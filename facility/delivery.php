@@ -193,7 +193,7 @@
 		if(Vital_Signs::already_set($protocol_ID)){
 			(new Vital_Signs($protocol_ID))->setVital_signs('get');
 		}else{
-			$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_GET['BP'],$_GET['weight'],$_GET['pulse'],$_GET['temperature'],$_GET['MUAC']);
+			$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_GET['BP'],$_GET['weight'],$_GET['pulse'],$_GET['temperature'],'');
 		}
 
 		## Print links to edit the delivery, the client's pregnancy overview and back to the list of Maternity clients.

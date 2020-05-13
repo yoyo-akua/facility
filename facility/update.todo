@@ -1,7 +1,0 @@
-1. Backups:
-     ☐ Database backup
-          -> Terminal: /opt/lampp/htdocs/backup/autobackup.sh
-     ☐ Software backup 
-          -> Terminal: sudo mv /opt/lampp/htdocs /home/firstaid-server/Desktop/old_software 
-             Password: firstaid-server
-2. Database changes: 

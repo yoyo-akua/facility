@@ -23,6 +23,7 @@
 	include_once("Objects/Vital_Signs.php");
 	include_once("Objects/Push.php");
 	include_once("Objects/Seen.php");
+	include_once("Objects/Nutrition.php");
 	
 	## The Settings file contains object independent functions.
 	include_once("Objects/Settings.php");

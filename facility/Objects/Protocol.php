@@ -229,7 +229,6 @@
 		/*
 		## Getter function.
 		## Returns any remarks that the consultant made on the patient's diagnosis.
-		## If this field is empty that implies, that no tests were ordered for the patient.
 		*/
 		public function getRemarks(){
 			return $this->remarks;
@@ -238,11 +237,19 @@
 		/*
 		## Getter function.
 		## Returns the maternity ID of a client, that has come for delivery.
-		## If this field is empty that implies, that no tests were ordered for the patient.
 		*/
 		public function getDelivery(){
 			return $this->delivery;
-		}		
+		}	
+		
+		/*
+		## Getter function.
+		## Returns the patient ID of the client.
+		*/
+		public function getPatient_ID(){
+			return $this->patient_ID;
+		}
+
 		/*
 		## Setter function.
 		## Updates the visit date of that protocol entry, on which the function is called, in database.

@@ -6,14 +6,15 @@
 	include("HTMLParts/HTML_HEAD.php");
 
 
-	## Initialise new object of patient by a certain patient-ID, with which the page is called.
-	$patient_ID=$_GET['patient_ID'];
-	$patient=new Patient($patient_ID);
+
 
 	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol= new Protocol($protocol_ID);
 
+	## Initialise new object of patient by a certain patient-ID, with which the page is called.
+	$patient_ID=$protocol->getPatient_ID();
+	$patient=new Patient($patient_ID);
 
 	/*
 	## Check, whether the patient's diagnosis is protected.
@@ -620,62 +621,9 @@
 		echo "</details>";
 	}
 
-	/*
-	## Check, if the patient has been referred for lab investigations.
-	## If so, print the lab number and the test results.
-	## If not in "display-mode" (indicated by $_GET['show']), print a links for adding more tests and editing the results.
-	*/
-	$lab_number=$protocol->getLab_number();
+	## In case the user is opening the page to enter the patient's nutrition data, include the file containing the corresponding code.
 	if(! empty($_GET['nutrition'])){
-		$html=Lab::display_results($protocol_ID,'tooltips on');
-		echo"
-				<details open>
-					<summary>
-						<h2>Nutrition Treatment</h2>
-					</summary>
-					<h3>Measurements</h3>
-					<table>
-						<tr>
-							<th style='border-left:none'>
-								MUAC
-							</th>
-							<th>
-								Height
-							</th>
-							<th>
-								Weight
-							</th>
-							<th>
-								<div class='tooltip'>
-									BMI
-									<span class='tooltiptext' id='BMIflag' style='display:none'>
-									</span>
-								</div>
-							</th>
-						</tr>
-						<tr>
-							<td style='border-left:none'>
-								<input type='number' name='MUAC' min='0' step='0.1'> cm
-							</td>
-							<td>
-								<input type='number' name='height' min='0' step='0.1' oninput='PrefillBMI()'> cm
-							</td>
-							<td>
-								<input type='number' name='weight' min='0' step='0.1' oninput='PrefillBMI()'> kg
-							</td>
-							<td id='BMI'>
-							</td>
-						</tr>
-					</table>
-				"; 
-		if(empty($_GET['show'])){
-			echo"
-					";
-					# Hier Link zu nutrition patients Seite @todo
-		}else{
-			# Hier Übersicht über Nutrition Daten @todo
-		}
-		echo "</details>";
+		Vital_Signs::nutrition_visit($protocol_ID, $age_exact);
 	}
 
 	/*

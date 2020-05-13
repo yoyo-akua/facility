@@ -9,6 +9,8 @@
 		private $pulse;	## The patient's pulse.
 		private $temperature;	## The patient's temperature.
 		private $MUAC;	## The patient's Mid-upper arm circumference.
+		private $height; ## The patient's body height.
+		private $infantometer; ## Boolean indicating if an infantometer was used to measure the patient's height
 		
 		/*
 		## This function is called, if a new protocol object is needed for futher actions.
@@ -25,6 +27,8 @@
 				$this->pulse = $row->pulse;
 				$this->temperature = $row->temperature;
 				$this->MUAC = $row->MUAC;
+				$this->height = $row->height;
+				$this->infantometer = $row->infantometer;
 			}
 			$this->protocol_ID = $protocol_ID;
 		}
@@ -84,6 +88,22 @@
 		*/
 		public function getMUAC(){
 			return $this->MUAC;
+		}	
+
+		/*
+		## Getter function.
+		## Returns the patient's body height at that visit, on which the function is called.
+		*/
+		public function getHeight(){
+			return $this->height;
+		}	
+
+		/*
+		## Getter function.
+		## Returns the boolean indicating whether the patient's height was measured with an infantometer or not.
+		*/
+		public function getInfantometer(){
+			return $this->infantometer;
 		}	
 
 		/*
@@ -150,6 +170,33 @@
 			mysqli_query($link,$query);
 			return $this->MUAC = $var;
 		}
+
+		/*
+		## Setter function.
+		## Updates the patient's height on that visit, of which the function is called, in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/				
+		public function setHeight($var){
+			global $link;
+			$query = "UPDATE vital_signs SET height='$var' WHERE protocol_ID = $this->protocol_ID";
+			mysqli_query($link,$query);
+			return $this->height = $var;
+		}
+
+		/*
+		## Setter function.
+		## Updates the information whether the height was measured with an infantometer, in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/				
+		public function setInfantometer($var){
+			global $link;
+			$query = "UPDATE vital_signs SET infantometer='$var' WHERE protocol_ID = $this->protocol_ID";
+			mysqli_query($link,$query);
+			return $this->infantometer = $var;
+		}
+
 		/*
 		## If known, display the patient's admission information.
 		## Variable $html is used as buffer of HTML commands to print the patient's admission information later.
@@ -273,4 +320,119 @@
 			}
 			return $BP_last;
 		}
+
+		public function nutrition_visit($protocol_ID,$age){
+			$vitals=new self($protocol_ID);
+			$nutrition=new Nutrition($protocol_ID);
+
+			echo"
+				<details open>
+					<summary>
+						<h2>Nutrition Treatment</h2>
+					</summary>";
+			if(empty($_GET['show']) AND $_GET["nutrition"]=='enter'){
+				echo"
+					<h3>Measurements</h3>
+					<form action='patient_visit.php' method='get'>
+					<table>
+						<tr>
+							<th style='border-left:none'>
+								Height
+							</th>";
+							if($age<6){
+								echo "<th>Infantometer?</th>";
+							}
+							echo"
+							<th>
+								Weight
+							</th>
+							<th>
+								<div class='tooltip'>
+									BMI
+									<span class='tooltiptext' id='BMIflag' style='display:none'>
+									</span>
+								</div>
+							</th>";
+							if($age<6){
+								echo "<th>MUAC</th>";
+							}
+							echo"
+						</tr>
+						<tr>
+							<td style='border-left:none'>
+								<input type='number' name='height' min='0' step='0.1' oninput='PrefillBMI()' value='$vitals->height'> cm
+							</td>";
+							if($age<6){
+								echo "<td><input type='checkbox' name='infantometer'";
+								if($vitals->infantometer=='1'){
+									echo "checked='checked'";
+								}
+								echo"></td>";
+							}
+							echo"
+							<td>
+								<input type='number' name='weight' min='0' step='0.1' oninput='PrefillBMI()' value='$vitals->weight'> kg
+							</td>
+							<td id='BMI'>
+							</td>
+							";
+							if($age<6){
+								echo "<td><input type='number' name='MUAC' min='0' step='0.1' value='$vitals->MUAC'> cm</td>";
+							}
+							echo"
+						</tr>
+					</table>
+					<br><h3>Remarks:</h3>
+					<textarea name='nutrition_remarks' maxlength='1000' style='min-width:500px; margin-left:20px; min-height:100px'>".$nutrition->getNutrition()."</textarea>
+					<br><br>
+					<input type='submit' name='nutrition' value='submit' style='margin-left:0px'><br>
+					<input type='hidden' name='protocol_ID' value='$protocol_ID'>
+					<a href='nutrition_patients.php'><div class ='box'>patients in nutrition office</div></a><br>"; 
+			}else{
+				if($_GET["nutrition"]=='submit'){
+					$vitals->setHeight($_GET["height"]);
+					if(! empty($_GET['infantometer'])){
+						$vitals->setInfantometer(1);
+					}else{
+						$vitals->setInfantometer(0);
+					}
+					$vitals->setweight($_GET["weight"]);
+					$vitals->setMUAC($_GET["MUAC"]);
+					$nutrition->setNutrition($_GET["nutrition_remarks"]);
+				}
+				echo Vital_Signs::print_nutrition($protocol_ID);
+			}
+			echo "</details>";
+		}
+
+		public function print_nutrition($protocol_ID){
+			
+			$vitals=new self($protocol_ID);
+			
+			$height=$vitals->height;
+			$weight=$vitals->weight;
+			$infantometer=$vitals->infantometer;
+			$MUAC=$vitals->MUAC;
+			$BMI=$weight/($height/100)^2;
+
+
+			$nutrition=(new Nutrition($protocol_ID))->getNutrition();
+
+			$html='';
+			
+			if(! empty($height) OR ! empty($weight) OR ! empty($MUAC)){
+				$html.='<h3>Measurements</h3>';
+				if(! empty($height)){
+					$html.="<h4>Height:</h4> $height cm";
+					if(! empty($infantometer)){
+						$html.=" (measured with infantometer)";
+					}
+					$html.='<br>';
+				}
+				
+			}
+
+			return $html;
+		}
 	}
+?>
