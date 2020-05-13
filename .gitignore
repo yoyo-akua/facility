@@ -1,3 +1,4 @@
 **/facility/defaults
 **/facility/Objects/DB.php
 **/facility/documentation
+!/facility/documentation/ERD.vuerd.json
