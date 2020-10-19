@@ -149,7 +149,6 @@
 		## which is included below ('require_once('Style/PDF/tcpdf.php')').
 		*/
 		public function pdf_execute($pdfName,$size,$html){
-			
 			$html.='</body>';
 
 			$html=str_replace('<h4>','<b>',$html);
@@ -161,6 +160,7 @@
 			global $FACILITY;
 			
 			require_once('Style/PDF/tcpdf.php');
+
 
 			$pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, $size, true, 'UTF-8', false);
 
@@ -188,6 +188,7 @@
 			$pdf->writeHTML($html, true, false, true, false, '');
 			ob_clean();
 			$pdf->Output($pdfName, 'I');
+			
 		}
 
 		/*

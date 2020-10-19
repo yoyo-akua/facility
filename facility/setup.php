@@ -24,6 +24,8 @@
 	include_once("Objects/Push.php");
 	include_once("Objects/Seen.php");
 	include_once("Objects/Nutrition.php");
+	include_once("Objects/Complaints.php");
+	include_once("Objects/Uploads.php");
 	
 	## The Settings file contains object independent functions.
 	include_once("Objects/Settings.php");

@@ -10,7 +10,6 @@
         document.getElementById('BMI').innerHTML= BMI;
         document.getElementById('BMIflag').style.display = "block";
 
-        var patient_ID="<?= $_GET['patient_ID']; ?>";
         var protocol_ID="<?= $_GET['protocol_ID']; ?>";
 
         $.ajax({
@@ -20,7 +19,7 @@
 
             // Method of sending data to the php script and the URL of this page which can be retrieved in the php file as $_POST['thispage'].
             type: "POST",
-            data: {patient_ID: patient_ID, protocol_ID: protocol_ID, BMI: BMI},
+            data: {protocol_ID: protocol_ID, BMI: BMI},
 
             success:function(data){
                 var classification = jQuery.parseJSON(data);

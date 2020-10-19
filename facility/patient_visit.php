@@ -5,9 +5,6 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-
-
-
 	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol= new Protocol($protocol_ID);
@@ -15,6 +12,9 @@
 	## Initialise new object of patient by a certain patient-ID, with which the page is called.
 	$patient_ID=$protocol->getPatient_ID();
 	$patient=new Patient($patient_ID);
+
+	## Inquire whether the patient has received nutrition management for this visit.
+	$nutrition=Nutrition::nutritionBoolean($protocol_ID);
 
 	/*
 	## Check, whether the patient's diagnosis is protected.
@@ -156,6 +156,8 @@
 				".(new Vital_Signs($protocol_ID))->display_admission_data($patient)."
 			</div>
 			";
+
+
 	/*
 	## Initialising more variales.
 	## Variable $attendant contains the name of the person, who diagnoses the patient.
@@ -166,10 +168,41 @@
 
 	$primgiven=false;
 	$stop=false;
-	
+
 	## Call this if-branch in case the user is submitting the selection of diagnoses.
 	if(! empty($_POST['submit'])){
-		
+
+		## Initialise variable containing object with patient's complains on that visit.
+		$complaints=new Complaints($protocol_ID);
+
+		## Set all the complains to database as entered by the user. 
+		if(! empty($_POST['coughing'])){
+			$complaints->setCoughing(1);
+		}else{
+			$complaints->setCoughing(0);
+		}
+		if(! empty($_POST['vomitting'])){
+			$complaints->setVomitting(1);
+		}else{
+			$complaints->setVomitting(0);
+		}
+		if(! empty($_POST['fever'])){
+			$complaints->setFever(1);
+		}else{
+			$complaints->setFever(0);
+		}
+		if(! empty($_POST['diarrhoea'])){
+			$complaints->setDiarrhoea(1);
+		}else{
+			$complaints->setDiarrhoea(0);
+		}
+		if(! empty($_POST['others'])){
+			$complaints->setOthers($_POST['others']);
+		}else{
+			$complaints->setOthers('');
+		}
+
+
 		## Delete all previously entered diagnoses from the database.
 		Diagnosis_IDs::clean($protocol_ID);
 
@@ -185,21 +218,38 @@
 		while($row = mysqli_fetch_object($result)){
 			$Diagnosis_ID=$row->Diagnosis_ID;
 			$Diagnosis = new Diagnoses($Diagnosis_ID);
-			/*
-			## This if-branch is called, if a new or updated patient's diagnoses contain primary diagnoses.
-			## These diseases are tagged by suffix "(1)".
-			## They are added in list of patient's diagnosed diseases ($insert)
-			*/		
-			if (! empty($_POST["prim_$Diagnosis_ID"])){
-				## This if-branch saves the first primary diagnosis in $insert.
-				if(! $primgiven){
-					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,1);
-					$primgiven=true;
+
+			## This if-branch is called, if the current disease has been selected as a diagnosis (either primary, secondary or provisional).
+			if (! empty($_POST["$Diagnosis_ID"]) OR ! empty($_POST["prov_$Diagnosis_ID"])){
+				
+				/*
+				## Variable $importance is initialised with a figural value symbolising the importance of the diagnosis:
+				## 		- 1 for primary diagnoses
+				##		- 2 for secondary diagnoses
+				##		- 3 for provisional diagnoses.
+				*/
+				if(! empty($_POST["$Diagnosis_ID"])){
+					$importance=$_POST["$Diagnosis_ID"];
+				}else{
+					$importance=3;
+				}
+				
+
+				/*
+				## This if-branch is used to make sure only one primary diagnosis is selected. 
+				## It creates the database entry for the diagnosis using the function new_Diagnosis_IDs.
+				## Within this if-branch it is also checked whether the diagnosis was also selected as provisional diagnosis and if so, stored as such in database.
+				*/
+				if(! $primgiven OR $importance!==1){
+					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
+					if($importance==1){
+						$primgiven=true;
+					}
 				}
 
 				/*
 				## Check if there is more than one primary diagnosis selected.
-				## If so, show warning, and by setting $stop=true, prevent database entries.
+				## If so, show warning and break the loop to prevent further database entries.
 				*/
 				else{
 					$message="Please select only one primary diagnosis!";
@@ -207,15 +257,6 @@
 					$stop=true;
 					break;
 				}
-			}
-
-			/*
-			## This if-branch is called, if a new or updated patient's diagnoses contain one or more secondary diagnosis.
-			## These diseases are tagged by suffix "(2)".
-			## They are added in list of patient's diagnosed diseases ($insert)
-			*/
-			else if (! empty($_POST["sec_$Diagnosis_ID"]) AND ! $stop){
-				Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,2);
 			}
 		}
 
@@ -238,12 +279,29 @@
 	## In the following, print content on the left hand side of the patient's diagnosis page.
 	echo "<div class='columnleft'>";
 
+
 	/*
 	## Show content of patient's diagnosis page if
 	## 		- a new or updated diagnosis was successfully submitted,
 	##		- page is called in "display-mode" that is indicated by variable $_GET['show'].
 	*/
 	if((! empty($_POST['submit']) OR ! empty($_GET['show'])) AND $stop==false AND empty($_POST['search'])){
+
+		/*
+		## Check if any complaints for the patient have been stated on that visit.
+		## If so, display them, using the function display_Complaints().
+		*/
+		$complaints=Complaints::display_Complaints($protocol_ID);
+		if(! empty($complaints)){
+			echo "
+				<details>
+					<summary>
+						<h2>Complaints</h2>
+					</summary>
+					$complaints
+				</details>
+				";
+		}
 
 		## In case of a new or updated diagnosis some information are added to database, if they are known.
 		if(! empty($_POST['submit'])){
@@ -261,6 +319,36 @@
 			}else{
 				$protocol->setreferral('');
 			}
+
+			/*
+			## Check if the user selected the checkbox for referring a patient for nutrition management.
+			## In case he did and the patient has no such entry for this visit yet, add an empty nutrition entry for the user.
+			## In case the user is trying to delete an existing nutrition entry, jump into the else branch.
+			*/
+			if(! empty($_POST["refer_nutrition"]) AND ! $nutrition){
+				Nutrition::new_Nutrition($protocol_ID);
+			}else if(empty($_POST['refer_nutrition']) AND $nutrition){
+
+				## Initialise variable $nutrition_management with an object of the class Nutrition corresponding to the patient's visit.
+				$nutrition_management=new Nutrition($protocol_ID);
+
+				/*
+				## Check if any data have been entered already for nutrition management, if so alert the user and prevent the deletion of the entry.
+				## Otherwise delete the nutrition entry from the database.
+				*/
+				if(! empty($nutrition_management->getManagement()) OR ! empty($nutrition_management->getNutrition_remarks())){
+					echo"
+						<script>
+							alert('Nutrition data have already been entered. Clean them manually first, if you are sure you want to delete them.')
+						</script>
+						";
+				}else{
+					$query="DELETE FROM nutrition WHERE protocol_ID=$protocol_ID";
+					mysqli_query($link,$query);
+					$nutrition=false;
+				}
+			}
+
 			
 			## Add any remarks from the consultant to the diagnosis.
 			if(! empty($_POST['remarks'])){
@@ -276,6 +364,8 @@
 				$protocol->setcompleted(0);
 			}
 		}
+
+		
 		
 		/*
 		## Print result of patient's diagnosis,
@@ -310,7 +400,89 @@
 
 	## Show input form in case the diagnosis still need's to be set.
 	else{
-
+		
+		/*
+		## Inquire whether complaits have already been noted.
+		## If so, initialise variable $complaints with these previously stated complaints,
+		## otherwise create a new, empty complaints entry.
+		*/
+		if(Complaints::complaints_Boolean($protocol_ID)==true){
+			$complaints=new Complaints($protocol_ID);
+		}else{
+			$complaints=Complaints::new_Complaints($protocol_ID,0,0,0,0,'');
+		}
+		
+		/*
+		## Display a table head containing the most common complains (coughing, vomitting, fever, diarrhoea) and a general category "others" for further complaints.
+		## In a table row display checkboxes for the most common complaints and an input field for "others".
+		## These input fields are to be prefilled with previously entered values, if available. 
+		*/
+		echo "
+			<details open>
+				<summary>
+					<h2>Complaints</h2>
+				</summary>
+					<table>
+						<tr>
+							<th style='border-left:none'>
+								Coughing
+							</th>
+							<th>
+								Vomitting
+							</th>
+							<th>
+								Fever
+							</th>
+							<th>
+								Diarrhoea
+							</th>
+							<th>
+								Others
+							</th>
+						</tr>  
+						<tr>
+							<form action='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID' method='post' autocomplete='off'>
+								<td style='border-left:none'>
+									<input type='checkbox' name='coughing' value='1'";
+									if($complaints->getCoughing()==1){
+										echo" checked='checked'";
+									}
+									echo">			
+								</td>
+								<td>
+									<input type='checkbox' name='vomitting' value='1'";
+									if($complaints->getVomitting()==1){
+										echo" checked='checked'";
+									}
+									echo">
+								</td>
+								<td>
+									<input type='checkbox' name='fever' value='1'";
+									if($complaints->getFever()==1){
+										echo" checked='checked'";
+									}
+									echo">
+								</td>
+								<td>
+									<input type='checkbox' name='diarrhoea' value='1'";
+									if($complaints->getDiarrhoea()==1){
+										echo" checked='checked'";
+									}
+									echo">
+								</td>
+								<td>
+									<textarea name='others' length='1000' style=width:90px;height:25px>";
+									if(! empty($complaints->getOthers())){
+										echo $complaints->getOthers();
+									}
+									echo"</textarea>
+								</td>
+						</tr>
+					</table>
+				
+			</details>
+		";
+		
 		/*
 		## Print "Diagnoses" headline, if the user is calling the page as a nutrition officer, hide the list of diagnoses and the consultant's information.
 		## Identify last known attendant.
@@ -330,7 +502,6 @@
 		}
 		echo'
 				><summary><h2>Diagnoses</h2></summary>
-				<form action="patient_visit.php?patient_ID='.$patient_ID.'&protocol_ID='.$protocol_ID.'" method="post" autocomplete="off">
 				<b>Attendant: <input type="text" name="attendant" 
 				';
 					if(! empty($_POST['attendant'])){
@@ -376,8 +547,8 @@
 			echo "checked='checked'";
 		}
 		echo">
-				referred</b> 
-				(to: <input type='text' name='referredto' ";
+				referred to different facility</b> 
+				(<input type='text' name='referredto' ";
 				if ($referred OR ! empty($_POST['referredto'])){
 					if(! empty($_POST['referredto'])){
 						$referral=$_POST['referredto'];
@@ -386,10 +557,20 @@
 					}
 					echo "value='$referral'";
 				}
+				echo"style='margin:0px'>)<br>";
+		/*
+		## Inquire, whether patient was referred for nutrition management.
+		## Print a checkbox for referral, which is checked, if patient was referred.
+		*/
+		echo "<input type='checkbox' name='refer_nutrition'";
+		if ($nutrition OR ! empty($_POST['refer_nutrition'])){
+			echo "checked='checked'";
+		}
+		echo">
+				<b>referred for nutrition management</b><br>";
 		
 		## Print checkbox for reattendance, which is checked if it was previously defined to be a review case. 
-		echo"style='margin:0px'>)<br>
-		
+		echo"
 				<input type='checkbox' name='reattendance' ";
 				if (in_array(0,Diagnosis_IDs::getImportances($protocol_ID)) OR ! empty($_POST['reattendance'])){
 					echo "checked='checked''";
@@ -399,9 +580,7 @@
 		echo"> <b>reattendance</b><br><br>
 				<div><input type='text' name='search' id='autocomplete' placeholder='search diagnosis' class='autocomplete'>
 				<button type='submit' name='submitsearch'><i class='fas fa-search smallsearch'></i></button></div>
-
-				<input type='submit' name='submit' value='submit diagnoses'>
-				";
+				<button type='submit' name='submit' value='submit'><i id='submitconsult' class='far fa-check-circle fa-4x'></i></button>";
 		
 		##Print tablehead for following table.
 		Diagnoses::diagnoses_tablehead();
@@ -496,9 +675,12 @@
 					if($protocol->getCompleted()!=0){
 						echo "checked='checked'";
 					}
-					echo'> <b>treatment in clinic completed</b>
+					echo"> <b>treatment in clinic completed</b>
+
+					
+
 				</form>
-				';
+				";
 	}
 	
 	/*
@@ -618,11 +800,41 @@
 					<a href=\"lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&reset=on\"><div class =\"box\">reset test results</div></a>
 					";
 		}
+
+		## In case a file has been attached which contains lab information, display a link to this file. 
+		$upload_array=Uploads::getUploadArray($protocol_ID);
+		foreach($upload_array AS $ID){
+			$upload=new Uploads($ID);
+			if(! empty($upload->getFilename())){
+				$upload_name=$upload->getFilename();
+				if($upload->getDepartment_ID()==Departments::getDepartmentId('Laboratory')){
+					echo '
+					<br>
+					<div class="tooltip">
+						<a href="./uploads/'.$upload_name.'">
+							<i class="fas fa-paperclip fa-2x"></i>
+						</a>
+						<span class="tooltiptext" style="line-height:normal">
+							uploaded file:<br>
+							'.$upload_name.'
+						</span>
+					</div>
+					';
+				}
+				
+			}
+		}
+		
+		
 		echo "</details>";
 	}
 
-	## In case the user is opening the page to enter the patient's nutrition data, include the file containing the corresponding code.
-	if(! empty($_GET['nutrition'])){
+	/*
+	## Inquire whether any nutrition data are requested or saved for the patient.
+	## If so call the function containing the corresponding code (Vital_Signs::nutrition_visit()).
+	*/
+	$nutrition_entry=new Nutrition($protocol_ID);
+	if(! empty($_GET['nutrition']) OR ($nutrition AND ((! empty($nutrition_entry->getNutrition_remarks()) OR ! empty($nutrition_entry->getManagement())) OR ! empty($_GET['edit'])))){
 		Vital_Signs::nutrition_visit($protocol_ID, $age_exact);
 	}
 
@@ -703,13 +915,38 @@
 
 	## If you are in "display-mode" or just submitted the diagnosis, there is a link printed to exit the "display-mode" and edit diagnoses again.
 	if(! empty($_GET['show']) OR ! empty($_POST['submit'])){
-		echo"<a href='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>edit results</div></a></div>";
+		echo"<a href='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&edit=on'><div class ='box'>edit results</div></a></div>";
 	}
 
 	## Prints a button to create a pdf document of patient's diagnosis.
 	echo"
 			</div>
-			<div class='tableright'><a href='patient_visit_pdf.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'>create pdf</a></div>
+			<div class='tableright'>
+				<a href='patient_visit_pdf.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'>create pdf</a>";
+
+				## In case a file has been attached which contains lab information, display a link to this file. 
+				foreach($upload_array AS $ID){
+					$upload=new Uploads($ID);
+					if(! empty($upload->getFilename())){
+						$upload_name=$upload->getFilename();
+						if (strstr($upload_name,'pdf')){
+							echo '<br>
+								<br>
+								<div class="tooltip" >
+									<a href="./uploads/'.$upload_name.'" id="linkbutton">
+										<i class="fas fa-file"></i>
+									</a>
+									<span class="tooltiptext " style="line-height:normal;">
+										uploaded file:<br>
+										'.$upload_name.'
+									</span>
+								</div>';
+						}
+					}
+				}
+				echo"
+			
+			</div>
 			";
 
 	## Contains client-side operations based on javascript.

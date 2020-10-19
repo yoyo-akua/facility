@@ -518,6 +518,7 @@
 			$html='';
 			$primary='';
 			$secondary='';
+			$provisional='';
 
 			## Check, if the patient needs to reattending. If so, print a correspondent notice. 
 			if(in_array(0,Diagnosis_IDs::getImportances($protocol_ID))){
@@ -546,14 +547,16 @@
 					$primary.="-$DiagnosisName<br>";
 				}else if ($importance==2){
 					$secondary.="-$DiagnosisName<br>";
+				}else if($importance==3){
+					$provisional.="-$DiagnosisName<br>";
 				}
 			}
 
 			/*	
 			## Add the as primary marked diagnoses to HTML buffer for printing it later. 
-			## Add also a headline for primary diagnose, if both - primary and secondary diagnoses - are printed.
+			## Add also a headline for primary diagnosis, if both - primary and secondary diagnoses - are printed.
 			*/ 
-			if(! empty($primary) AND $circumference!=='secondary'){
+			if(! empty($primary) AND $circumference!=='secondary' AND $circumference!=='provisional'){
 				if($circumference!=='primary'){
 				$html.="<h3>primary diagnosis:</h3>";
 				}
@@ -562,13 +565,24 @@
 
 			/*
 			## Add all as secondary marked diagnoses to HTML buffer for printing them later. 
-			## Add also a headline for primary diagnose, if both - primary and secondary diagnoses - are printed.
+			## Add also a headline for secondary diagnosis, if both - primary and secondary diagnoses - are printed.
 			*/ 
-			if(! empty($secondary) AND $circumference!=='primary'){
+			if(! empty($secondary) AND $circumference!=='primary' AND $circumference!=='provisional'){
 				if($circumference!=='secondary'){
 				$html.="<h3>secondary diagnosis:</h3>";
 				}
 				$html.=$secondary;
+			}
+
+			/*
+			## Add all as provisional marked diagnoses to HTML buffer for printing them later. 
+			## Add also a headline for provisional diagnosis, if both - primary and secondary diagnoses - are printed.
+			*/ 
+			if(! empty($provisional) AND $circumference!=='primary' AND $circumference!=='secondary'){
+				if($circumference!=='provisional'){
+				$html.="<h3>provisional diagnosis:</h3>";
+				}
+				$html.=$provisional;
 			}
 			
 			## If it is not empty and both - secondary and primary diagnoses - are printed, also print the consultant's remarks on the diagnosis.

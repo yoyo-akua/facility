@@ -19,8 +19,8 @@
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
 			    $this->test_name = $row->test_name;
-					$this->frequency = $row->frequency;
-					$this->sex_limit = $row->sex_limit;
+				$this->frequency = $row->frequency;
+				$this->sex_limit = $row->sex_limit;
 			}
 			$this->test_ID = $test_ID;
 		}
@@ -72,6 +72,19 @@
 		*/
 		public function getSex_limit(){
 			return $this->sex_limit;
+		}
+
+		/*
+		## Setter function.
+		## Updates the name of the test in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/			
+		public function setTest_name($var){
+			global $link;
+			$query = "UPDATE tests SET test_name='$var' WHERE test_ID = $this->test_ID";
+			mysqli_query($link,$query);
+			return $this->test_name = $var;
 		}
 	}
 ?>

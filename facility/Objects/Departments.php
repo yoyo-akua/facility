@@ -14,5 +14,13 @@
             }
             return $own_department;
         }
+
+        public function getDepartmentId($name){
+            global $link;
+            $query="SELECT Department_ID FROM departments WHERE Department='$name'";
+            $object=mysqli_query($link,$query);
+            $ID=mysqli_fetch_object($object);
+            return $ID->Department_ID;
+        }
     }
 ?>

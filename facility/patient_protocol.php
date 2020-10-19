@@ -188,17 +188,6 @@
 		$searchpara .= " AND Locality = '$var'";
 		$parameter.="- stay in $var<br>";
 	}
-	/*
-	## If the user is searching for patients, that have a body height within a certain range,
-	## the search parameter is added to the search parameters,
-	## the current search is based on and buffered in $parameter to display the user all chosen search parameters later.
-	*/			
-	if(! (empty($_POST['height_filter']) AND empty($_POST['heightfrom']) AND empty($_POST['heightto']))){
-		$varfrom=$_POST['heightfrom'];
-		$varto=$_POST['heightto'];
-		$searchpara.=" AND patient.height>='$varfrom' AND patient.height<='$varto'";
-		$parameter.="- are $varfrom-$varto cm high<br>";
-	}
 
 	/*
 	## If the user is searching only patients whose diagnoses were entered/ that were consulted (and checking the checkbox),
@@ -272,16 +261,16 @@
 			
 			/*
 			## This if-branch is called, if the user is only searching for that particular disease, 
-			## that is either defined as primary or as secondary diagnosis.
+			## that is either defined as primary, secondary or as provisional diagnosis.
 			*/			
 			if (! empty($_POST["radio_$Diagnosis_ID"])){
 				
 				/*
-				## Variable $radio is used to indicate, whether the user is searching for primary or secondary diagnoses.
+				## Variable $radio is used to indicate, whether the user is searching for primary, provisional or secondary diagnoses.
 				## This is used to add the condition to  $searchpara.
 				## The search parameter is added to the search parameters the current search is based on and 
 				## buffered in $parameter to display the user all chosen search parameters later, 
-				## depending on the user's selection of primary or secondary diagnosis.
+				## depending on the user's selection of primary, provisional or secondary diagnosis.
 				*/
 				$radio=$_POST["radio_$Diagnosis_ID"];
 				$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND diagnosis_id='$Diagnosis_ID' AND importance='$radio'";
@@ -290,15 +279,17 @@
 				
 				if($radio==1){
 					$parameter.="(primary)";
-				}else{
+				}else if($radio==2){
 					$parameter.="(secondary)";
+				}else{
+					$parameter.="(provisional)";
 				}
 				
 				$parameter.="<br>";
 			}
 			
 			/*
-			## If the user did not select any limitation like primary or secondary for the search,
+			## If the user did not select any limitation like provisional, primary or secondary for the search,
 			## just the disease is added to search parameters the current search is based on and 
 			## buffered in $parameter to display the user all chosen search parameters later.
 			*/
@@ -884,6 +875,54 @@
 				$parameter.="- delivered babies between $babyweight_from and $babyweight_to kg<br>";
  
 			}
+	}
+
+	if((! empty($_POST["BMI_classification_filter"]) AND ! empty($_POST["BMI_classification"]))
+		 OR (! empty($_POST["management_filter"]) AND ! empty($_POST["management"]))
+		 OR (! empty($_POST["all_nutrition"]))){
+		$tables.=",nutrition";
+		$IDs.=' AND nutrition.protocol_ID=protocol.protocol_ID';
+		$parameter.="- received nutritional care";
+		
+		if(! empty($_POST['management_filter']) AND ! empty($_POST['management'])){
+			$management=$_POST['management'];
+			$searchpara.=" AND nutrition.management like '$management'";
+			$parameter.=" of the type $management";
+		}
+		$parameter.='<br>';
+		if(! empty($_POST['BMI_classification_filter']) AND ! empty($_POST['BMI_classification'])){
+			$classification=$_POST['BMI_classification'];
+			$searchpara.=" AND nutrition.BMI_classification like '$classification%'";
+			$parameter.="- have $classification";
+		}
+	}
+
+	if((! empty($_POST["BMI_filter"]) AND ! empty($_POST["BMI_from"]) AND ! empty($_POST["BMI_to"]))
+		 OR (! empty($_POST["MUAC_filter"]) AND ! empty($_POST["MUAC_from"]) AND ! empty($_POST["MUAC_to"]))
+		 OR (! empty($_POST['height_filter']) AND ! empty($_POST['heightfrom']) AND ! empty($_POST['heightto']))){
+		$tables.=",vital_signs";
+		$IDs.=" AND vital_signs.protocol_ID=protocol.protocol_ID";
+		
+		if(! empty($_POST['height_filter']) AND ! empty($_POST['heightfrom']) AND ! empty($_POST['heightto'])){
+			$varfrom=$_POST['heightfrom'];
+			$varto=$_POST['heightto'];
+			$searchpara.=" AND vital_signs.height>='$varfrom' AND vital_signs.height<='$varto'";
+			$parameter.="- are $varfrom-$varto cm tall<br>";
+		}
+		
+		if(! empty($_POST["MUAC_filter"]) AND ! empty($_POST["MUAC_from"]) AND ! empty($_POST["MUAC_to"])){
+			$varfrom=$_POST['MUAC_from'];
+			$varto=$_POST['MUAC_to'];
+			$searchpara.=" AND vital_signs.MUAC>='$varfrom' AND vital_signs.MUAC<='$varto'";
+			$parameter.="- have $varfrom-$varto cm MUAC<br>";
+		}
+
+		if(! empty($_POST["BMI_filter"]) AND ! empty($_POST["BMI_from"]) AND ! empty($_POST["BMI_to"])){
+			$varfrom=$_POST['BMI_from'];
+			$varto=$_POST['BMI_to'];
+			$searchpara.=" AND (vital_signs.weight/((vital_signs.height/100)*(vital_signs.height/100))) BETWEEN '$varfrom' AND '$varto'";
+			$parameter.="- have a BMI of $varfrom-$varto  kg/m&sup2<br>";
+		}
 	}
 
 	/*
@@ -1519,7 +1558,7 @@
 		## These are:
 		##		- a button to create the Consulting report,
 		##		- (not) consulted, referred, reattending and pregnant patients,
-		##		- followed by a list of all diagnoses, where primary and secondary can be selected as a limitation.
+		##		- followed by a list of all diagnoses, where provisional, primary and secondary can be selected as a limitation.
 		## If the user has searched once before, the Consulting's form is prefilled with the search parameters of the previous search.
 		*/
 		echo'
@@ -1586,7 +1625,7 @@
 					
 					/*
 					## Print for each disease/diagnos a checkbox and its name as well as 
-					## a radio button to limit it as primary or secondary diagnosis.
+					## a radio button to limit it as provisional, primary or secondary diagnosis.
 					*/
 					echo"
 							<tr class='emptytable'>
@@ -1609,7 +1648,12 @@
 											if(! empty($_POST["radio_$row->Diagnosis_ID"]) AND $_POST["radio_$row->Diagnosis_ID"]==2){
 												echo "checked='checked'";
 											}
-											echo"><font color='grey'>secondary)
+											echo"><font color='grey'>secondary</font>
+										<input type='radio' name='radio_$row->Diagnosis_ID' value='3' ";
+											if(! empty($_POST["radio_$row->Diagnosis_ID"]) AND $_POST["radio_$row->Diagnosis_ID"]==3){
+												echo "checked='checked'";
+											}
+											echo"><font color='grey'>provisional)
 									</font>
 								</td>
 							</tr>
@@ -1737,7 +1781,7 @@
 						}
 						echo'>
 					<label>Trimester:</label> 
-					<select name="trimester">
+					<select name="trimester" style="margin:0px">
 						<option value=""></option>
 						<option value="1" ';
 							if(! empty($_POST['trimester']) AND $_POST['trimester']==1){
@@ -1852,6 +1896,114 @@
 				</details></td>';
 	}
 
+	if(in_array('Nutrition',$DEPARTMENTS)){
+		echo'	
+				<td>
+					<details>
+						<summary><div><div class="smalltile">Nutrition<br><i class="fas fa-weight fa-2x"></i></div></div></summary>
+						
+						<div><input type="checkbox" name="all_nutrition" ';
+								if(! empty($_POST['all_nutrition'])){
+									echo "checked='checked'";
+								}
+								echo'> all nutrition management cases
+						</div>
+						<br>
+						<div><input type="checkbox" name="BMI_filter" ';
+								if(! empty($_POST['BMI_filter'])){
+									echo "checked='checked'";
+								}
+								echo'> BMI:
+								from<input type="number" name="BMI_from" step="0.01" min="0"';
+									if(! empty($_POST['BMI_from'])){
+										echo "value='".$_POST['BMI_from']."'";
+									}
+									echo'>
+								to<input type="number" name="BMI_to" step="0.01" min="0"';
+									if(! empty($_POST['BMI_to'])){
+										echo "value='".$_POST['BMI_to']."'";
+									}
+									echo'> kg/m&sup2<br>
+						</div>
+						<div><input type="checkbox" name="BMI_classification_filter" ';
+								if(! empty($_POST['BMI_classification_filter'])){
+									echo "checked='checked'";
+								}
+								echo'> BMI classification:
+							<select name="BMI_classification" style="margin:0px">
+								<option name=""'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']==''){
+										echo 'selected';
+									}
+									echo'></option>
+								<option name="severe underweight"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='severe underweight'){
+										echo 'selected';
+									}
+									echo'>severe underweight</option>
+								<option name="underweight"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='underweight'){
+										echo 'selected';
+									}
+									echo'>underweight</option>
+								<option name="normal weight"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='normal weight'){
+										echo 'selected';
+									}
+									echo'>normal weight</option>
+								<option name="overweight"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='overweight'){
+										echo 'selected';
+									}
+									echo'>overweight</option>
+								<option name="obesity"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='obesity'){
+										echo 'selected';
+									}
+									echo'>obesity</option>
+								<option name="severe obesity"'; 
+									if(! empty($_POST['BMI_classification']) AND $_POST['BMI_classification']=='severe obesity'){
+										echo 'selected';
+									}
+									echo'>severe obesity</option>
+							</select> <br>
+							&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp(this is only saved for patients who have been in nutritional care - you can filter others by BMI range)
+						</div>
+						<div><input type="checkbox" name="MUAC_filter" ';
+								if(! empty($_POST['MUAC_filter'])){
+									echo "checked='checked'";
+								}
+								echo'> MUAC:
+								from<input type="number" name="MUAC_from" step="0.1" min="0"';
+									if(! empty($_POST['MUAC_from'])){
+										echo "value='".$_POST['MUAC_from']."'";
+									}
+									echo'>
+								to<input type="number" name="MUAC_to" step="0.1" min="0" ';
+									if(! empty($_POST['MUAC_to'])){
+										echo "value='".$_POST['MUAC_to']."'";
+									}
+									echo'> cm<br>
+						</div>
+						<div><input type="checkbox" name="management_filter" ';
+								if(! empty($_POST['management_filter'])){
+									echo "checked='checked'";
+								}
+								echo"> Type of Management:
+							<select name='management' style='margin:0px'>
+								<option value=''";if(! empty($_POST['management']) AND $_POST['management']==''){echo 'selected';}echo"></option>
+								<option value='Diet Management'";if(! empty($_POST['management']) AND $_POST['management']=='Diet Management'){echo 'selected';}echo">Diet Management</option>
+								<option value='Physical Management'";if(! empty($_POST['management']) AND $_POST['management']=='Physical Management'){echo 'selected';}echo">Physical Management</option>
+								<option value='Pharmaceutical Management'";if(! empty($_POST['management']) AND $_POST['management']=='Pharmaceutical Management'){echo 'selected';}echo">Pharmaceutical Management</option>
+								<option value='Therapeutic Management'";if(! empty($_POST['management']) AND $_POST['management']=='Therapeutic Management'){echo 'selected';}echo">Therapeutic Management</option>
+							</select>
+	
+						</div>
+					</details>
+				</td>";
+	}
+
+
 	## Initialise a variable which is used to determine which columns are activated for the table of patients in which the search results are displayed.
 	$columns=array(
 		'entered'=>'off',
@@ -1865,7 +2017,9 @@
 		'drugs'=>'off',
 		'primary'=>'off',
 		'secondary'=>'off',
-		'ANC'=>'off');
+		'provisional'=>'off',
+		'ANC'=>'off',
+		'nutrition'=>'off');
 
 	## Print a headline, an icon and a drop down list for "Settings" where the columns can be (de)activated.
 	echo'
@@ -1979,6 +2133,14 @@
 				}
 				echo'>
 				<label>secondary diagnoses</label><br>
+
+				<input type="checkbox" name="provisional_column"';
+				if(! empty($_POST['provisional_column'])){
+					echo'checked="checked"';
+					$columns['provisional']='on';
+				}
+				echo'>
+				<label>provisional diagnoses</label><br>
 				';
 	}
 
@@ -1991,6 +2153,17 @@
 				}
 				echo'>
 				<label>ANC</label><br>
+				';
+	}
+	if(in_array('Nutrition',$DEPARTMENTS)){
+		echo'	
+				<input type="checkbox" name="nutrition_column"';
+				if(! empty($_POST['nutrition_column'])){
+					echo'checked="checked"';
+					$columns['nutrition']='on';
+				}
+				echo'>
+				<label>Nutrition Management</label><br>
 				';
 	}
 

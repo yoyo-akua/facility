@@ -1,4 +1,4 @@
-<?php
+i<?php
 	## Contains global variables and functions which are needed within this page.
 	include("setup.php");
 	
@@ -81,6 +81,14 @@
 	if(! empty($protocol->getreferral())){
 		$referral=$protocol->getreferral();
 		$html.="<br>Patient has been <b>referred</b> to <b>$referral</b><br>";
+	}
+	/*
+	## Check if any complaints for the patient have been stated on that visit.
+	## If so, display them, using the function display_Complaints().
+	*/
+	$complaints=Complaints::display_Complaints($protocol_ID);
+	if(! empty($complaints)){
+		$html.= "<h2>Complaints</h2> $complaints";
 	}
 
 	## Check if patient was diagnosed, if so add the attending medical officer and the list of primary and secondary diagnoses to $html.
@@ -169,6 +177,19 @@
 	}
 
 	/*
+	## Inquire from database whether any nutrition data are saved for the patient.
+	## If so call the function containing the corresponding code (Vital_Signs::print_nutrition()).
+	*/
+	$query="SELECT * FROM nutrition WHERE protocol_ID=$protocol_ID";
+	$result=mysqli_query($link,$query);
+	if(mysqli_num_rows($result)!==0){
+		$nutrition=new Nutrition($protocol_ID);
+		if(! empty($nutrition->getNutrition_remarks()) OR ! empty($nutrition->getManagement())){
+			$html.="<h2>Nutrition Treatment</h2>".Vital_Signs::print_nutrition($protocol_ID);
+		}
+	}
+
+	/*
 	## If there were any, add a list of all prescribed drugs 
 	## with information about drug name, amount, unit and dosage recommendation to $html.
 	## Format this list, to a more pdf adapted style.
@@ -181,7 +202,22 @@
 		$drugs=str_replace('</u>','',$drugs);
 		$html.=$drugs;
 	}
-
+	
+	## In case files have been attached which contains lab information, display these files. 
+	$upload_array=Uploads::getUploadArray($protocol_ID);
+	if(! empty($upload_array)){
+		$html.='<br pagebreak="true"/><h2>Attached Files</h2>';
+		foreach($upload_array AS $ID){
+		$upload=new Uploads($ID);
+		if(! empty($upload->getFilename())){
+			$upload_name=$upload->getFilename();
+			if(! strstr($upload_name, 'pdf')){
+				$html.='<img src="./uploads/'.$upload_name.'"></img><br>';
+			}
+		}
+	}
+	}
+	
 	## Initialise variables for the name of the pdf and it's page format.
 	$pdfName = "Results-$name-$VisitDate.pdf";
 	$size='A4';

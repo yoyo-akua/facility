@@ -13,8 +13,8 @@
 		private $infantometer; ## Boolean indicating if an infantometer was used to measure the patient's height
 		
 		/*
-		## This function is called, if a new protocol object is needed for futher actions.
-		## Saves the information of that protocol from database (identified by protocol ID) in that new protocol object.
+		## This function is called, if a new vital signs object is needed for further actions.
+		## Saves the information of that entry from database (identified by protocol ID) in that new vital signs object.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
 		public function Vital_Signs($protocol_ID){
@@ -285,7 +285,7 @@
 		## This function is used to determine whether a patient's vital signs have already been entered.
 		## The sent parameter $protocol_ID is used as a link to the patient's visit's entry.
 		*/
-		public function already_set($protocol_ID){
+		public static function already_set($protocol_ID){
 			global $link;
 			$query="SELECT * FROM vital_signs WHERE protocol_ID=$protocol_ID";
 			$result=mysqli_query($link,$query);
@@ -304,7 +304,7 @@
 		## The sent parameters $protocol_ID and $patient_ID are used to link to the patient and his visit's data.
 		## Return $BP_last.
 		*/
-		public function last_BPs($protocol_ID){
+		public static function last_BPs($protocol_ID){
 			global $link;
 			global $today;
 			$querylast="SELECT * FROM protocol,vital_signs WHERE patient_ID=(SELECT patient_ID FROM protocol WHERE protocol_ID=$protocol_ID) AND vital_signs.protocol_ID=protocol.protocol_ID AND protocol.protocol_ID!=$protocol_ID AND VisitDate<='$today' ORDER BY VisitDate DESC LIMIT 0,5";
@@ -321,16 +321,76 @@
 			return $BP_last;
 		}
 
+		/*
+		## This function is used to display the input fields for entering the data of nutrition management.
+		## The following parameters are sent along: 
+		## - $protocol_ID contains the protocol ID which is used to identify the protocol entry of the particular visit 
+		##   on which the patient received the treatment,
+		## - $age contains the patient's age as a decimal figure, 
+		##   which is used to limit the option of entering the MUAC only to children upt ot five years. 
+		*/
 		public function nutrition_visit($protocol_ID,$age){
-			$vitals=new self($protocol_ID);
-			$nutrition=new Nutrition($protocol_ID);
 
+			/*
+			## Get data from database. 
+			## Get the vital signs which were previously taken for the patient on that visit.
+			## Variable $link contains credentials to connect with database and is defined in DB.php.
+			*/
+			global $link;
+			$query="SELECT * FROM vital_signs WHERE protocol_ID=$protocol_ID";
+			$result=mysqli_query($link,$query);
+
+			/*
+			## Initialise variable $vitals with the values of the previously entered vital signs in case they were entered before,
+			## otherwise create a new Vital Signs entry and assign the value to $vitals.
+			*/
+			if(mysqli_num_rows($result)!==0){
+				$vitals=new self($protocol_ID);
+			}else{
+				$vitals=Vital_Signs::new_Vital_Signs($protocol_ID,'','','','','');
+			}
+
+			/*
+			## Inquire whether there already existis a nutrition entry, if not create a new one.
+			## Assign the previously entered (or newly created, empty) values to $nutrition. 
+			*/
+			if(Nutrition::nutritionBoolean($protocol_ID)){
+				$nutrition=new Nutrition($protocol_ID);
+			}else{
+				$nutrition=Nutrition::new_Nutrition($protocol_ID);
+			}
+
+			## Print the headline.
 			echo"
-				<details open>
+				<details ";
+				if (empty($_GET['show'])){
+					echo "open";
+				}
+				echo">
 					<summary>
-						<h2>Nutrition Treatment</h2>
+						<h2>Nutrition Management</h2>
 					</summary>";
-			if(empty($_GET['show']) AND $_GET["nutrition"]=='enter'){
+			## In case the user is not in "display mode" and is either editing or newly entering the nutrition data, display the corresponding input fields.
+			if(empty($_GET['show']) AND ((! empty($_GET["nutrition"]) AND $_GET["nutrition"]=='enter') OR ! empty($_GET['edit']))){
+				
+				/*
+				## Initialise variable $management which contains the data which were previously entered as type of management.
+				## This information is required for preselecting the correct type of management in the select box, when the user has entered this before. 
+				*/
+				$management=$nutrition->getManagement();
+
+				/*
+				## Print the form for the nutrition data.
+				## This includes 
+				## - a number field with the patient's height,
+				## - in case the patient is below 6 years old a checkbox, inquiring whether the height was measured with an infantometer or not,
+				## - an inout field for the patient's weight, 
+				## - an automatically filled (but not editable) cell with the BMI which is calculated and classified by the javascript function prefillBMI(),
+				## - in case the client is below 6 years another input field for the MUAC of the child,
+				## - a selection field for the type of management performed on the patient,
+				## - a large textbox where to enter any further information to the treatment. 
+				## All fields are prefillled with previously entered values for this visit, if available.
+				*/
 				echo"
 					<h3>Measurements</h3>
 					<form action='patient_visit.php' method='get'>
@@ -348,7 +408,7 @@
 							</th>
 							<th>
 								<div class='tooltip'>
-									BMI
+									<a href='BMI_links.php'>BMI</a>
 									<span class='tooltiptext' id='BMIflag' style='display:none'>
 									</span>
 								</div>
@@ -382,14 +442,33 @@
 							echo"
 						</tr>
 					</table>
-					<br><h3>Remarks:</h3>
-					<textarea name='nutrition_remarks' maxlength='1000' style='min-width:500px; margin-left:20px; min-height:100px'>".$nutrition->getNutrition()."</textarea>
-					<br><br>
+					<br><h3>Management</h3>
+					<h4>Type:</h4><br>
+					<select name='management' style='margin-left:20px'>
+						<option value=''";if($management==''){echo 'selected';}echo"></option>
+						<option value='Diet Management'";if($management=='Diet Management'){echo 'selected';}echo">Diet Management</option>
+						<option value='Physical Management'";if($management=='Physical Management'){echo 'selected';}echo">Physical Management</option>
+						<option value='Pharmaceutical Management'";if($management=='Pharmaceutical Management'){echo 'selected';}echo">Pharmaceutical Management</option>
+						<option value='Therapeutic Management'";if($management=='Therapeutic Management'){echo 'selected';}echo">Therapeutic Management</option>
+					</select><br>
+					<h4>Remarks:</h4><br>
+					<textarea name='nutrition_remarks' maxlength='1000' style='min-width:500px; margin-left:20px; min-height:100px'>".$nutrition->getNutrition_remarks()."</textarea>
+					<br>
+					<input type='checkbox' name='completed'> treatment in clinic completed<br>
 					<input type='submit' name='nutrition' value='submit' style='margin-left:0px'><br>
 					<input type='hidden' name='protocol_ID' value='$protocol_ID'>
-					<a href='nutrition_patients.php'><div class ='box'>patients in nutrition office</div></a><br>"; 
-			}else{
-				if($_GET["nutrition"]=='submit'){
+					"; 
+			}
+			
+			## Call this if-branch after the user submitted the nutrition data or in case he is in "display mode". 
+			else{
+
+				/*
+				## Call this if-branch in case the user submitted the input form. 
+				## It is used to write the entered data to the database. 
+				*/
+				if(! empty($_GET["nutrition"]) AND $_GET["nutrition"]=='submit'){
+
 					$vitals->setHeight($_GET["height"]);
 					if(! empty($_GET['infantometer'])){
 						$vitals->setInfantometer(1);
@@ -397,41 +476,101 @@
 						$vitals->setInfantometer(0);
 					}
 					$vitals->setweight($_GET["weight"]);
-					$vitals->setMUAC($_GET["MUAC"]);
-					$nutrition->setNutrition($_GET["nutrition_remarks"]);
+
+					if(! empty($_GET['MUAC'])){
+						$vitals->setMUAC($_GET["MUAC"]);
+					}
+
+					$nutrition->setManagement($_GET["management"]);
+					$nutrition->setNutrition_remarks($_GET["nutrition_remarks"]);
+
+					$BMI=$vitals->getweight()/pow(($vitals->getheight()/100),2);
+					$nutrition->setBMI_classification(Nutrition::classify_BMI($protocol_ID,$BMI));
+
+					$protocol=new Protocol($protocol_ID);
+					if(! empty($_GET['completed'])){
+						$protocol->setcompleted(1);
+					}else{
+						$protocol->setcompleted(0);
+					}
 				}
+
+				## Print the nutrition data for the patient on that visit on which the function is called (not editable).
 				echo Vital_Signs::print_nutrition($protocol_ID);
+			}
+
+			## In case the user is not in "display mode", print a link to the overview with all nutrition patients. 
+			if(empty($_GET['show'])){
+				echo "<a href='nutrition_patients.php'><div class ='box'>patients in nutrition office</div></a><br>";
 			}
 			echo "</details>";
 		}
 
-		public function print_nutrition($protocol_ID){
+		/*
+		## This function is used to print the nutrition data for a patient on a particular visit (not editable).
+		## The sent parametr $protocol_ID is used to link to this particular visit's data in the database. 
+		*/
+		public static function print_nutrition($protocol_ID){
 			
+			/*
+			## Initialise variable $vitals containing the vital signs of that visit. 
+			## Use this to initialise variables with the height, weight, infantometer status and MUAC of the client. 
+			*/
 			$vitals=new self($protocol_ID);
 			
 			$height=$vitals->height;
 			$weight=$vitals->weight;
 			$infantometer=$vitals->infantometer;
 			$MUAC=$vitals->MUAC;
-			$BMI=$weight/($height/100)^2;
 
-
-			$nutrition=(new Nutrition($protocol_ID))->getNutrition();
-
-			$html='';
-			
-			if(! empty($height) OR ! empty($weight) OR ! empty($MUAC)){
-				$html.='<h3>Measurements</h3>';
-				if(! empty($height)){
-					$html.="<h4>Height:</h4> $height cm";
-					if(! empty($infantometer)){
-						$html.=" (measured with infantometer)";
-					}
-					$html.='<br>';
-				}
-				
+			## Calculate the BMI, based on the patient's height and weight.
+			if($height!=0 AND $weight!=0){
+				$BMI=number_format($weight/pow(($height/100),2),2);
 			}
 
+			/*
+			## Initialise variable $nutrition containing the nutrition data for the patient on that visit. 
+			## Use it to initialise variables with the management type, the classification of the BMI and further remarks on the treatment.
+			*/
+			$nutrition=new Nutrition($protocol_ID);
+			$remarks=$nutrition->getNutrition_remarks();
+			$management=$nutrition->getManagement();
+			$classification=$nutrition->getBMI_classification();
+
+			## Initilialise variable $html as an empty variable whihc will be used to buffer all data which are to be printed.
+			$html='';
+			
+			## Add all the nutrition data and vitals to $html.
+			if($height!=0 OR $weight!=0 OR $MUAC!=0){
+				$html.='<h3>Measurements</h3>';
+				if($height!=0){
+					$html.="<h4>Height:</h4> $height cm";
+					if($infantometer!=0){
+						$html.=" (measured with infantometer)";
+					}
+					$html.="<br>";
+				}
+				if($weight!=0){
+					$html.="<h4>Weight:</h4> $weight kg<br>";
+				}
+				if(isset($BMI)){
+					$html.="<h4>BMI:</h4> $BMI kg/m&#xB2; ($classification)<br>";
+				}
+				if($MUAC!=0){
+					$html.="<h4>MUAC:</h4> $MUAC cm<br>";
+				}
+			}
+			if(! empty($remarks) OR ! empty($management)){
+				$html.="<h3>Management</h3>";
+				if(! empty($management)){
+					$html.="<h4>Type:</h4> $management<br>";
+				}
+				if(! empty($remarks)){
+					$html.="<h4>Remarks:</h4> $remarks";
+				}
+			}
+
+			## Return $html.
 			return $html;
 		}
 	}

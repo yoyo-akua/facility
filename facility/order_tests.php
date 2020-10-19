@@ -180,7 +180,7 @@
 			}
 			Push::new_Notification($title,$text,date("Y-m-d H:i:s",time()),"Laboratory");
 		}
-		
+		/*
 		## Automatically lead to lab list, if the patient is a self-paying lab client, otherwise lead to current patient list.
 		if($protocol->getOnlylab()==1){
 			echo'<script type="text/JavaScript">;
@@ -190,7 +190,7 @@
 			echo'<script type="text/JavaScript">;
 						window.location.href="current_patients.php";
 					</script>';
-		}
+		}*/
 	}
 	
 	## This if-branch is called, when the user is calling the page, before clicking submit.

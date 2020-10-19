@@ -56,12 +56,27 @@
 			return $this->DiagnosisClass;
 		}	
 		
-		
-		## Print a head of a table to display diseases with three columns: primary disease, secondary disease and name of disease.		
+		/*
+		## Setter function.
+		## Updates the name of the diagnosis in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/			
+		public function setDiagnosisName($var){
+			global $link;
+			$query = "UPDATE diagnoses SET DiagnosisName='$var' WHERE Diagnosis_ID = $this->Diagnosis_ID";
+			mysqli_query($link,$query);
+			return $this->DiagnosisName = $var;
+		}
+
+		## Print a head of a table to display diseases with three columns: provisional, primary and secondary and name of disease.		
 		public function diagnoses_tablehead(){
 			echo"<table>
 						<tr>
 							<th style='border-left:none'>
+								provisional
+							</th>
+							<th>
 								primary
 							</th>
 							<th>
@@ -69,6 +84,8 @@
 							</th>
 							<th>
 								disease
+							</th>
+							<th style='border-left:none'>
 							</th>
 						</tr>
 					";
@@ -85,21 +102,31 @@
 			echo"
 					<tr>
 						<td style='border-left:none'>
-							<input type='checkbox' name='prim_$Diagnosis_ID'";
-							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==1 OR ! empty($_POST["prim_$Diagnosis_ID"])){
+							<input type='checkbox'  id='3_$Diagnosis_ID' name='prov_$Diagnosis_ID'";
+							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==3 OR ! empty($_POST["prov_$Diagnosis_ID"])){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
-							<input type='checkbox' name='sec_$Diagnosis_ID'";
-							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==2 OR ! empty($_POST["sec_$Diagnosis_ID"])){
+							<input type='radio' id='1_$Diagnosis_ID' name='$Diagnosis_ID' value='1'";
+							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==1 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==1)){
+								echo "checked='checked'";
+							}
+							echo">
+						</td>
+						<td>
+							<input type='radio' id='2_$Diagnosis_ID' name='$Diagnosis_ID' value='2'";
+							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==2 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==2)){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
 							$Diagnosis_Name
+						</td>
+						<td>
+						<button type='button' id='ban_diagnosis' onclick='document.getElementById(\"1_$Diagnosis_ID\").checked = false; document.getElementById(\"2_$Diagnosis_ID\").checked = false; document.getElementById(\"3_$Diagnosis_ID\").checked = false;'><i class='fas fa-ban'></i></button>
 						</td>
 					</tr>
 					";

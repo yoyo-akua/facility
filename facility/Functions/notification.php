@@ -11,8 +11,6 @@ include("../defaults/DEFAULTS.php");
 include("variables.php");
 include("../Objects/Departments.php");
 
-SESSION_START();
-
 ## Initialise variable $push with a new object of the push class.
 $push = new Push(); 
 

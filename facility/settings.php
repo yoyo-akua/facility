@@ -208,19 +208,44 @@
 						}
 					}
 					
+					## This if-branch is called, if the user is editing a test from the list of diagnoses.
+					if(! empty($_GET['Edit_Test'])){
+						
+						## Initialising variable with test's ID, creating object of test and getting its name.
+						$Test_ID=$_GET['Edit_Test'];
+						$Test=new Tests($Test_ID);
+						$Testname=$Test->getTest_name();
+
+						## Writing the new name of the test to database and sending message to user that change has been successful.
+						if(! empty($_GET['new_name'])){
+							
+							$new_name=$_GET['new_name'];
+
+							if($new_name!==$Testname){
+								$Test->setTest_name($new_name);
+								$message="You succesfully changed the name of the test '$Testname' to '$new_name'.";
+								Settings::messagebox($message);
+							}
+							
+						}
+					}
+
+
 					## Display the list of all tests and a symbol with a link for deleting each of them.
 					echo"<details";
-					if(! empty($_GET['Delete_Test'])){
+					if(! empty($_GET['Delete_Test']) OR ! empty($_GET['Edit_Test'])){
 						echo " open";
 					}
 					echo">
 								<summary>
-									<h2>Delete Test</h2>
+									<h2>Delete/Edit Test</h2>
 								</summary>
-							<table class='onlytop'>
+							<table class='onlytop' style='width:50%'>
 								<tr>
 									<th>
 										Testname
+									</th>
+									<th>
 									</th>
 									<th>
 									</th>
@@ -229,16 +254,25 @@
 					$query="SELECT * FROM tests ORDER BY frequency";
 					$result2=mysqli_query($link,$query);
 					while($row2=mysqli_fetch_object($result2)){
+						$ID=$row2->test_ID;
+						$label=".drug_$ID";
 						echo"
-								<tr>
-									<td>
-										$row2->test_name
-									</td>
-									<td>
-										<a href='settings.php?Delete_Test=$row2->test_ID'><i class='fas fa-times-circle'></i></a>
-									</td>
-								</tr>
-								";
+										<tr>
+											<form method='get' action='settings.php'>
+												<td style='text-align:left'>
+													<font  id='name$label'>$row2->test_name</font>
+													<input type='text' name='new_name' id='edit$label' value='$row2->test_name' style='margin:0px;text-align:left;width:100%;max-width:1000px;display:none'>
+												</td>
+												<td>
+													<button type='button' id='edit_button$label' onclick='edit_name(\"$label\")'><i class='fas fa-pencil-alt'></i></button>
+													<button type='submit' name='Edit_Test' value='$ID' id='save_button$label' style='display:none'><i class='fas fa-save'></i></button>												
+												</td>
+												<td>
+													<a href='settings.php?Delete_Test=$ID'><i class='fas fa-trash-alt'></i></i></a>
+												</td>
+											</form>
+										</tr>
+									";
 					}
 					
 					## Print a link to the page, you can use for adding tests.
@@ -337,6 +371,32 @@
 							mysqli_query($link,$query);
 						}
 					}
+
+					## This if-branch is called, if the user is editing a drug from the list of diagnoses.
+					if(! empty($_GET['Edit_Drug'])){
+						
+						## Initialising variable with drug's ID, creating object of drug and getting its name.
+						$Drug_ID=$_GET['Edit_Drug'];
+						$Drug=new Drugs($Drug_ID);
+						$Drugname=$Drug->getDrugname();
+						$unit=$Drug->getUnit_of_Issue();
+
+						## Writing the new name of the drug to database and sending message to user that change has been successful.
+						if(! empty($_GET['new_name']) AND ! empty($_GET['new_unit'])){
+							
+							$new_name=$_GET['new_name'];
+							$new_unit=$_GET['new_unit'];
+
+							if($new_name!==$Drugname OR $new_unit!==$unit){
+								$Drug->setDrugname($new_name);
+								$Drug->setUnit_of_Issue($new_unit);
+								$message="You succesfully changed '$Drugname ($unit)' to '$new_name ($new_unit)'.";
+								Settings::messagebox($message);
+							}
+							
+						}
+
+					}
 					
 					## If the user sets the in Charge of Store, update it in the database and show notification.
 					if(! empty($_POST["Incharge"])){
@@ -347,19 +407,28 @@
 						Settings::messagebox($message);
 					}
 					
-					## Display the list of all drugs and a symbol with a link for deleting each of them.
+					/*
+					## Display the list of all drugs and a symbol with a link for deleting or editing each of them.
+					## When clicking the delete button a link to this page is opened which activates the if-branch deleting the item.
+					## When clicking the edit button that activates the javascript function edit_name().
+					*/
 					echo"<details";
-					if(! empty($_GET['Delete_Drug'])){
+					if(! empty($_GET['Delete_Drug']) OR ! empty($_GET['Edit_Drug'])){
 						echo " open";
 					}
 					echo">
 								<summary>
-									<h2>Delete Drug</h2>
+									<h2>Delete/Edit Drug</h2>
 								</summary>
-							<table class='onlytop'>
+							<table class='onlytop' style='width:60%'>
 								<tr>
 									<th>
 										Drugname
+									</th>
+									<th>
+										Unit of Issue
+									</th>
+									<th>
 									</th>
 									<th>
 									</th>
@@ -368,16 +437,43 @@
 					$query="SELECT * FROM drugs ORDER BY Drugname";
 					$result2=mysqli_query($link,$query);
 					while($row2=mysqli_fetch_object($result2)){
+						$ID=$row2->Drug_ID;
+						$unit=$row2->Unit_of_Issue;
+						$label=".drug_$ID";
 						echo"
-								<tr>
-									<td>
-										$row2->Drugname
-									</td>
-									<td>
-										<a href='settings.php?Delete_Drug=$row2->Drug_ID'><i class='fas fa-times-circle'></i></a>
-									</td>
-								</tr>
-								";
+										<tr>
+											<form method='get' action='settings.php'>
+												<td style='text-align:left'>
+													<font  id='name$label'>$row2->Drugname</font>
+													<input type='text' name='new_name' id='edit$label' value='$row2->Drugname' style='margin:0px;text-align:left;width:100%;max-width:1000px;display:none'>
+												</td>
+												<td style='text-align:left'>
+													<font  id='unit$label' name='unit_$ID' >$unit</font>	
+													<select name='new_unit' id='unit_select$label' style='display:none'>
+														<option value='ampoule' "; if($unit=='ampoule'){echo"selected='selected'";}; echo">ampoule</option>
+														<option value='bag' "; if($unit=='bag'){echo"selected='selected'";}; echo">bag</option>
+														<option value='bottle' "; if($unit=='bottle'){echo"selected='selected'";}; echo">bottle</option>
+														<option value='capsule' "; if($unit=='capsule'){echo"selected='selected'";}; echo">capsule</option>
+														<option value='container' "; if($unit=='container'){echo"selected='selected'";}; echo">container</option>
+														<option value='pessary' "; if($unit=='pessary'){echo"selected='selected'";}; echo">pessary</option>
+														<option value='sachet' "; if($unit=='sachet'){echo"selected='selected'";}; echo">sachet</option>
+														<option value='suppository' "; if($unit=='suppository'){echo"selected='selected'";}; echo">suppository</option>
+														<option value='tablet' "; if($unit=='tablet'){echo"selected='selected'";}; echo">tablet</option>
+														<option value='tube' "; if($unit=='tube'){echo"selected='selected'";}; echo">tube</option>
+														<option value='vial' "; if($unit=='vial'){echo"selected='selected'";}; echo">vial</option>
+													</select>
+												</td>
+												<td>
+													<button type='button' id='edit_button$label' onclick='edit_name(\"$label\")'><i class='fas fa-pencil-alt'></i></button>
+													<button type='submit' name='Edit_Drug' value='$ID' id='save_button$label' style='display:none'><i class='fas fa-save'></i></button>												
+												</td>
+												<td>
+													<a href='settings.php?Delete_Drug=$ID'><i class='fas fa-trash-alt'></i></i></a>
+												</td>
+											</form>
+										</tr>
+									";
+						
 					}
 					echo"
 								</table>
@@ -520,6 +616,28 @@
 							mysqli_query($link,$query);
 						}
 					}
+
+					## This if-branch is called, if the user is editing a disease from the list of diagnoses.
+					if(! empty($_GET['Edit_Diagnosis'])){
+						
+						## Initialising variable with diagnosis' ID, creating object of diagnosis and getting its name.
+						$Diagnosis_ID=$_GET['Edit_Diagnosis'];
+						$Diagnosis=new Diagnoses($Diagnosis_ID);
+						$Diagnosisname=$Diagnosis->getDiagnosisName();
+
+						## Writing the new name of the disease to database and sending message to user that change has been successful.
+						if(! empty($_GET['new_name'])){
+							
+							$new_name=$_GET['new_name'];
+
+							if($new_name!==$Diagnosisname){
+								$Diagnosis->setDiagnosisName($new_name);
+								$message="You succesfully changed the name of '$Diagnosisname' to '$new_name'.";
+								Settings::messagebox($message);
+							}
+							
+						}
+					}
 					/*
 					## This if-branch is called, if the user is adding a new disease to the database.
 					## It adds the drug to the database and shows a notification about successfull entry.
@@ -539,18 +657,23 @@
 					
 					echo"<details";
 					
-					## Display the list of all diagnoses and a symbol with a link for deleting each of them.
-					if(! empty($_GET['Delete_Diagnosis'])){
+					/*
+					## Display the list of all diagnoses and a symbol with a link for deleting or editing each of them.
+					## When clicking the delete button a link to this page is opened which activates the if-branch deleting the item.
+					## When clicking the edit button that activates the javascript function edit_name().
+					*/
+					if(! empty($_GET['Delete_Diagnosis']) OR ! empty($_GET['Edit_Diagnosis'])){
 						echo " open";
 					}
 					echo">
 										<summary>
-											<h2>Delete Diagnosis</h2>
+											<h2>Delete/Edit Diagnosis</h2>
 										</summary>
-									<table class='onlytop'>
+																		
+									<table class='onlytop' style='width:50%;text-align:left'>
 										<tr>
+											<th>Diagnosisname</th>
 											<th>
-												Diagnosisname
 											</th>
 											<th>
 											</th>
@@ -559,16 +682,25 @@
 							$query="SELECT * FROM diagnoses WHERE DiagnosisName not like 'All other Cases' ORDER BY DiagnosisName";
 							$result2=mysqli_query($link,$query);
 							while($row2=mysqli_fetch_object($result2)){
+								$ID=$row2->Diagnosis_ID;
+								$label=".diagnosis_$ID";
 								echo"
 										<tr>
-											<td>
-												$row2->DiagnosisName
-											</td>
-											<td>
-												<a href='settings.php?Delete_Diagnosis=$row2->Diagnosis_ID'><i class='fas fa-times-circle'></i></a>
-											</td>
+											<form method='get' action='settings.php'>
+												<td style='text-align:left'>
+												<font  id='name$label'>$row2->DiagnosisName</font>
+												<input type='text' name='new_name' id='edit$label' value='$row2->DiagnosisName' style='margin:0px;text-align:left;width:100%;max-width:1000px;display:none'>
+												</td>
+												<td>
+													<button type='button' id='edit_button$label' onclick='edit_name(\"$label\")'><i class='fas fa-pencil-alt'></i></button>
+													<button type='submit' name='Edit_Diagnosis' value='$ID' id='save_button$label' style='display:none'><i class='fas fa-save'></i></button>												
+												</td>
+												<td>
+													<a href='settings.php?Delete_Diagnosis=$ID'><i class='fas fa-trash-alt'></i></i></a>
+												</td>
+											</form>
 										</tr>
-										";
+									";
 							}
 							echo"
 								</table>
@@ -616,9 +748,101 @@
 								</details>
 								";
 					}
+				}else if($department=='Administration'){
+					echo "<details";
+					
+					## Print an input form for new diagnoses, where the user can enter a name and select a class of diagnosis.
+					if(! empty($_POST["new_staff"])){
+						echo " open";
+					}
+					echo">
+							<summary>
+								<h2>Add Staff</h2>
+							</summary>
+								<form action='settings.php' method='post'>
+									<div>
+										<label>Name:</label>
+										<input type='text' name='staff_name'><br>
+									</div>
+									<div>
+										<label>Qualification:</label>
+										<input type='text' name='qualification'><br>
+									</div>
+									<div>
+										<label>Department:</label>
+										<select name='staff_department'>
+											<option value=''></option>";
+											foreach($DEPARTMENTS AS $staff_department){
+												echo "<option value='$staff_department'>$staff_department</option>";
+											}
+											echo"
+										</select>
+									</div>
+									<input type='hidden' name='token' value='$uniqueID'>
+									<div><input type='submit' value='submit'></div>
+								</form>
+							</details>
+						";
 				}
 				
+				
 				## The following content is displayed for every department.
+				## Display the list of all IP addresses for the department and a symbol with a link for deleting each of them.
+				echo"
+				<details";
+				if(! empty($_GET["Delete_IP_$department"])){
+				echo " open";
+				}
+				echo">
+						<summary>
+							<h2>Delete IP</h2>
+						</summary>
+					<table class='onlytop'>
+						<tr>
+							<th>
+								IP Adress
+							</th>
+							<th>
+							</th>
+						</tr>
+					";
+				$IP_array=explode(' & ',$IPs);
+				foreach($IP_array AS $IP){
+					echo"
+							<tr>
+								<td>
+									$IP
+								</td>
+								<td>
+									<a href='settings.php?Delete_IP_$department=$IP'><i class='fas fa-times-circle'></i></a>
+								</td>
+							</tr>
+							";
+				}
+				echo"
+						</table>
+					</details>
+					<details
+					";
+
+				## Print an input form for adding new IP addresses.
+				if(! empty($_POST["IP_$department"])){
+				echo " open";
+				}
+				echo">
+						<summary>
+							<h2>Add IP</h2>
+						</summary>
+						<form action='settings.php' method='get'>
+							<div><input type='text' name='IP_$department' required pattern='[0-9.]{14}'>
+							<input type='hidden' name='token' value='$uniqueID'>
+							<input type='submit' value='submit'></div>
+						</form><br>
+						<div>OR
+						<a class='button' href='settings.php?IP_$department=$own_IP'>this PC</a></div>
+						<br>
+					</details>";
+				
 				
 				## Display a dropdown menu for the layout colour.
 				echo"<details";
@@ -643,66 +867,9 @@
 								<input type='radio' name='colour_department' value='$department' required> $department's PCs
 								<input type='radio' name='colour_department' value='' required> all PCs <br>
 								<input type='submit' name='Change_Colour_$department' value='submit'><br>
-							</form>";
-
-				## Display the list of all IP addresses for the department and a symbol with a link for deleting each of them.
-				echo"
+							</form>
 					</details>
 					<details";
-				if(! empty($_GET["Delete_IP_$department"])){
-					echo " open";
-				}
-				echo">
-							<summary>
-								<h2>Delete IP</h2>
-							</summary>
-						<table class='onlytop'>
-							<tr>
-								<th>
-									IP Adress
-								</th>
-								<th>
-								</th>
-							</tr>
-						";
-				$IP_array=explode(' & ',$IPs);
-				foreach($IP_array AS $IP){
-						echo"
-								<tr>
-									<td>
-										$IP
-									</td>
-									<td>
-										<a href='settings.php?Delete_IP_$department=$IP'><i class='fas fa-times-circle'></i></a>
-									</td>
-								</tr>
-								";
-				}
-				echo"
-							</table>
-						</details>
-						<details
-						";
-				
-				## Print an input form for adding new IP addresses.
-				if(! empty($_POST["IP_$department"])){
-					echo " open";
-				}
-				echo">
-							<summary>
-								<h2>Add IP</h2>
-							</summary>
-							<form action='settings.php' method='get'>
-								<div><input type='text' name='IP_$department' required pattern='[0-9.]{14}'>
-								<input type='hidden' name='token' value='$uniqueID'>
-								<input type='submit' value='submit'></div>
-							</form><br>
-							<div>OR
-							<a class='button' href='settings.php?IP_$department=$own_IP'>this PC</a></div>
-							<br>
-						</details>
-						<details
-						";
 				
 				/*
 				## Print an input form for changing the password with three input fields: 

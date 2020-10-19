@@ -127,7 +127,7 @@ li:hover li a:hover {
   white-space:nowrap;
 }
 
-.tooltip .tooltiptext {
+.tooltip .tooltiptext{
 	visibility: hidden;
 	background-color: black;
 	color: #fff;
@@ -139,7 +139,6 @@ li:hover li a:hover {
 	position: absolute;
 	z-index: 1;
 }
-
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
@@ -192,11 +191,33 @@ div.columnleft{
 	z-index:4;
 }
 .popupbackground{
-	background-color:white;
+	background-color:grey;
 	position:fixed;
 	z-index:3;
 	width:100%;
 	height:100%;
+}
+#submitconsult{
+	position:fixed;
+	color: <?php echo $main; ?>;
+	bottom: 5%;
+	left: 25%;
+	z-index:2;
+	text-shadow: 2px 2px rgb(240,240,240);
+}
+#submitconsult:hover{
+	color: <?php echo $h1; ?>;
+}
+
+#submitlab{
+	color: <?php echo $main; ?>;
+	text-shadow: 2px 2px rgb(240,240,240);
+}
+#submitlab:hover{
+	color: <?php echo $hover; ?>;
+} 
+#ban_diagnosis:hover{
+	color:grey;
 }
 .columnleft>div{
 	margin-top:10px;
@@ -520,13 +541,22 @@ input{
 	background-color:<?php echo $input; ?>;
 	border:1px solid #ccc;
 	font-size:15px;
-	font-family:Times;
+	font-family:courier;
 	max-width:220px;
 	border-radius:3px;
 	height:20px;
 }
 input:hover{
 	box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.10);
+}
+textarea:hover{
+	box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.10);
+	background-color:white;
+}
+textarea{
+	border-radius: 5px;
+	border:1px solid #ccc;
+	font-family:courier;
 }
 input:focus{
 	border-color: <?php echo $hover; ?>;
@@ -611,7 +641,6 @@ input[type="number"]{
 .tableright >input{
 	background-color:white;
 	border:0.5px solid <?php echo $main; ?>;
-	font-style:italic;
 	text-align:center;
 }
 .tableright >input[type="submit"]{
@@ -626,6 +655,12 @@ input[type="number"]{
 	background-color:transparent;
 	border:0px;
 	padding:0px;
+}
+#linkbutton{
+	background-color:transparent;
+	border:0px;
+	padding:0px;
+	color:<?php echo $main; ?>;
 }
 .inputform{
     margin: 20px;
@@ -764,4 +799,9 @@ div.center{
 .line>input{
 	margin-bottom:10px;
 	margin-left:0px;
+}
+[type="file"] {
+  height: 0;
+  overflow: hidden;
+  width: 0;
 }

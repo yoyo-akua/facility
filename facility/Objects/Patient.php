@@ -280,7 +280,7 @@
 		## Optional and depending on which columns are requested within variable $columns,
 		## more columns (new or old patient, insured or uninsured, NHIS,
 		## CC Code, tests and its results, surgery information, 
-		## prescribed drugs, primary and secondary diagnosis, 
+		## prescribed drugs, provisional, primary and secondary diagnosis, 
 		## as well as information about ANC) are printed within the table head.
 		## At the end two further columns for Editing a patient and patient's results are printed.
 		*/
@@ -377,6 +377,13 @@
 								</th>
 							";
 						}
+						if($columns['provisional']=='on'){
+							echo"
+								<th>
+									provisional diagnoses
+								</th>
+							";
+						}
 						if($columns['ANC']=='on'){
 							echo"
 								<th>
@@ -388,6 +395,13 @@
 							echo"
 								<th>
 									Entered in NHIS Claim It?
+								</th>
+							";
+						}
+						if($columns['nutrition']=='on'){
+							echo"
+								<th>
+									Nutrition Management
 								</th>
 							";
 						}
@@ -414,7 +428,7 @@
 		## Optional and depending on which columns are requested within variable $columns,
 		## more columns are printed within the table: new or old patient, insured or uninsured patient, NHIS,
 		## CC Code, tests and its results, surgery information, prescribed drugs, 
-		## primary and secondary diagnosis, as well as information about ANC.
+		## provisional, primary and secondary diagnosis, as well as information about ANC.
 		## At the end two further columns are printed for Editing a patient by forwarding the user to edit_patient.php,
 		## and for patient's results by forwarding the user to patient_visit.php.
 		*/
@@ -534,6 +548,10 @@
 				$html=$Protocol->display_diagnoses('secondary');
 				echo "<td style='text-align:left'>$html</td>";
 			}
+			if($columns['provisional']=='on'){
+				$html=$Protocol->display_diagnoses('provisional');
+				echo "<td style='text-align:left'>$html</td>";
+			}
 			
 			## Prints optional, depending on which columns are requested and only if existing the patient's ANC information.
 			if($columns['ANC']=='on'){
@@ -587,6 +605,12 @@
 					echo"checked='checked'";
 				}
 				echo"></a></td>";
+			}
+
+			## Prints optional, depending on which columns are requested and only if existing the nutrition management of a patient.
+			if($columns['nutrition']=='on'){
+				$html=Vital_Signs::print_nutrition($protocol_ID);
+				echo "<td style='text-align:left'>$html</td>";
 			}
 			
 			## Prints links for editing patient as well as for show its results in patient diagnoses overview.
@@ -878,7 +902,7 @@
 		}
 		
 		## Adapt a search parameter for a simple search with name or OPD number.
-		public function simple_search($page){
+		public static function simple_search($page){
 			$searchpara="";
 			if(! empty($_POST['OPD']) OR ! empty($_POST['Name'])){
 				if(! empty($_POST['OPD'])){

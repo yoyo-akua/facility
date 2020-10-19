@@ -13,6 +13,8 @@
 		<script src="HTMLParts/JavaScript/expired.js"></script>
 		<script src="HTMLParts/JavaScript/prefill_amounts.js"></script>
 		<?php include_once("HTMLParts/JavaScript/prefill_BMI.js.php");?>
+		<script src="HTMLParts/JavaScript/edit_name.js"></script>
+		<script src="HTMLParts/JavaScript/upload_name.js"></script>
 		
 	</body>
 </html>

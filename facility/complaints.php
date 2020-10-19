@@ -1,0 +1,144 @@
+<?php
+
+    /*
+	## Contains global variables and functions which are needed within this page.
+	## Contains also HTML/CSS structure, which styles the graphical user interface in the browser.
+	*/
+	include("HTMLParts/HTML_HEAD.php");
+	
+	/*
+	## Variable, which represents the search parameters a current search is based on.
+	## Initialising this variable.
+	*/
+	$searchpara = "";
+
+	/*
+	## This if-branch is called, if the user is clicking on one OPD patient's submit button.
+	## This visit (by this particular patient) is identified by variable $protocol_ID.
+	## The patient's complaints are added to the database, if they were defined in browser.
+	*/
+	if(! empty($_POST['submit'])){
+		$protocol_ID=$_POST['protocol_ID'];
+		if(! empty($_POST['coughing'])){
+			$coughing=1;
+		}else{
+			$coughing=0;
+		}
+		if(! empty($_POST['vomitting'])){
+			$vomitting=1;
+		}else{
+			$vomitting=0;
+		}
+		if(! empty($_POST['fever'])){
+			$fever=1;
+		}else{
+			$fever=0;
+		}
+		if(! empty($_POST['diarrhoea'])){
+			$diarrhoea=1;
+		}else{
+			$diarrhoea=0;
+		}
+		$complaints=Complaints::new_Complaints($protocol_ID,$coughing,$vomitting,$fever,$diarrhoea,$_POST['others']);
+	}
+
+	
+	echo "<h1>Complaints</h1>";
+	/*
+	## $searchpara is the variable on which the search is based. 
+	## The function Patient::simple_search() prints a simple input form for name and OPD number to search in the list.
+	## If the user used the search, the function also adds the parameters to $searchpara.
+	*/
+	$searchpara=Patient::simple_search('complaints.php');
+	
+	/*
+	## Get data from database.
+	## Get all patients, 
+	##		- which are visiting today ($today is defined in HTML_HEAD.php),
+	##		- whose treatment is not finished (completed like 0),
+	##		- which match to current search parameters 'OPD Number' or 'Name' in case these search parameters are used.
+	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
+	## Save all data from database in $result.
+	*/
+	$query="SELECT * FROM protocol,patient WHERE patient.patient_ID=protocol.patient_ID and VisitDate like '%$today%' $searchpara AND onlylab=0 AND protocol.protocol_ID NOT IN (SELECT protocol_ID FROM complaints) AND completed like '0'  ORDER BY VisitDate ASC";
+	$result = mysqli_query($link,$query);
+
+	/*
+	## If search result is empty and no patient found, print button 'search patient' in browser.
+	## After click on this button the user is forwarded to OPD Search.
+	*/
+	If (mysqli_num_rows($result) == 0){
+		echo'
+			<a href="search_patient.php"><div class ="box">search patient</div></a>
+		';
+	}
+	
+	/*
+	## If search result is not empty and patients are found,
+	## Print a table with all found patients.
+	## At this, checkboxes for coughing, vomitting, fever and diarrhoea can be selected and a text can be entered for others can be entered.
+	*/
+	else{
+		Patient::currenttablehead();  
+		echo"
+			<th>
+				Coughing
+			</th>
+			<th>
+				Vomitting
+			</th>
+			<th>
+				Fever
+			</th>
+			<th>
+				Diarrhoea
+			</th>
+			<th>
+				Others
+			</th>
+			<th style=border-left:none>
+			</th>
+			</tr>  
+		";
+		
+		
+		while($row = mysqli_fetch_object($result)){
+			$protocol_ID=$row->protocol_ID;
+			$protocol= new Protocol($protocol_ID);
+			$patient_ID=$row->patient_ID;
+			$patient = new Patient($patient_ID);
+
+			$age=$patient->getAge(strtotime($protocol->getVisitDate()),'calculate');
+
+			$patient->currenttablerow($protocol_ID);
+			
+			echo"
+				<form action='complaints.php' method='post'>
+					<td>
+						<input type='checkbox' name='coughing' value='1'>			
+					</td>
+					<td>
+						<input type='checkbox' name='vomitting' value='1'>
+					</td>
+					<td>
+						<input type='checkbox' name='fever' value='1'>
+					</td>
+					<td>
+						<input type='checkbox' name='diarrhoea' value='1'>
+					</td>
+					<td>
+						<textarea name='others' length='1000' style=width:90px;height:25px></textarea>
+					<td>
+						<input type='hidden' name='protocol_ID' value='".$row->protocol_ID."'>
+						<input type='submit' name='submit' value='submit'>
+					</td>
+				</form>
+				</tr>
+			";
+		}
+		Patient::tablebottom();
+	}
+
+	## contains HTML/CSS structure, which styles the graphical user interface in the browser
+	include("HTMLParts/HTML_BOTTOM.php");		
+?>

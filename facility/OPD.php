@@ -17,6 +17,9 @@
 
 			<a href="vital_signs.php"><div class ="tile">Vitals<br>
 			<i class="fas fa-thermometer-half fa-3x"></i></div></a>
+
+			<a href="complaints.php"><div class ="tile">Complaints<br>
+			<i class="fas fa-frown fa-3x"></i></div></a>
 			
 			</div>
 			';

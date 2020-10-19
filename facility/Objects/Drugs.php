@@ -63,6 +63,32 @@
 		public function getUnit_of_Issue(){
 			return $this->Unit_of_Issue;
 		}
+		
+		/*
+		## Setter function.
+		## Updates the name of the drug in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/			
+		public function setDrugname($var){
+			global $link;
+			$query = "UPDATE drugs SET Drugname='$var' WHERE Drug_ID = $this->Drug_ID";
+			mysqli_query($link,$query);
+			return $this->Drugname = $var;
+		}
+
+		/*
+		## Setter function.
+		## Updates the unit of issue of the drug in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/			
+		public function setUnit_of_Issue($var){
+			global $link;
+			$query = "UPDATE drugs SET Unit_of_Issue='$var' WHERE Drug_ID = $this->Drug_ID";
+			mysqli_query($link,$query);
+			return $this->Unit_of_Issue = $var;
+		}
 
 		/*
 		## This function is needed for styling the graphical user interface.

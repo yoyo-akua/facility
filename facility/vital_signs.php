@@ -87,12 +87,15 @@
 		
 		while($row = mysqli_fetch_object($result)){
 			$protocol_ID=$row->protocol_ID;
+			$protocol= new Protocol($protocol_ID);
 			$patient_ID=$row->patient_ID;
 			$patient = new Patient($patient_ID);
-			$patient->currenttablerow($protocol_ID);
-			$BP_last=Vital_Signs::last_BPs($protocol_ID);
-			
 
+			$BP_last=Vital_Signs::last_BPs($protocol_ID);
+			$age=$patient->getAge(strtotime($protocol->getVisitDate()),'calculate');
+
+			$patient->currenttablerow($protocol_ID);
+			
 			echo"
 				<form action='vital_signs.php' method='post'>
 					<td>";
@@ -120,7 +123,12 @@
 						<input type='number' name='temperature' min='30' max='45' step='0.1'>&#176C
 					</td>
 					<td>
-						<input type='number' name='MUAC' min='0' step='0.1'>cm
+						";
+						
+						if($age<6){
+							echo "<input type='number' name='MUAC' min='0' step='0.1'>cm";
+						}
+						echo"
 					<td>
 						<input type='hidden' name='protocol_ID' value='".$row->protocol_ID."'>
 						<input type='submit' name='submit' value='submit'>

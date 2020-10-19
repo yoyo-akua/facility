@@ -79,7 +79,7 @@
 					$allowedpasswords[$department]=$password;
 				}
 			}
-			
+
 			## Call this if-branch only if the correct password for any of the permitted departments has not been saved yet.
 			if(! $passwordset){
 				
@@ -108,7 +108,7 @@
 						Settings::wrongpassword();
 					}
 				}
-				
+
 				## If the user didn't enter a password yet or entered a wrong password, print a password request, using $alloweddepartments.
 				if(empty($_POST['password']) OR ! $passwordset){
 					$text="Please enter the $alloweddepartments password to confirm your access allowance";

@@ -43,6 +43,7 @@
 							<ul>
 								<li><a href="search_patient.php"><i class="fas fa-search menu-left"></i><font class='menu-text'>Search Patients</font></a></li>
 								<li><a href="vital_signs.php"><i class="fas fa-thermometer-half menu-left"></i><font class='menu-text'>Vital Signs</font><!--<span class="badge">5</span>--></a></li>
+								<li><a href="complaints.php"><i class="fas fa-frown menu-left"></i><font class='menu-text'>Complaints</font></a></li>
 							</ul>
 						</li>
 		<?php }

@@ -117,6 +117,55 @@
 				$allset=false;
 			}
 		}
+
+		
+		## This if-branch is opened, if the user uploaded a file to be attached to the report.
+		if(!empty($_FILES["file"]["name"])) {
+			
+			/*
+			## Define variables
+			## 		- $targetDir contains the file upload path
+			##		- $temp is used to buffer the original file name in an array
+			##		- $newfilename uses the patient's name, the filename entered by the user 
+			## 		  and the filetype to create the new name with which it will be saved 
+			##		- $targetFilePath compiles $targetDir and $newfilename to the complete directory for saving
+			##		- $allowTypes defines which file formats are allowed for the uploaded file
+			*/
+			$targetDir = "./uploads/";
+			
+			$temp = explode(".", $_FILES["file"]["name"]);
+			$newfilename = $name. '_'.$_POST['filename'].'.'.end($temp);
+
+			$targetFilePath = $targetDir . $newfilename;
+			
+			$fileType = pathinfo($targetFilePath,PATHINFO_EXTENSION);
+
+			$allowTypes = array('jpg','png','jpeg','pdf');
+
+			## Check, if the uploaded file has an allowed file format.
+			if(in_array($fileType, $allowTypes)){
+				
+				/*
+				## Upload file to server.
+				## Write information about upload to database.
+				*/
+				if(move_uploaded_file($_FILES["file"]["tmp_name"], $targetFilePath)){
+					$message = "The file ".$newfilename. " has been uploaded.";
+
+					$department = Departments::getDepartmentID("Laboratory");
+					Uploads::new_Uploads($protocol_ID,$newfilename,$department);
+				}else{
+					$message = "Sorry, there was an error uploading your file.";
+				}
+			}else{
+				$message = 'Sorry, only JPG, JPEG, PNG & PDF files are allowed to upload.';
+			}
+			## Display status message, containing information whether the file had the wrong format or the upload failed/succeeded.
+			Settings::messagebox($message);
+		}
+
+		
+
 		/*
 		## If the user set the lab tests as completed, indicate that in the protocol.
 		## Also send a message to Consulting that test's have been completed
@@ -199,7 +248,7 @@
 			## Print headline, lab number and the beginning of the form.
 			echo"	<h1>Tests on $name</h1>
 					<h1>lab ID: $lab_number</h1>
-					<form action='lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID' method='post'>
+					<form action='lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID' method='post' enctype='multipart/form-data'>
 					";
 			
 			## The following loop will be run once for each of the parameters of the ordered tests for the patient.
@@ -360,6 +409,8 @@
 				$other_facility=$row->other_facility;
 			}
 
+			
+
 			## Print last checkbox for outsourced tests for the last run of the loop.
 			echo"
 					<br><br>
@@ -367,44 +418,77 @@
 					if($other_facility==1){
 						echo "checked='checked' ";
 					}
-					echo"> <text style='color:grey'>test performed in different lab</text>
-					<br></div></details>
-					<div class='tableright'>
-					";
+					echo'> <text style="color:grey">test performed in different lab</text>
+					<br></div></details>';
+			
+			## Define variable $upload which is used to create the IDs of the elements used for the upload.
+			$upload='lab_upload';
 
-					/*
-					## If the patient has only come for lab, the user can change that here.
-					## If the patient was only coming for lab initially, he did not appear in the other department's patient lists. 
-					## If this checkbox is deselected, he will appear in those lists.
-					*/
-					if($protocol->getOnlylab()==1){
-						echo"<input type='checkbox' name='onlylab' checked='checked'>only coming for lab<br>";
-					}
+			/*
+			## Within a box in the upper right corner display an upload button.
+			## In case the user selects a file for upload call the javascript function upload_name(),
+			## which is used to display an input field for the file name.
+			*/
+			echo'
+					<div class="tableright">
+						
+							<div class="tooltip">
+								<input type="file" id="'.$upload.'" name="file" onChange="upload_name(\''.$upload.'\')">
+								<label for="'.$upload.'">
+									<i class="fas fa-file-upload fa-2x" id="submitlab"></i>
+								</label>
+								<span class="tooltiptext" style="line-height:normal">
+									upload file to<br> 
+									attach to report
+								</span>
+							</div>
+							<br><input type="text" name="filename" id="'.$upload.'_input" style="display:none;" maxlength="100"><font id="'.$upload.'_type"></font>
+							
+						
+					<br>';
 
-					## Print input field for the patient's charges, a checkbox to indicate, if the tests have been completed and the submit button.
-					echo"
-					<input type='checkbox' name='charge_checkbox' ";
-							if($protocol->getCharge()!=='0.00'){
-								echo'checked="checked"';
-							}
-							echo'> charged:
-					<input type="number" name="charge_number" min="0" step="0.01"';
-							if($protocol->getCharge()!=='0.00'){
-								echo'value='.$protocol->getCharge();
-							}
-							echo'> GhC <br>
-					<input type="checkbox" name="labdone"';
-							if($protocol->getLabdone()==1){
-								echo'checked="checked"';
-							}
-							echo'>tests completed?<br>
-					<input type="submit" name="submit" value="submit"></div>
+						/*
+						## If the patient has only come for lab, the user can change that here.
+						## If the patient was only coming for lab initially, he did not appear in the other department's patient lists. 
+						## If this checkbox is deselected, he will appear in those lists.
+						*/
+						if($protocol->getOnlylab()==1){
+							echo"<input type='checkbox' name='onlylab' checked='checked'>only coming for lab<br>";
+						}
+
+						## Print input field for the patient's charges, a checkbox to indicate, if the tests have been completed and the submit button.
+						echo"
+						<input type='checkbox' name='charge_checkbox' ";
+								if($protocol->getCharge()!=='0.00'){
+									echo'checked="checked"';
+								}
+								echo'> charged:
+						<input type="number" name="charge_number" min="0" step="0.01"';
+								if($protocol->getCharge()!=='0.00'){
+									echo'value='.$protocol->getCharge();
+								}
+								echo'> GhC <br>
+						<input type="checkbox" name="labdone"';
+								if($protocol->getLabdone()==1){
+									echo'checked="checked"';
+								}
+								echo'>tests completed?
+										
+						<br>
+								
+								<div class="tooltip">
+									<button type="submit" name="submit" value="submit"><i id="submitlab" class="far fa-check-circle fa-4x"></i></button>
+									<span class="tooltiptext">
+										submit
+									</span>
+								</div>
+					</div>
 				</form>
 				';
 		}
 	}
 
-	## This function is creating the pdf file, using the data stored in $html as content.
+	## Contains client-side operations based on javascript.
 	include("HTMLParts/HTML_BOTTOM.php");
 
 ?>
