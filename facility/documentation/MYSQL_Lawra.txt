@@ -545,6 +545,7 @@ CREATE TABLE `facility`.`referral` ( `protocol_ID` INT NOT NULL , `destination` 
 CREATE TABLE `facility`.`lab_list` ( `lab_list_ID` INT NOT NULL AUTO_INCREMENT , `protocol_ID` INT NOT NULL , `lab_done` INT NOT NULL , `lab_number` INT NOT NULL , PRIMARY KEY (`lab_list_ID`)) ENGINE = InnoDB; 
 ALTER TABLE `lab_list` CHANGE `lab_done` `lab_done` TINYINT(1) NOT NULL, CHANGE `lab_number` `lab_number` VARCHAR(20) NOT NULL; 
 ALTER TABLE `lab` ADD `lab_list_ID` INT NOT NULL AFTER `lab_ID`; 
+ALTER TABLE lab_list ADD visit_ID INT NOT NULL AFTER lab_number;
 
 
 new.php

@@ -202,7 +202,7 @@
 		## Print links to reset the results, add further tests or go back to the list of patients in lab.
 		echo"
 				<a href='lab.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&reset=on'><div class='box'>edit this patient's test results</div></a>
-				<a href='order_tests.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID'><div class='box'>add tests</div></a>
+				<a href='order_tests.php?visit_ID=$visit_ID&patient_ID=$patient_ID'><div class='box'>add tests</div></a>
 				<a href='lab_patients.php'><div class='box'>back to all lab patients</div></a>
 				";
 	}
