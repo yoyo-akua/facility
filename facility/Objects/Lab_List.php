@@ -4,21 +4,23 @@
 		private $lab_list_ID;				## Database ID of this lab list entry. 
 		private $lab_done;					  ## Defines, whether the lab tests have been completed for the particular visit.
 		private $lab_number;			   ## Defines patient's lab number which is used by user to label samples (not the identifier in database).
+		private $visit_ID;				## Database ID of the patient's visit (to the facility, not lab).
 
 		/*
 		## This function is called, if a new lab list object is needed for further actions.
 		## Saves the information of that lab list from database (identified by lab list ID) in that new lab list object.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public function Lab_List($lab_list_ID){
+		public function Lab_List($visit_ID){
 			global $link;
-			$query = "SELECT * FROM lab_list WHERE lab_list_ID = $lab_list_ID";
+			$query = "SELECT * FROM lab_list WHERE visit_ID = $visit_ID";
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
 				$this->lab_done = $row->lab_done;
 				$this->lab_number = $row->lab_number;
+				$this->lab_list_ID = $row->lab_list_ID;
 			}
-			$this->lab_list_ID = $lab_list_ID;
+			$this->visit_ID = $visit_ID;
 		}
 
 		/*
@@ -28,9 +30,9 @@
 		## Save this data also in a new created lab list object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_Lab_List($lab_number){
+		public static function new_Lab_List($lab_number,$visit_ID){
 			global $link;
-			$query = "INSERT INTO `lab_list`(`lab_number`) VALUES ('$lab_number')";
+			$query = "INSERT INTO `lab_list`(`lab_number`,`visit_ID`) VALUES ('$lab_number','$visit_ID')";
 			mysqli_query($link,$query);
 
 			$lab_list_ID = mysqli_insert_id($link);

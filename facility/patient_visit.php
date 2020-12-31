@@ -835,7 +835,7 @@
 		
 		if(empty($_GET['show'])){
 			echo"
-					<a href=\"order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID\"><div class =\"box\">add tests</div></a>
+					<a href=\"order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID\"><div class =\"box\">add tests</div></a>
 					<a href=\"lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&reset=on\"><div class =\"box\">reset test results</div></a>
 					";
 		}
@@ -918,7 +918,7 @@
 		## In this case link to order tests is printed.
 		*/
 		if(! $lab_number AND in_array('Laboratory',$DEPARTMENTS)){
-			echo "<a href='order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>order tests</div></a>";
+			echo "<a href='order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>order tests</div></a>";
 		}
 		
 		## If there hasn't been performed any surgery/procedure, print a link to do so.

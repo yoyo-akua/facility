@@ -114,13 +114,14 @@
 			if(! empty($_GET['CCC']) OR ! empty($_GET['Expired'])){
 				$insurance=Insurance::new_Insurance($visit_ID,$CCC,$exp);
 			}
-		}
+		
 			
-		if(! empty($_GET['onlylab'])){
-			$visit->setOnlylab(1);
-			echo '<script>window.location.href=("order_tests.php?patient_ID='.$patient_ID.'&protocol_ID='.$protocol->getProtocol_ID().'")</script>';
-		}else{
-			echo '<script>window.location.href=("search_patient.php")</script>';
+			if(! empty($_GET['onlylab'])){
+				$visit->setOnlylab(1);
+				echo '<script>window.location.href=("order_tests.php?patient_ID='.$patient_ID.'&visit_ID='.$visit_ID.'")</script>';
+			}else{
+				echo '<script>window.location.href=("search_patient.php")</script>';
+			}
 		}
 	}
 	

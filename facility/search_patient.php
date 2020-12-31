@@ -93,10 +93,11 @@
 				}
 			}
 			$visit=Visit::new_Visit($patient_ID,$new_p);
-			$protocol = Protocol::new_Protocol($visit->getVisit_ID(),'admission');
+			$visit_ID=$visit->getVisit_ID();
+			$protocol = Protocol::new_Protocol($visit_ID,'admission');
 			if(! empty($_POST['onlylab'])){
 				$visit->setOnlylab(1);
-				echo "<script>window.location.href=('order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol->getProtocol_ID()')</script>";
+				echo "<script>window.location.href=('order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID')</script>";
 			}
 		}
 	}

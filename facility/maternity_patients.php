@@ -106,7 +106,7 @@
 						<a href=\"patient_visit.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Diagnosis</a>
 					</td>
 					<td>
-						<a href=\"order_tests.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Laboratory</a>
+						<a href=\"order_tests.php?patient_ID=$row->patient_ID&visit_ID=$row->visit_ID\">Laboratory</a>
 					</td>
 				";
 				if(empty($row->ANC_ID)){
