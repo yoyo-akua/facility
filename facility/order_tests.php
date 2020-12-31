@@ -86,18 +86,15 @@
 						Settings::set_new_number('Laboratory',$lab_number,'');
 						$protocol=Protocol::new_Protocol($visit_ID,'Tests ordered');
 						$protocol_ID=$protocol->getProtocol_ID();
-						$lab_list=Lab_List::new_Lab_List($lab_number);
+						$lab_list=Lab_List::new_Lab_List($lab_number,$visit_ID);
 						$lab_list_ID=$lab_list->getLab_List_ID();
 					}else if(! isset($protocol_ID)){
 						$protocol=Protocol::new_Protocol($visit_ID,'Tests added');
 						$protocol_ID=$protocol->getProtocol_ID();
 						
-						$query="SELECT lab_list_ID FROM lab,protocol WHERE visit_ID=$visit_ID AND protocol.protocol_ID=lab.protocol_ID";
-						$result2=mysqli_query($link,$query);
-						$object=mysqli_fetch_object($result2);
-						$lab_list_ID=$object->lab_list_ID;
+						$lab_list=new Lab_List($visit_ID);
+						$lab_list_ID=$lab_list->getLab_List_ID();
 					}
-					
 					Lab::new_Lab($protocol_ID,$parameter_ID,$lab_list_ID);
 
 					## Set $ordered true in case any tests have been ordered for the patient.
@@ -189,7 +186,7 @@
 			}
 			Push::new_Notification($title,$text,date("Y-m-d H:i:s",time()),"Laboratory");
 		}
-		
+		/*
 		## Automatically lead to lab list, if the patient is a self-paying lab client, otherwise lead to current patient list.
 		if($visit->getOnlylab()==1){
 			echo'<script type="text/JavaScript">;
@@ -200,7 +197,7 @@
 						window.location.href="current_patients.php";
 					</script>';
 		}
-		
+		*/
 	}
 	
 	## This if-branch is called, when the user is calling the page, before clicking submit.

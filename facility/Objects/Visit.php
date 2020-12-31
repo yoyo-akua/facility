@@ -201,7 +201,7 @@
 		*/
 		public function getLab_number(){
 			global $link;
-			$query= "SELECT * FROM protocol,lab_list,lab WHERE protocol.visit_ID=$this->visit_ID AND lab.lab_list_ID=lab_list.lab_list_ID AND protocol.protocol_ID=lab.protocol_ID";
+			$query= "SELECT * FROM lab_list WHERE visit_ID=$this->visit_ID";
 			$result=mysqli_query($link,$query);
 			if(mysqli_num_rows($result)!==0){
 				$result=mysqli_query($link,$query);

@@ -478,7 +478,7 @@
 		
 		## Print links to pregnancy overview, for ordering tests, diagnosing, prescribing drugs and back to the list of potential maternity clients.
 		echo"<a href=\"complete_pregnancy.php?maternity_ID=$maternity_ID\"><div class ='box'>pregnancy overview</div></a>
-			<a href='order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class='box'>request tests</div></a>
+			<a href='order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class='box'>request tests</div></a>
 			<a href='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class='box'>diagnose</div></a>
 			<a href='prescribe_drugs.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class='box'>prescribe drugs</div></a>
 			<a href='maternity_patients.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class='box'>back to maternity clients</div></a>";
