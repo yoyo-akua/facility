@@ -69,9 +69,9 @@
 		## Check, if the patient has been referred for lab investigations.
 		## If so, print the test results.
 		*/
-		if(! empty($protocol->getLab_number())){
+		if(! empty($visit->getLab_number())){
 			echo"<br><h4><u>Test results</u></h4><br>".
-					Lab::display_results($protocol_ID,'tooltips on');
+					Lab::display_results($visit->getLab_number(),'tooltips on');
 		}
 		
 		## Print link to results of that day's visit.
@@ -96,8 +96,12 @@
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
 
+		## Initialising object of visit by visit ID.		
+		$visit_ID=$protocol->getVisit_ID();
+		$visit=new Visit($visit_ID);
+
 		## Initialising variable with date of delivery.
-		$date=date("d/m/y",(strtotime($protocol->getVisitDate())));
+		$date=date("d/m/y",(strtotime($visit->getCheckin_time())));
 		
 		## Print the delivery's records and a link to results of that day's visit.
 		echo"<h2>$date - Delivery</h2>".

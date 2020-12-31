@@ -29,7 +29,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,disp_drugs WHERE patient.patient_ID=protocol.patient_ID and disp_drugs.protocol_ID=protocol.protocol_ID AND onlylab=0 and completed like 0 AND VisitDate>(DATE_SUB('$today',INTERVAL 14 DAY)) $searchpara GROUP BY protocol.protocol_ID";
+	$query="SELECT * FROM protocol,patient,disp_drugs,visit WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID and disp_drugs.protocol_ID=protocol.protocol_ID AND onlylab=0 and checkout_time like '0000-00-00 00:00:00' AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) $searchpara GROUP BY protocol.protocol_ID";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -79,16 +79,17 @@
 		## This loop will be run once for each of the output patients from the database query.
 		while($row = mysqli_fetch_object($result)){
 			
-			## Initialise objects of patient and protocol by their IDs.
+			## Initialise objects of patient, visit and protocol by their IDs.
 			$patient = new Patient($row->patient_ID);
 			$protocol=new Protocol($row->protocol_ID);
+			$visit=new Visit($row->visit_ID);
 			
 			## Print the patient's data in the table and in the last column a link for entering their test results.
 			echo"
 					<tr>
 						<td style=border-left:none>
 							";
-							$visitdate=date("d/m/y",strtotime($protocol->getVisitDate()));
+							$visitdate=date("d/m/y",strtotime($visit->getCheckin_time()));
 							if($visitdate!==$previous){
 								echo $visitdate;
 								$previous=$visitdate;

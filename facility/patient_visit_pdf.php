@@ -11,9 +11,13 @@ i<?php
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol= new Protocol($protocol_ID);
 
+	## Initialise new object of visit by a certain visit ID, with which the page is called
+	$visit_ID=$protocol->getVisit_ID();
+	$visit= new Visit($visit_ID);
 
-	## This if-branch is called, if a patient's diagnosis is protected ($protocol->getprotect()==1) and the password hasn't been saved before.
-	if(!(isset($_SESSION['password_Consulting'])) AND $protocol->getprotect()==1){
+
+	## This if-branch is called, if a patient's diagnosis is protected ($visit->getprotect()==1) and the password hasn't been saved before.
+	if(!(isset($_SESSION['password_Consulting'])) AND $visit->getProtect()==1){
 		$consultingpassword=Settings::passwordrequest('Consulting');
 
 		/*
@@ -49,7 +53,7 @@ i<?php
 	$style='th{font-weight:bold}';
 
 	## Initialising variables of patient's name and date of visit.
-	$VisitDate=date("d/m/y",strtotime($protocol->getVisitDate()));
+	$VisitDate=date("d/m/y",strtotime($visit->getCheckin_time()));
 	$name = $patient->getName();
 
 	/*
@@ -61,7 +65,7 @@ i<?php
 							<h1>$name</h1><br>
 							<b>Visit Date:</b> $VisitDate<br>
 							<br>
-							".$patient->display_general(strtotime($protocol->getVisitDate()));
+							".$patient->display_general(strtotime($visit->getCheckin_time()));
 	
 	/*
 	## The function Settings::pdf_header() is used to create the letter head of the pdf file, which includes the facility's data and the logo.
@@ -73,14 +77,15 @@ i<?php
 				(new Vital_Signs($protocol_ID))->display_admission_data();
 
 	## Check if patient is pregnant, if so, add that information to $html.
-	if($protocol->getpregnant()==1){
+	if($visit->getPregnant()==1){
 		$html.="<br>Patient is <b>pregnant</b><br>";
 	}
 
+
 	## Check if patient was referred, if so, add that information to $html.
-	if(! empty($protocol->getreferral())){
-		$referral=$protocol->getreferral();
-		$html.="<br>Patient has been <b>referred</b> to <b>$referral</b><br>";
+	if(Referral::checkReferral($visit_ID)){
+		$referral=new Referral(Referral::checkReferral($visit_ID));
+		$html.="<br>Patient has been <b>referred</b> to <b>".$referral->getDestination()."</b> because of ".$referral->getReason()."<br>";
 	}
 	/*
 	## Check if any complaints for the patient have been stated on that visit.
@@ -93,10 +98,12 @@ i<?php
 
 	## Check if patient was diagnosed, if so add the attending medical officer and the list of primary and secondary diagnoses to $html.
 	if(! empty(Diagnosis_IDs::getDiagnosis_IDs($protocol_ID))){
+		$staff=new Staff($protocol->getStaff_ID());
+		$staff_name=$staff->getName();
 		$html.='
-					<h2>Diagnoses</h2>
-					<b>Attendant:</b> '.$protocol->getattendant().'<br>
-					'.$protocol->display_diagnoses('both');	
+				<h2>Diagnoses</h2>
+				<b>Attendant:</b> '.$staff_name.'<br>
+				'.$protocol->display_diagnoses('both');	
 	}
 
 	## Initialising variable $ANC_ID, which indicates, if the client has come for ANC, for delivery or neither of them.
@@ -137,7 +144,8 @@ i<?php
 	}
 
 	## Check, if the patient has been referred for lab investigations, if so if-branch is opened.
-	if(! empty($protocol->getLab_number())){
+	if($visit->getLab_number()){
+		
 		## Add the table head for the following table to $html.
 		$html.="<h2>Lab Tests</h2>".Lab::result_tablehead();
 		$last_test='';

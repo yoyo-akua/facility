@@ -9,6 +9,10 @@
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol=new Protocol($protocol_ID);
 
+	## Initialise new object of visit by a certain visit ID, with which the page is called.
+	$visit_ID=$protocol->getVisit_ID();
+	$visit=new Visit($visit_ID);
+
 	## Initialise new object of client by a certain client ID, with which the page is called.
 	$patient_ID=$_GET['patient_ID'];
 	$patient=new Patient($patient_ID);
@@ -52,7 +56,7 @@
 			}else if (! empty($_GET['pregnancy_week'])){
 				$pregnancy_week=$_GET['pregnancy_week'];
 				$days=7*3600*24*$pregnancy_week;
-				$conception_date=date("Y-m-d",(strtotime($protocol->getVisitDate())-$days));
+				$conception_date=date("Y-m-d",(strtotime($visit->getCheckin_time())-$days));
 			}
 			
 			## If the user is just editing (not creating) the pregnancy data, set the pregnancy entry's data in the database like the ones the user entered.
@@ -110,7 +114,7 @@
 						<div><label>Name:</label><br>
 						$name</div>".
 						
-						$patient->display_general(strtotime($protocol->getVisitDate()))."
+						$patient->display_general(strtotime($visit->getCheckin_time()))."
 
 						<div><label>Serial Number:</label><br>
 						<input type='text' name='serial_number' ";
@@ -228,7 +232,10 @@
 				$result=mysqli_query($link,$query);
 				$object=mysqli_fetch_object($result);
 				Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$object->Diagnosis_ID,1);
-				$protocol->setAttendant('Midwife');
+				if(! empty($_SESSION['staff_ID'])){
+					## Set the client's attendant.
+					$protocol->setStaff_ID($_SESSION['staff_ID']);
+				}
 			}
 			
 			
@@ -240,7 +247,7 @@
 			}
 			
 			$protocol->setANC_ID($ANC->getANC_ID());
-			$protocol->setpregnant(1);
+			$visit->setPregnant(1);
 
 			## Save status about receipt of ITN (inisecticide treated net) to database.
 			if(! empty($_GET['ITN'])){
@@ -259,7 +266,7 @@
 				if(! empty($_GET['pregnancydays'])){
 					$days+=3600*24*($_GET['pregnancydays']);
 				}
-				$conception_date=date("Y-m-d",(strtotime($protocol->getVisitDate())-$days));
+				$conception_date=date("Y-m-d",(strtotime($visit->getCheckin_time())-$days));
 				
 				/*
 				## $conception_date can be calculated from the EDD (estimated delivery date) or the gestational age.
@@ -287,7 +294,7 @@
 			## The user is forwarded to the list of all potential maternity clients.
 			*/
 			if(! empty($_GET['completed'])){
-				$protocol->setcompleted(1);
+				$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 				echo '<script>window.location.href=("maternity_patients.php")</script>';
 			}
 			
@@ -376,7 +383,7 @@
 			$currenttemperature=$vital_signs->gettemperature();
 
 			## Calculate the gestational age and save it in $weeks and $anddays.
-			$days=(strtotime($protocol->getVisitDate())-(strtotime($maternity->getconception_date())))/(24*3600);
+			$days=(strtotime($visit->getCheckin_time())-(strtotime($maternity->getconception_date())))/(24*3600);
 			$weeks=floor($days/7);
 			$anddays=floor($days-($weeks*7));
 			

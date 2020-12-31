@@ -46,7 +46,7 @@
 	if(! empty($from OR $to)){
 
 		## Using the variables $from and $to the time frame of the search is added to search parameters the current search is based on.
-		$searchpara.=" AND VisitDate BETWEEN '$from' AND '$to 23:59:59'";	
+		$searchpara.=" AND checkin_time BETWEEN '$from' AND '$to 23:59:59'";	
 		
 		## Variables are initialised to transfer dates into british time format.
 		$fromdisplay=date("d/m/y",strtotime($from));
@@ -147,7 +147,7 @@
 	if(! empty($_POST['Agefilter'])){
 		$varfrom = $_POST['agefrom'];
 		$varto = $_POST['ageto'];
-		$searchpara .= " AND patient.Birthdate BETWEEN (ADDDATE(protocol.VisitDate,INTERVAL - $varto YEAR)) AND (ADDDATE(protocol.VisitDate,INTERVAL - $varfrom YEAR))";
+		$searchpara .= " AND patient.Birthdate BETWEEN (ADDDATE(visit.checkin_time,INTERVAL - $varto YEAR)) AND (ADDDATE(visit.checkin_time,INTERVAL - $varfrom YEAR))";
 		$parameter.="- are between $varfrom and $varto years old<br>";
 	}
 
@@ -169,11 +169,13 @@
 	*/
 	if(! empty($_POST['Insurancefilter'])){
 		$Insurance = $_POST['Insurance'];
+		$tables.=',insurance';
+		$IDs.=' AND visit.visit_ID=insurance.visit_ID';
 		If($Insurance== "yes"){
-			$searchpara .= " AND NHIS IS NOT NULL and Expired=0";
+			$searchpara .= " AND NHIS IS NOT NULL and expired=0";
 			$parameter.="- are insured<br>";
 		}else{
-			$searchpara .= " AND (NHIS IS NULL OR Expired=1)";
+			$searchpara .= " AND (NHIS IS NULL OR expired=1)";
 			$parameter.="- are not insured<br>";
 		}
 	}
@@ -307,7 +309,7 @@
 	## buffered in $parameter to display the user all chosen search parameters later.
 	*/	
 	if(! empty($_POST['nolab'])){
-		$searchpara.=" AND lab_number=''";
+		$searchpara.=" AND protocol.protocol_ID NOT IN (SELECT protocol_ID FROM lab_list)";
 		$parameter.="- were not tested in lab<br>";
 	}
 
@@ -335,7 +337,9 @@
 	*/		
 	if(! empty($_POST['Lab_IDfilter']) AND !empty($_POST['Lab_ID'])){
 		$var=$_POST['Lab_ID'];
-		$searchpara .= " AND protocol.lab_number like '$var'";
+		$tables.=",lab_list";
+		$IDs.=" AND lab_list.protocol_ID=protocol.protocol_ID";
+		$searchpara .= " AND lab_list.lab_number like '$var'";
 		$parameter.="- have Lab Number $var<br>";	
 	}
 
@@ -759,7 +763,7 @@
 				if(! (empty($_POST['week_filter']) AND empty($_POST['week']))){
 					$week=$_POST['week'];
 					$nextweek=$week+1;
-					$searchpara.=" AND protocol.VisitDate<(ADDDATE(maternity.conception_date,INTERVAL + $nextweek WEEK)) AND protocol.VisitDate>=(ADDDATE(maternity.conception_date,INTERVAL + $week WEEK))";
+					$searchpara.=" AND visit.checkin_time<(ADDDATE(maternity.conception_date,INTERVAL + $nextweek WEEK)) AND visit.checkin_time>=(ADDDATE(maternity.conception_date,INTERVAL + $week WEEK))";
 					$parameter.="- were in $week. week pregnant<br>";
 				}
 
@@ -773,11 +777,11 @@
 					$parameter.="- were in $trimester. trimester of pregnancy<br>";
 
 					if($trimester=='1'){
-						$searchpara.=" AND protocol.VisitDate<(ADDDATE(maternity.conception_date,INTERVAL + 14 WEEK)) AND protocol.VisitDate>=maternity.conception_date";
+						$searchpara.=" AND visit.checkin_time<(ADDDATE(maternity.conception_date,INTERVAL + 14 WEEK)) AND visit.checkin_time>=maternity.conception_date";
 					}else if($trimester=='2'){
-						$searchpara.=" AND protocol.VisitDate<(ADDDATE(maternity.conception_date,INTERVAL + 28 WEEK)) AND protocol.VisitDate>=(ADDDATE(maternity.conception_date,INTERVAL + 14 WEEK))";
+						$searchpara.=" AND visit.checkin_time<(ADDDATE(maternity.conception_date,INTERVAL + 28 WEEK)) AND visit.checkin_time>=(ADDDATE(maternity.conception_date,INTERVAL + 14 WEEK))";
 					}else if($trimester=='3'){
-						$searchpara.=" AND protocol.VisitDate<(ADDDATE(maternity.conception_date,INTERVAL + 45 WEEK)) AND protocol.VisitDate>=(ADDDATE(maternity.conception_date,INTERVAL + 28 WEEK))";
+						$searchpara.=" AND visit.checkin_time<(ADDDATE(maternity.conception_date,INTERVAL + 45 WEEK)) AND visit.checkin_time>=(ADDDATE(maternity.conception_date,INTERVAL + 28 WEEK))";
 					}
 				}
 
@@ -2202,7 +2206,7 @@
 	## Get all patients' and their visits' data on which the search parameters apply.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
-	$query="SELECT * FROM protocol,patient$tables WHERE patient.patient_ID=protocol.patient_ID $IDs $searchpara $grouping $having ORDER BY VisitDate ASC ";
+	$query="SELECT * FROM protocol,patient,visit$tables WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID $IDs $searchpara $grouping $having ORDER BY visit.checkin_time ASC ";
 	$result = mysqli_query($link,$query);
 
 	## This loop will be run once for each of the output patient visits from the search in the database.
@@ -2211,6 +2215,7 @@
 		## Initialise objects of patient and its visit, by using the correspondent IDs.
 		$patient = new Patient($row->patient_ID);
 		$protocol = new Protocol($row->protocol_ID);
+		$visit = new Visit($row->visit_ID);
 		
 		## Print the table row for the patient (visit).
 		$patient->shorttablerow($row->protocol_ID,$previous,$columns);
@@ -2239,11 +2244,11 @@
 		}
 
 		## If the patient was referred to another facility, print a notice at the end of the table row to which facility.
-		if (! empty($protocol->getreferral())){
-			$referral=$protocol->getreferral();
+		if (Referral::checkReferral($row->visit_ID)){
+			$referral=new Referral(Referral::checkReferral($row->visit_ID));
 			echo"
 			<td style=border:none>
-			&#8594;referred to $referral
+			&#8594;referred to ".$referral->getDestination()."
 			</td>";
 		}
 
@@ -2257,7 +2262,7 @@
 		echo"</tr>";
 
 		## Update $previous for the next run of the loop.
-		$previous=date("d/m/y",strtotime($protocol->getVisitDate()));
+		$previous=date("d/m/y",strtotime($visit->getCheckin_time()));
 		
 		## Increase counted patients by one.
 		$count++;

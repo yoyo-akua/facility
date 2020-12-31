@@ -307,12 +307,12 @@
 		public static function last_BPs($protocol_ID){
 			global $link;
 			global $today;
-			$querylast="SELECT * FROM protocol,vital_signs WHERE patient_ID=(SELECT patient_ID FROM protocol WHERE protocol_ID=$protocol_ID) AND vital_signs.protocol_ID=protocol.protocol_ID AND protocol.protocol_ID!=$protocol_ID AND VisitDate<='$today' ORDER BY VisitDate DESC LIMIT 0,5";
+			$querylast="SELECT * FROM protocol,vital_signs,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=(SELECT visit.patient_ID FROM visit,protocol WHERE visit.visit_ID=protocol.protocol_ID AND protocol_ID=$protocol_ID) AND vital_signs.protocol_ID=protocol.protocol_ID AND protocol.protocol_ID!=$protocol_ID AND checkin_time<='$today' ORDER BY checkin_time DESC LIMIT 0,5";
 			$resultlast=mysqli_query($link,$querylast);
 			if(mysqli_num_rows($resultlast)!==0){
 				$BP_last="last visits' BPs <br>";
 				while($row_last=mysqli_fetch_object($resultlast)){
-					$date=date("d/m/y",strtotime($row_last->VisitDate));
+					$date=date("d/m/y",strtotime($row_last->timestamp));
 					$BP_last.=$date.": ".$row_last->BP."<br>";
 				}
 			}else{
@@ -488,10 +488,11 @@
 					$nutrition->setBMI_classification(Nutrition::classify_BMI($protocol_ID,$BMI));
 
 					$protocol=new Protocol($protocol_ID);
+					$visit=new Visit($protocol->getVisit_ID());
 					if(! empty($_GET['completed'])){
-						$protocol->setcompleted(1);
+						$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 					}else{
-						$protocol->setcompleted(0);
+						$visit->setCheckout_time('0000-00-00 00:00:00');
 					}
 				}
 

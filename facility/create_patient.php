@@ -89,7 +89,7 @@
 		if(! empty($_GET['CCC'])){
 			$CCC=$_GET['CCC'];
 		}else{
-			$CCC="0";
+			$CCC="";
 		}
 		
 		## If there was an OPD number entered, update it in the database, so that the next one can be proposed correctly.
@@ -106,11 +106,18 @@
 		$patient_ID=$patient->getPatient_ID();
 		
 		if (empty ($_GET['notpresent'])){
-			$protocol = Protocol::new_Protocol($patient_ID,$new_p,$CCC,$exp);
+			$visit = Visit::new_Visit($patient_ID,$new_p);
+			$visit_ID= $visit->getVisit_ID();
+
+			protocol::new_Protocol($visit_ID,'admission');
+
+			if(! empty($_GET['CCC']) OR ! empty($_GET['Expired'])){
+				$insurance=Insurance::new_Insurance($visit_ID,$CCC,$exp);
+			}
 		}
 			
 		if(! empty($_GET['onlylab'])){
-			$protocol->setOnlylab(1);
+			$visit->setOnlylab(1);
 			echo '<script>window.location.href=("order_tests.php?patient_ID='.$patient_ID.'&protocol_ID='.$protocol->getProtocol_ID().'")</script>';
 		}else{
 			echo '<script>window.location.href=("search_patient.php")</script>';

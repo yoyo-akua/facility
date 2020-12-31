@@ -4,12 +4,14 @@
 		## Each lab object represents a parameter's result of a certain test and is saved in Laboratory register entry. 
 		## In the following all its parameters are described.
 		*/
-		private $lab_ID;		## ID of Laboratory register entry.
-		private $protocol_ID;		## ID of corresponding patient's visit.
+		private $lab_ID;			## ID of Laboratory register entry.
+		private $protocol_ID;		## ID of corresponding protocol entry.
 		private $parameter_ID;		## ID of the result's corresponding parameter. 
 		private $test_results;		## Contains the parameter's result.
 		private $other_facility;	## Status, whether the parameter/the corresponding test has to be tested in another facility's Laboratory. 
-		
+		private $lab_list_ID;		## ID of the lab list entry containing also the lab number.
+
+
 		/*
 		## This function is called, if a new Laboratory register entry object is needed for futher actions.
 		## Saves the information of that store register entry from database (identified by Laboratory register entry ID) in
@@ -21,10 +23,11 @@
 			$query = "SELECT * FROM lab WHERE lab_ID = $lab_ID";
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
-			    $this->protocol_ID = $row->protocol_ID;
+			   		$this->protocol_ID = $row->protocol_ID;
 					$this->parameter_ID = $row->parameter_ID;
 					$this->test_results = $row->test_results;
 					$this->other_facility = $row->other_facility;
+					$this->lab_list_ID = $row->lab_list_ID;
 			}
 			$this->lab_ID = $lab_ID;
 		}
@@ -36,9 +39,9 @@
 		## Save this data also in a new created Laboratory register entry object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_Lab($protocol_ID,$parameter_ID){
+		public static function new_Lab($protocol_ID,$parameter_ID,$lab_list_ID){
 			global $link;
-			$query = "INSERT INTO `lab`(`protocol_ID`,`parameter_ID`) VALUES ('$protocol_ID','$parameter_ID')";
+			$query = "INSERT INTO `lab`(`protocol_ID`,`parameter_ID`,`lab_list_ID`) VALUES ('$protocol_ID','$parameter_ID','$lab_list_ID')";
 			mysqli_query($link,$query);
 			
 			$lab_ID = mysqli_insert_id($link);
@@ -99,14 +102,14 @@
 		## This tooltip displays the value (range) a parameter would have, if the corresponding patient is healthy.
 		## This function returns the HTML buffer $html.
 		*/
-		public function display_results($protocol_ID,$tooltips){
+		public function display_results($lab_number,$tooltips){
 
 			/*
 			## Get data from database.
 			## Get all ordered tests and their parameter, which were performed on a certain patient's visit.
 			*/
 			global $link;
-			$query="SELECT * FROM lab WHERE protocol_ID=$protocol_ID";
+			$query="SELECT * FROM lab,lab_list WHERE lab_list.lab_list_ID=lab.lab_list_ID AND lab_number='$lab_number'";
 			$result=mysqli_query($link,$query);
 			
 			/*

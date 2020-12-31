@@ -31,7 +31,7 @@
 		## $new_p describes whether the patient has already come to the facility within this year.
 		*/
 		$patient_ID=$_POST['ID'];
-		$query="SELECT * FROM protocol WHERE patient_ID='$patient_ID' ORDER BY VisitDate DESC LIMIT 1";
+		$query="SELECT * FROM visit WHERE patient_ID='$patient_ID' ORDER BY checkin_time DESC LIMIT 1";
 		$result=mysqli_query($link,$query);
 		$treatmentStarted=false;
 		$new_p=1;
@@ -45,13 +45,15 @@
 		*/
 		$object=mysqli_fetch_object($result);
 		if(! empty($object)){
-			$VisitDate=date("Y-m-d",strtotime($object->VisitDate));
-			$protocol_ID=$object->protocol_ID;
+			$visit_ID=$object->visit_ID;
+			$visit=new Visit($visit_ID);
+			$VisitDate=date("Y-m-d",strtotime($visit->getCheckin_time()));
+			
 			if ($VisitDate==$today){
 				$message="This patient has already been entered today. You can continue the treatment in Consulting";
 				Settings::messagebox($message);
-				$protocol=new Protocol($protocol_ID);
-				$protocol->setcompleted(0);
+				
+				$visit->setCheckout_time('0000-00-00 00:00:00');
 				$treatmentStarted=true;
 			}
 			if(strstr($VisitDate,date("Y",time()))){
@@ -76,7 +78,7 @@
 			if(! empty($_POST['CCC'])){
 				$CCC=$_POST['CCC'];
 			}else{
-				$CCC=0;
+				$CCC='';
 			}
 			if(! empty($_POST['Expired'])){
 				$Expired=1;
@@ -90,9 +92,10 @@
 					$new_p=0;
 				}
 			}
-			$protocol = Protocol::new_Protocol($patient_ID,$new_p,$CCC,$Expired);
+			$visit=Visit::new_Visit($patient_ID,$new_p);
+			$protocol = Protocol::new_Protocol($visit->getVisit_ID(),'admission');
 			if(! empty($_POST['onlylab'])){
-				$protocol->setOnlylab(1);
+				$visit->setOnlylab(1);
 				echo "<script>window.location.href=('order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol->getProtocol_ID()')</script>";
 			}
 		}

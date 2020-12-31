@@ -11,6 +11,12 @@
 
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol = new Protocol ($protocol_ID);
+
+	$visit_ID=$protocol->getVisit_ID();
+	$visit=new Visit($visit_ID);
+
+	$insurance=new Insurance($visit_ID);
+
 	$vital_signs=new Vital_Signs($protocol_ID);
 	## This if-branch is called if the user made some changes in the patient's data and clicked "submit".
 	if(! empty($_POST['submit'])){
@@ -19,28 +25,69 @@
 		## This function saves all general patient data (like name, sex, birthdate, NHIS and OPD).
 		## The timestamp of the visit date is sent with the function to calculate the age of the patient and if it is too old to use its mother's NHIS.
 		*/
-		$patient->setOPD_data(strtotime($protocol->getVisitDate()));
+		$patient->setOPD_data(strtotime($visit->getCheckin_time()));
 		
 		## This function saves the patient's vital signs.
 		(new Vital_Signs($protocol_ID))->setVital_signs('post');
 		
 		## Save in the database, if "Expired?" is selected or not.
 		if(! empty($_POST['Expired'])){
-			$protocol->setExpired(1);
+			$insurance->setExpired(1);
 		}else{
-			$protocol->setExpired(0);
+			$insurance->setExpired(0);
 		}
 		
 		## Update the CCC in the database, using the entry in the page.
 		if(! empty($_POST['CCC'])){
-			$protocol->setCCC($_POST['CCC']);
+			$insurance->setCCC($_POST['CCC']);
 		}else{
-			$protocol->setCCC('');
+			$insurance->setCCC('');
 		}
 		
-		## If the date of visit has been changed, save it in the database.
-		if(! empty($_POST['VisitDate']) AND($_POST['VisitDate']!==date("Y-m-d",strtotime($protocol->getVisitDate())))){
-				$protocol->setVisitDate($_POST['VisitDate']);
+		## If the date and time of visit have been changed, call this if-branch.
+		if($_POST['VisitDate'].' '.$_POST['VisitTime']!==date("Y-m-d H:i",strtotime($visit->getCheckin_time()))){
+			
+			## Initialise variable $checkin with the original checkin time of the visit transformed into a timestamp.
+			$checkin=strtotime($visit->getCheckin_time());
+			
+			## In case the patient already checked out, update his checkout time.
+			if($visit->getCheckout_time()!=='0000-00-00 00:00:00'){
+
+				## Initialise variable $checkin with the original checkin time of the visit transformed into a timestamp.
+				$checkout=strtotime($visit->getCheckout_time());
+				
+				## Use the difference between $checkin and $checkout to inquire the duration of the visit and save it in $duration.
+				$duration=$checkout-$checkin;
+
+				## Update the time of checkout in the database, using the new checkin time and the duration of the stay.
+				$visit->setCheckout_time(date('Y-m-d H:i:s',($new_checkin+$duration)));
+			}
+
+			## Inquire the new time of checkin the user entered in the form. 
+			$new_checkin=strtotime($_POST['VisitDate'].' '.$_POST['VisitTime']);
+			
+			## Call the function Protocol::getAllByVisit_ID to get all protocol entries linked to this visit. 
+			$result=Protocol::getAllByVisit_ID($visit->getVisit_ID());
+
+			## Call this loop once for each protocol entry linked to the visit. 
+			while($row=mysqli_fetch_object($result)){
+
+				## Initialise new object of protocol. 
+				$protocol=new Protocol($row->protocol_ID);
+
+				## Save the timestamp of the protocol entry the variable $old_time. 
+				$old_time=strtotime($protocol->getTimestamp());
+
+				## Use the difference between $checkin and $old_time to inquire how long after the arrival the protocol entry was made.
+				$duration=$checkin-$old_time;
+
+				## Use $new_checkin and $duration to inquire the new time of the protocol entry and write it to the database.
+				$new_time=date('Y-m-d H:i:s',$new_checkin+$duration);
+				$protocol->setTimestamp($new_time);
+			}
+
+			## Write the new checkin time to the database.
+			$visit->setCheckin_time($_POST['VisitDate'].' '.$_POST['VisitTime']);
 		}
 		
 		/*
@@ -48,9 +95,9 @@
 		## After that, the collection of data should be sufficienty complete to calculate that reliably from the previous database entries.
 		*/
 		if(strstr($today,$YEAR) AND ! empty($_POST['new'])){
-			$protocol->setNew_p(1);
+			$visit->setNew_p(1);
 		}else{
-			$protocol->setNew_p(0);
+			$visit->setNew_p(0);
 		}
 
 		## Show notification that changes have been saved and lead back to protocol.
@@ -162,7 +209,7 @@
 					}
 					echo'
 					<th>
-						Visit Date
+						Date & Time of Arrival
 					</th>
 					<th>
 						CC Code
@@ -176,7 +223,7 @@
 						echo'
 							<td>
 								<input type="checkbox" name="new"';
-								if($protocol->getnew_p()==1){
+								if($visit->getNew_p()==1){
 									echo "checked='checkd'";
 								}
 								echo'>
@@ -185,18 +232,19 @@
 					}
 					echo'
 					<td>
-						<input type="date" name="VisitDate" value="'.date("Y-m-d",strtotime($protocol->getVisitDate())).'">
+						<input type="date" name="VisitDate" value="'.date("Y-m-d",strtotime($visit->getCheckin_time())).'" required>
+						<input type="time" name="VisitTime" value="'.date("H:i",strtotime($visit->getCheckin_time())).'" required>
 					</td>
 					<td>
 						<input class="smalltext" type="text" pattern="[0-9]{5}" name="CCC"';
-						if($protocol->getCCC()!=0){
-							echo 'value="'.$protocol->getCCC().'"';
+						if($insurance->getCCC()!=0){
+							echo 'value="'.$insurance->getCCC().'"';
 						}
 						echo'>
 					</td>
 					<td>
 						<input type="checkbox" name="Expired"';
-						if($protocol->getExpired()=='1'){
+						if($insurance->getExpired()=='1'){
 							echo 'checked';
 						}
 						echo '>		

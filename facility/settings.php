@@ -748,7 +748,43 @@
 								</details>
 								";
 					}
-				}else if($department=='Administration'){
+				}
+				## Call this if-branch only for the department Administration.
+				else if($department=='Administration'){
+
+					## Call this if-branch in case the user is adding a new member of staff.
+					if (! empty($_POST['staff_name'])){
+
+						## Initialise a variable with the name of the new staff member.
+						$name=$_POST['staff_name'];
+
+						/*
+						## Check if there already is a staff member by the name the user entered. 
+						## If so, warn the user and stop database entry.
+						*/
+						if(Staff::getStaffByUsername($name)){
+							$message="Entry failed! A member of staff with this username is already in the database. Please instruct the other member of staff to set a different username and try again.";
+						}else{
+							
+							/*
+							## Check if a department has been selected, 
+							## if so initialise variable $department_ID and find out by which ID the department is defined. 
+							## Otherwise initialise $department_ID as an empty variable.
+							*/
+							if(! empty($_POST['staff_department'])){
+								$department_ID=Departments::getDepartmentId($_POST['staff_department']);
+							}else{
+								$department_ID='';
+							}
+
+							## Write the new member of staff to database and show a success message to the user. 
+							Staff::new_Staff($name,$name,$_POST['qualification'],'authorised',$department_ID);
+							$message="$name has been entered as a new member of staff. The initial username is \'$name\' and the initial password has been set to \'authorised\', please instruct your new co-worker to set a new individual password and username for further logins.";
+						}
+						Settings::messagebox($message);
+					}
+
+
 					echo "<details";
 					
 					## Print an input form for new diagnoses, where the user can enter a name and select a class of diagnosis.
@@ -762,11 +798,11 @@
 								<form action='settings.php' method='post'>
 									<div>
 										<label>Name:</label>
-										<input type='text' name='staff_name'><br>
+										<input type='text' name='staff_name' required><br>
 									</div>
 									<div>
 										<label>Qualification:</label>
-										<input type='text' name='qualification'><br>
+										<input type='text' name='qualification' required><br>
 									</div>
 									<div>
 										<label>Department:</label>

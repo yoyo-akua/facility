@@ -117,4 +117,13 @@
 			}
 		}
 	}
+	if(strstr($thispage,'patient_visit.php') AND ! isset($_SESSION['staff_ID'])){
+		echo'<script type="text/JavaScript">;
+				if(window.confirm("Please log in to continue.")){
+					window.location.href="login.php";
+				}else{
+					window.history.back();
+				}
+			</script>';
+	}
 ?>

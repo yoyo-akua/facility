@@ -434,6 +434,11 @@
 		*/
 		public function shorttablerow($protocol_ID,$previous,$columns){
 			$Protocol=new Protocol($protocol_ID);
+
+			$visit=new Visit($Protocol->getVisit_ID());
+
+			$insurance=new Insurance($Protocol->getVisit_ID());
+
 			$patient_ID=$this->ID;
 			
 			echo"
@@ -442,7 +447,7 @@
 			";
 			
 			## Prints last visit date.
-			$VisitDate=date("d/m/y",strtotime($Protocol->getVisitDate()));
+			$VisitDate=date("d/m/y",strtotime($visit->getCheckin_time()));
 			if($previous!==$VisitDate){
 				echo $VisitDate;
 			}
@@ -457,7 +462,7 @@
 					$this->name
 				</td>	
 				<td>
-				".$this->getAge(strtotime($Protocol->getVisitDate()),'print')."
+				".$this->getAge(strtotime($visit->getCheckin_time()),'print')."
 				</td>
 				<td>
 					$this->Sex
@@ -475,7 +480,7 @@
 			
 			## Prints optional and depending on which columns are requested the information, whether a patient is new or not.
 			if($columns['newold']=='on'){
-				$new_p=$Protocol->getnew_p();
+				$new_p=$visit->getNew_p();
 				if($new_p=='1'){
 					echo"<td>new</td>";
 				}
@@ -486,7 +491,7 @@
 
 			## Prints optional and depending on which columns are requested the information, whether a patient is insured or not.
 			if($columns['insured']=='on'){
-				$exp=$Protocol->getExpired();
+				$exp=$insurance->getExpired();
 				if($exp=='0' AND $this->NHIS){
 					echo"<td>yes</td>";
 				}
@@ -502,7 +507,7 @@
 			
 			## Prints optional, depending on which columns are requested and only if existing the patient's CCC information (insurance code).
 			if($columns['CCC']=='on'){
-				$CCC=$Protocol->getCCC();
+				$CCC=$insurance->getCCC();
 				if(! empty($CCC)){
 					echo "<td>$CCC</td>";
 				}
@@ -513,8 +518,8 @@
 			
 			## Prints optional and depending on which columns are requested the patient's tests and its results.
 			if($columns['tests']=='on'){
-				$lab_number=$Protocol->getLab_number();
-				$html=Lab::display_results($protocol_ID,'tooltips off');
+				$lab_number=$visit->getLab_number();
+				$html=Lab::display_results($lab_number,'tooltips off');
 				echo "<td style=text-align:left><h4><u>$lab_number</u></h4><br>$html</td>";
 			}
 						
@@ -575,10 +580,10 @@
 			if($columns['entered']=='on'){
 				global $thispage;
 				if(! empty($_GET['entered']) AND $_GET['entered']==$protocol_ID){
-					if($Protocol->getEntered()==1){
-						$Protocol->setEntered(0);
+					if($insurance->getEntered()==1){
+						$insurance->setEntered(0);
 					}else{
-						$Protocol->setEntered(1);
+						$insurance->setEntered(1);
 					}
 				}
 				/*
@@ -601,7 +606,7 @@
 				echo"
 						<td><a href='$thispage?from=$from&to=$to$&entered=$protocol_ID'>
 						<input type='checkbox'";
-				if($Protocol->getEntered()==1){
+				if($insurance->getEntered()==1){
 					echo"checked='checked'";
 				}
 				echo"></a></td>";
@@ -824,11 +829,11 @@
 			if(strstr($today,$YEAR)){
 				global $link;
 				$new_p=1;
-				$query="SELECT * FROM protocol WHERE patient_ID='$this->ID' ORDER BY VisitDate DESC LIMIT 1";
+				$query="SELECT * FROM visit WHERE patient_ID='$this->ID' ORDER BY checkin_time DESC LIMIT 1";
 				$result=mysqli_query($link,$query);
 				$object=mysqli_fetch_object($result);
 				if(! empty($object)){
-					$VisitYear=date("Y",strtotime($object->VisitDate));
+					$VisitYear=date("Y",strtotime($object->checkin_time));
 					if($VisitYear==date("Y",time())){
 						$new_p=0;
 					}

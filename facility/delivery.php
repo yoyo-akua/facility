@@ -6,8 +6,7 @@
 	include("HTMLParts/HTML_HEAD.php");
 
 	/*
-	## Initialise new objects of patient, 
-	## protocol (which represents the client visit on which the function is called),
+	## Initialise new objects of patient, protocol, visit
 	## and maternity (which contains general data of the client's pregnancy).
 	*/
 	$patient_ID=$_GET['patient_ID'];
@@ -15,6 +14,9 @@
 
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol=new Protocol($protocol_ID);
+
+	$visit_ID=$protocol->getVisit_ID();
+	$visit=new Visit($visit_ID);
 
 	$maternity_ID=$_GET['maternity_ID'];
 	$maternity=new maternity($maternity_ID);
@@ -39,33 +41,31 @@
 
 	## If the user is submitting the delivery entry form, call this if-branch.
 	if(! empty($_GET['submit'])){
-		
+		var_dump($_GET);
 		## If the user referred the client in labour, call this if-branch.
-		if(! empty($_GET['refer']) AND ! empty($_GET['referredto'])){
-			
-			/*
-			## Initialise variables.
-			## $referred saves the information about the referral which is to be stored in the database.
-			## $message buffers the text which is to be displayed in a message box later on.
-			*/
-			$referred=$_GET['referredto']." when in labour";
+		if(! empty($_GET['refer'])){
+
+			## ???
+			if(! Referral::checkReferral($visit_ID)){
+				Referral::new_Referral($protocol_ID,$_GET['referredto'],$_GET['refer_reason']);
+			}else{
+				$referral=new Referral(Referral::checkReferral($visit_ID));
+				$referral->setDestination($_GET['referredto']);
+				$referral->setReason($_GET['refer_reason']);
+			}
 			$message="Client has been referred";
-			
+		
 			## If the user indicated a reason for the referral, add it to $referred and $message.
-			if(! empty($_GET['reason'])){
-				$reason=$_GET['reason'];
-				$referred.="(because of: $reason)";
+			if(! empty($_GET['refer_reason'])){
+				$reason=$_GET['refer_reason'];
 				$message.=" because of $reason";
 			}
 			
 			## Display the message box.
 			Settings::messagebox($message);
-			
+						
 			## Set the client's treatment completed.
-			$protocol->setcompleted(1);
-			
-			## Save the referral information in the database.
-			$protocol->setreferral($referred);
+			$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 			
 			## Automatically forward the user back to the maternity client list.
 			echo "
@@ -73,6 +73,10 @@
 					window.location.href='maternity_patients.php'
 					</script>
 					";
+		}else{
+			if(Referral::checkReferral($visit_ID)){
+				Referral::delete_Referral(Referral::checkReferral($visit_ID));
+			}
 		}
 		
 		/*
@@ -171,11 +175,11 @@
 		
 		## If the user selected the "treatment in clinic completed" checkbox, set the treatment as completed in the protocol.
 		if(! empty($_GET['completed'])){
-			$protocol->setcompleted(1);
+			$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 		}
 		
 		## Set the client as pregnant in the protocol (at least when she arrived in the facility she still was pregnant).
-		$protocol->setpregnant(1);
+		$visit->setPregnant(1);
 		
 		## Update the protocol with the client's maternityID which will indicate the client delivered and connect this delivery with the client.
 		$protocol->setDelivery($maternity_ID);
@@ -186,8 +190,11 @@
 		$object=mysqli_fetch_object($result);
 		Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$object->Diagnosis_ID,1);
 		
-		## Set the client's attendant to "Midwife".
-		$protocol->setAttendant('Midwife');
+		if(! empty($_SESSION['staff_ID'])){
+			## Set the client's attendant.
+			$protocol->setStaff_ID($_SESSION['staff_ID']);
+		}
+		
 		
 		## The patient's vital signs are added/updated in the system, if they were defined in browser.
 		if(Vital_Signs::already_set($protocol_ID)){
@@ -216,7 +223,7 @@
 		
 		## Initialise variables with the name and information about a referral of the client.
 		$name=$patient->getName();
-		$referral=$protocol->getreferral();
+		$referred=Referral::checkReferral($visit_ID);
 		
 		## Print the headline and the input form for the referral information. 
 		## In case information about any referral are available, prefill the form with those.
@@ -224,39 +231,9 @@
 				<h1>Delivery of $name</h1>
 				<div class='inputform'>
 				<form action='delivery.php' method='get'>
-				<input type='checkbox' name='refer'";
-				if(! empty($referral)){
-					echo "checked='checked'";
-				}
-				echo" > <h4>referred in Labour</h4>
-				to:<input type='text' name='referredto'";
+				";
 				
-				## If client was referred, inquire the referral destination and the referral reason.
-				if(! empty($referral)){
-					$referral=str_replace("when in labour",'',$referral);
-					
-					## Inquire referral destination.
-					if(strstr($referral,'(because of:')){
-						$start=0;
-						$length=strpos($referral,'(')-1;
-						$referredto=substr($referral,$start,$length);
-					}else{
-						$referredto=$referral;
-					}
-					echo "value='$referredto'";
-				}
-				echo">
-				(reason:<input type='text' name='reason'";
-				
-				## Inquire referral reason.
-				if(! empty($referral) AND strstr($referral,'(because of:')){
-					$start=$length+1;
-					$reason=substr($referral,$start);
-					$reason=str_replace("(because of:","",$reason);
-					$reason=str_replace(")","",$reason);
-					echo "value='$reason'";
-				}
-				echo">)
+		echo"
 				<input type='hidden' name='protocol_ID' value='$protocol_ID'>
 				<input type='hidden' name='patient_ID' value='$patient_ID'>
 				<input type='hidden' name='maternity_ID' value='$maternity_ID'>
@@ -267,7 +244,6 @@
 					echo"<input type='hidden' name='edit' value='on'>";
 				}
 				echo"
-				<input type='submit' name='submit' value='refer'>
 				</form><br>
 				";
 		
@@ -296,8 +272,49 @@
 		## Print a form and prefill it with the clien's vital signs.
 		echo"
 			<br><br>
-			<form action='delivery.php' method='get'>
-
+			<form action='delivery.php' method='get'>";
+			
+			/*
+			## Inquire, whether patient was referred to another hospital.
+			## Print a checkbox for referral, which is checked, if patient was referred.
+			## If so, also display the input field for destination and reason of the referral.
+			*/
+			echo "<input type='checkbox'  id='unfold_item' onClick='unfold()' name='refer'";
+			if ($referred OR ! empty($_POST['referral'])){
+				echo "checked='checked'";
+			}
+			echo">
+				refer
+				<div id='unfold_content' style='margin-left:70px;";
+				if (!$referred AND empty($_POST['referral'])){
+					echo "display:none";
+				}
+				echo"'>
+				<i>destination:</i> <br>
+				<input type='text' maxlength='200' name='referredto' ";
+				if ($referred OR ! empty($_POST['referredto'])){
+					if(! empty($_POST['referredto'])){
+						$destination=$_POST['referredto'];
+					}else{
+						$referral=new Referral($referred);
+						$destination=$referral->getDestination();
+					}
+					echo "value='$destination'";
+				}
+				echo"style='width:300px'><br>
+				<i>reason for referral:</i> <br>
+				<textarea name='refer_reason' maxlength='1000'> ";
+				if ($referred OR ! empty($_POST['refer_reason'])){
+					if(! empty($_POST['refer_reason'])){
+						echo $_POST['refer_reason'];
+					}else{
+						$referral=new Referral($referred);
+						echo $referral->getReason();
+					}
+				}
+				echo"</textarea>
+				</div><br>
+			
 				<div><label>BP:</label><br>
 				<input type='text' class='smalltext' name='BP' ";if($currentBP!==''){echo"value='$currentBP'";}echo"> mmHg</div>
 
@@ -398,7 +415,7 @@
 		## Print the "treatment in clinic completed" checkbox and the close of the form.
 		echo"
 				<div><input type='checkbox' name='completed'";
-				if($edit AND $protocol->getCompleted()==1){
+				if($edit AND $visit->getCheckin_time()!=='0000-00-00 00:00:00'){
 					echo "checked='checked'";
 				}
 				echo"> <label>treatment in clinic completed</label></div>

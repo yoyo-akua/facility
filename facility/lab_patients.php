@@ -22,15 +22,15 @@
 	## Get data from database.
 	## Get all patients and their lab register entries,
 	##		- who were visiting within the last two weeks ($today is defined in HTML_HEAD.php),
-	##		- whose tests are not finished (labdone like 0),
+	##		- whose tests are not finished (lab_done like 0),
 	##		- who match to current search parameters, saved in $searchpara.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,lab WHERE patient.patient_ID=protocol.patient_ID AND lab.protocol_ID=protocol.protocol_ID AND labdone=0 $searchpara AND VisitDate>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY lab.protocol_ID ORDER BY SUBSTRING(lab_number FROM -2 FOR 2), lab_number";
+	$query="SELECT * FROM protocol,patient,visit,lab_list,lab WHERE lab_list.lab_list_ID=lab.lab_list_ID AND lab.protocol_ID=protocol.protocol_ID AND patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID AND lab_done=0 $searchpara AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY lab_list.lab_number ORDER BY SUBSTRING(lab_list.lab_number FROM -2 FOR 2), lab_list.lab_number";
 	$result = mysqli_query($link,$query);
 
-		/*
+	/*
 	## If search result is empty and no patient found, print button 'search patient' in browser.
 	## After click on this button the user is forwarded to current patients list of consulting department.
 	*/
@@ -84,13 +84,14 @@
 			## Initialise objects of patient and protocol by their IDs.
 			$patient = new Patient($row->patient_ID);
 			$protocol=new Protocol($row->protocol_ID);
+			$visit=new Visit($row->visit_ID);
 			
 			## Print the patient's data in the table and in the last column a link for entering their test results.
 			echo"
 					<tr>
 						<td style=border-left:none>
 							";
-							$visitdate=date("d/m/y",strtotime($protocol->getVisitDate()));
+							$visitdate=date("d/m/y",strtotime($visit->getCheckin_time()));
 							if($visitdate!==$previous){
 								echo $visitdate;
 								$previous=$visitdate;
@@ -116,7 +117,7 @@
 							$row->lab_number
 						</td>
 						<td>
-							<a href=\"lab.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Select</a>
+							<a href=\"lab.php?patient_ID=$row->patient_ID&visit_ID=$row->visit_ID\">Select</a>
 						</td>
 					</tr>
 					";				

@@ -47,7 +47,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient WHERE patient.patient_ID=protocol.patient_ID and completed like 0  AND onlylab=0 and Sex like 'female' and VisitDate like '%$today%' $searchpara ORDER BY VisitDate ASC";
+	$query="SELECT * FROM protocol,patient,visit WHERE patient.patient_ID=visit.patient_ID and protocol.visit_ID=visit.visit_ID AND checkout_time like '0000-00-00 00:00:00'  AND onlylab=0 and Sex like 'female' $searchpara ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -138,8 +138,8 @@
 					$conception_stamp=strtotime($object->conception_date);
 					
 					if($conception_stamp<=(time()-(3600*24*7*32))){
-						
 						if($conception_stamp>=(time()-(3600*24*7*45))){
+							
 							if($row->delivery==0){
 								echo"
 									<td>

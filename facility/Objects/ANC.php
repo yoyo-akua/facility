@@ -214,7 +214,9 @@
 			$FHt=$this->FHt;
 			$fetal_heart=$this->fetal_heart;
 			
-			$visitdate=(new Protocol($protocol_ID))->getVisitDate();
+			$protocol=new Protocol($protocol_ID);
+			$visit_ID=$protocol->getVisit_ID();
+			$visitdate=(new Visit($visit_ID))->getCheckin_time();
 			
 			$maternity=new Maternity($this->maternity_ID);
 			

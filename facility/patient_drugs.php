@@ -26,9 +26,9 @@
 		
 		## Depending on which submit button the user clicked, set "completed" or "not completed" in the database.
 		if(!empty($_POST['completed'])){
-			$protocol->setcompleted(1);
+			$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 		}else{
-			$protocol->setcompleted(0);
+			$visit->setCheckout_time('0000-00-00 00:00:00');
 		}
 		
 		## This loop is run once for each prescribed drug of the patient.

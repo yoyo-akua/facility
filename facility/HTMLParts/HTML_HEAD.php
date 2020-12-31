@@ -84,7 +84,51 @@
 				</li>
 			</ul>
 			
+			<ul id='drop-nav' class='right'>
+				<li>
+					<i class="fas fa-user shadow" id="home"></i></i>
+					<ul>
+						<li>
+							<?php
+							if(isset($_SESSION['staff_password'])){?>
+								<a href="logout.php">
+									<i class="fas fa-sign-out-alt shadow menu-left"></i>
+									<font class='menu-text'>Log Out</font>
+								</a>
+							<?php }else{ ?>
+								<a href="login.php">
+									<i class="fas fa-sign-in-alt shadow menu-left"></i>
+									<font class='menu-text'>Log In</font>
+								</a>
+							<?php } ?>
+						</li>
+						<?php
+						if(isset($_SESSION['staff_password'])){?>
+							<li>
+								<a href="user.php">
+									<i class="fas fa-user shadow menu-left"></i>
+									<font class='menu-text'>User Profile</font>
+								</a>
+							</li>
+							
+						<?php } ?>
+						<li>
+							<a href="help.php">
+								<i class="fas fa-question shadow menu-left"></i>
+								<font class='menu-text'>Help</font>
+							</a>
+						</li>
+					</ul>
+					</li>
+			</ul>
 			<a href="help.php"><i class="fas fa-question shadow" id='help'></i></a>
+			
+			<?php
+			if(isset($_SESSION['staff_password'])){?>
+				<a href="logout.php"><i class="fas fa-sign-out-alt shadow" id='help'></i></a>
+			<?php }else{ ?>
+				<a href="login.php"><i class="fas fa-sign-in-alt shadow" id='help'></i></a>
+			<?php } ?>
 		</div>
 		<a href='#'><i id='toplink' class="fa fa-arrow-up fa-2x" aria-hidden="true"></i></a>
 		<div class='content'>

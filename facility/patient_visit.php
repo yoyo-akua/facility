@@ -9,8 +9,12 @@
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol= new Protocol($protocol_ID);
 
+	## Initialise new object of visit by a certain visit ID, with which the page is called.
+	$visit_ID=$protocol->getVisit_ID();
+	$visit= new Visit($visit_ID);
+
 	## Initialise new object of patient by a certain patient-ID, with which the page is called.
-	$patient_ID=$protocol->getPatient_ID();
+	$patient_ID=$visit->getPatient_ID();
 	$patient=new Patient($patient_ID);
 
 	## Inquire whether the patient has received nutrition management for this visit.
@@ -22,9 +26,9 @@
 	## Otherwise the user is not allowed to enable or disable the protection of a patient's diagnosis.
 	## This if-branch is called, 
 	##		- if user wants to protect a patient's diagnosis ($_GET['protect'] or $_POST['password'] not empty),
-	##		- if a patient's diagnosis is protected ($protocol->getprotect()==1).
+	##		- if a patient's diagnosis is protected ($visit->getprotect()==1).
 	*/
-	if(! empty($_GET['protect']) OR ! empty($_POST['password']) OR $protocol->getprotect()==1){
+	if(! empty($_GET['protect']) OR ! empty($_POST['password']) OR $visit->getProtect()==1){
 		
 		## Tag, that the user wants to enable or disable the protection of a patient's diagnosis by a session named $_SESSION['protect_patient'].
 		if(! empty($_GET['protect'])){
@@ -76,17 +80,17 @@
 		
 		## Change the patient's protection status in datatbase, after the user is authorised and was changing it. 
 		if(isset($_SESSION['password_consulting']) AND isset($_SESSION['protect_patient'])){
-			if($protocol->getprotect()==1){
-				$protocol->setprotect(0);
+			if($visit->getProtect()==1){
+				$visit->setProtect(0);
 			}else{
-				$protocol->setprotect(1);
+				$visit->setProtect(1);
 			}
 			unset($_SESSION['protect_patient']);
 		}
 	}
 
 	## Initialising variables of patient's general data and date of visit.
-	$date=date('Y-m-d',strtotime($protocol->getVisitDate()));	
+	$date=date('Y-m-d',strtotime($visit->getCheckin_time()));	
 	if($date!==$today){
 		$visitdate=date('d/m/y',strtotime($date));
 	}else{
@@ -96,14 +100,14 @@
 
 	$name=$patient->getName();
 	$sex=$patient->getSex();
-	$age_exact=$patient->getAge(strtotime($protocol->getVisitDate()),'calculate');
+	$age_exact=$patient->getAge(strtotime($visit->getCheckin_time()),'calculate');
 
 	/*
 	## Get data from database.
 	## Inquire whether the patient has come to the facility before, if so initialise variable $ID_last with the ID of the previous visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$querylast="SELECT protocol_ID FROM protocol WHERE patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND VisitDate<='$date' ORDER BY VisitDate DESC LIMIT 0,1";
+	$querylast="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp<='$date' ORDER BY protocol.timestamp DESC LIMIT 0,1";
 	$resultlast=mysqli_query($link,$querylast);
 	if(mysqli_num_rows($resultlast)!==0){
 		$ID_last=mysqli_fetch_object($resultlast)->protocol_ID;
@@ -114,7 +118,7 @@
 	## Inquire whether the patient has come to the facility later on, if so initialise variable $ID_next with the ID of the next visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$querynext="SELECT protocol_ID FROM protocol WHERE patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND VisitDate>='$date' ORDER BY VisitDate ASC LIMIT 0,1";
+	$querynext="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp>='$date' ORDER BY protocol.timestamp ASC LIMIT 0,1";
 	$resultnext=mysqli_query($link,$querynext);
 	if(mysqli_num_rows($resultnext)!==0){
 		$ID_next=mysqli_fetch_object($resultnext)->protocol_ID;
@@ -138,7 +142,7 @@
 
 
 	## Function for displaying patient's general data (like age,sex,...) is called and printed.
-	echo '</h1><div class="inputform">'.$patient->display_general(strtotime($protocol->getVisitDate()));
+	echo '</h1><div class="inputform">'.$patient->display_general(strtotime($visit->getCheckin_time()));
 
 	/*
 	## Function for displaying patient's vital signs is called and printed,
@@ -148,7 +152,7 @@
 	echo "<br>
 				<a href='patient_visit.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
 					<input type='checkbox'";
-					if($protocol->getprotect()==1){
+					if($visit->getProtect()==1){
 						echo "checked='checked'";
 					}
 					echo"></input> protected by password
@@ -160,11 +164,9 @@
 
 	/*
 	## Initialising more variales.
-	## Variable $attendant contains the name of the person, who diagnoses the patient.
 	## Variable $primgiven defines, whether exactly one disease is tagged as primary disease.
 	## Variable $stop prevents entries in database, if multiple primary diagnoses are selected.
 	*/
-	$attendant=$protocol->getAttendant();
 
 	$primgiven=false;
 	$stop=false;
@@ -242,6 +244,7 @@
 				*/
 				if(! $primgiven OR $importance!==1){
 					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
+					$protocol->setStaff_ID($_SESSION['staff_ID']);
 					if($importance==1){
 						$primgiven=true;
 					}
@@ -270,9 +273,7 @@
 		## If the attendant is known, his or her name is documented in database
 		*/
 		if ($stop==false){
-			if(! empty($_POST['attendant'])){
-				$attendant=$protocol->setAttendant($_POST['attendant']);
-			}
+			$protocol->setStaff_ID($_SESSION['staff_ID']);
 		}
 	}
 
@@ -308,16 +309,24 @@
 			
 			## Add to database, whether the patient is pregnant or not.
 			if (! empty($_POST['pregnant'])){
-				$protocol->setpregnant(1);
+				$visit->setPregnant(1);
 			}else{
-				$protocol->setpregnant(0);
+				$visit->setPregnant(0);
 			}
 			
-			## Add to database, whether the patient is referred to another hospital and the name this hospital.
-			if(! empty($_POST['referral']) AND ! empty($_POST['referredto'])){
-				$protocol->setreferral($_POST['referredto']);
+			## ???
+			if(! empty($_POST['referral'])){
+				if(! Referral::checkReferral($visit_ID)){
+					Referral::new_Referral($protocol_ID,$_POST['referredto'],$_POST['refer_reason']);
+				}else{
+					$referral=new Referral(Referral::checkReferral($visit_ID));
+					$referral->setDestination($_POST['referredto']);
+					$referral->setReason($_POST['refer_reason']);
+				}
 			}else{
-				$protocol->setreferral('');
+				if(Referral::checkReferral($visit_ID)){
+					Referral::delete_Referral(Referral::checkReferral($visit_ID));
+				}
 			}
 
 			/*
@@ -354,14 +363,14 @@
 			if(! empty($_POST['remarks'])){
 				$protocol->setRemarks($_POST['remarks']);
 			}else{
-				$protocol->setcompleted('');
+				$protocol->setRemarks('');
 			}
 			
 			## Add notice to database after the patient's treatment was tagged as completed.
 			if(! empty($_POST['completed'])){
-				$protocol->setcompleted(1);
+				$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 			}else{
-				$protocol->setcompleted(0);
+				$visit->setCheckout_time('0000-00-00 00:00:00');
 			}
 		}
 
@@ -375,7 +384,7 @@
 		## Print also information about attendant and pregnancy, if known.
 		*/
 		$html=$protocol->display_diagnoses('both',$protocol_ID);
-		if(!empty(Diagnosis_IDs::getDiagnosis_IDs($protocol_ID)) OR ! empty($protocol->getreferral())){
+		if(!empty(Diagnosis_IDs::getDiagnosis_IDs($protocol_ID)) OR Referral::checkReferral($visit_ID)){
 			echo "
 					<details open>
 						<summary>
@@ -383,15 +392,17 @@
 						</summary>
 					";
 
-			if(! empty($attendant)){
-				echo"<h4>Attendant:</h4> $attendant<br>";
+			if(! empty($protocol->getStaff_ID())){
+				$staff=new Staff($protocol->getStaff_ID());
+				$staff_name=$staff->getName();
+				echo"<h4>Attendant:</h4> ".$staff_name."<br><br>";
 			}
-			if($protocol->getpregnant()==1){
+			if($visit->getPregnant()==1){
 				echo "Patient is <h4>pregnant</h4><br>";
 			}
-			if(! empty($protocol->getreferral())){
-				$referral=$protocol->getreferral();
-				echo "Patient has been <h4>referred</h4> to <h4>$referral</h4><br>";
+			if(Referral::checkReferral($visit_ID)){
+				$referral=new Referral(Referral::checkReferral($visit_ID));
+				echo "Patient has been <h4>referred</h4> to <b>".$referral->getDestination()."</b> because of ".$referral->getReason()."<br>";
 			}
 			echo $html;
 		}
@@ -483,42 +494,22 @@
 			</details>
 		";
 		
-		/*
-		## Print "Diagnoses" headline, if the user is calling the page as a nutrition officer, hide the list of diagnoses and the consultant's information.
-		## Identify last known attendant.
-		## Print an input field for attendant, prefill it with the name of last known attendant.
-		*/
-		if(! empty($attendant)){
-			$lastattendant=$attendant;
-		}else{
-			$query="SELECT attendant FROM protocol WHERE attendant not like '' AND attendant not like 'Midwife' ORDER BY protocol_ID DESC LIMIT 1";
-			$result=mysqli_query($link,$query);
-			$object=mysqli_fetch_object($result);
-			$lastattendant=$object->attendant;
-		}
+		## Print the name of the attendant.
 		echo '<details ';
 		if(empty($_GET['nutrition'])){
 			echo "open";
 		}
-		echo'
-				><summary><h2>Diagnoses</h2></summary>
-				<b>Attendant: <input type="text" name="attendant" 
-				';
-					if(! empty($_POST['attendant'])){
-						echo 'value="'.$_POST['attendant'].'"';
-					}else{
-						echo 'value="'.$lastattendant.'"';
-					}
-					echo '>
-				<br><br>
-				';
+		echo'><summary><h2>Diagnoses</h2></summary>';
+		if(! empty($_SESSION['staff_name'])){
+			echo'<h4>Attendant:</h4> '.$_SESSION['staff_name'].'<br><br>';
+		}
 
 		/*
 		## Inquire, whether patient is pregnant on women within the age range of 10 to 50.
 		## Print a checkbox for pregnancy, which is checked, if patient was pregnant at the time of her last visit.
 		*/
 		if($sex=='female' AND $age_exact>=10 AND $age_exact<=50){
-			$query="SELECT pregnant FROM protocol WHERE patient_ID=$patient_ID ORDER BY VisitDate DESC LIMIT 1,1";
+			$query="SELECT pregnant FROM visit WHERE patient_ID=$patient_ID ORDER BY checkin_time DESC LIMIT 1,1";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
 			
@@ -529,35 +520,55 @@
 			}
 			
 			echo"<input type='checkbox' name='pregnant'";
-					if((empty($_POST['search']) AND ($pregnant==1 OR $protocol->getpregnant()==1))OR (! empty($_POST['search']) AND (! empty($_POST['pregnant'])))){
+					if((empty($_POST['search']) AND ($pregnant==1 OR $visit->getPregnant()==1))OR (! empty($_POST['search']) AND (! empty($_POST['pregnant'])))){
 						echo"checked='checked'";
 					}
 					echo"> pregnant<br>";
 		}
 
 		## Check if the patient has been referred and save information in variable $referred.
-		$referred=$protocol->getreferral();
+		$referred=Referral::checkReferral($visit_ID);
 		
 		/*
 		## Inquire, whether patient was referred to another hospital.
 		## Print a checkbox for referral, which is checked, if patient was referred.
+		## If so, also display the input field for destination and reason of the referral.
 		*/
-		echo "<input type='checkbox' name='referral'";
+		echo "<input type='checkbox'  id='unfold_item' onClick='unfold()' name='referral'";
 		if ($referred OR ! empty($_POST['referral'])){
 			echo "checked='checked'";
 		}
 		echo">
-				referred to different facility</b> 
-				(<input type='text' name='referredto' ";
+				refer
+				<div id='unfold_content' style='margin-left:70px;";
+				if (!$referred AND empty($_POST['referral'])){
+					echo "display:none";
+				}
+				echo"'>
+				<i>destination:</i> <br>
+				<input type='text' maxlength='200' name='referredto' ";
 				if ($referred OR ! empty($_POST['referredto'])){
 					if(! empty($_POST['referredto'])){
-						$referral=$_POST['referredto'];
+						$destination=$_POST['referredto'];
 					}else{
-						$referral=$protocol->getreferral();
+						$referral=new Referral($referred);
+						$destination=$referral->getDestination();
 					}
-					echo "value='$referral'";
+					echo "value='$destination'";
 				}
-				echo"style='margin:0px'>)<br>";
+				echo"style='width:300px'><br>
+				<i>reason for referral:</i> <br>
+				<textarea name='refer_reason' maxlength='1000'> ";
+				if ($referred OR ! empty($_POST['refer_reason'])){
+					if(! empty($_POST['refer_reason'])){
+						echo $_POST['refer_reason'];
+					}else{
+						$referral=new Referral($referred);
+						echo $referral->getReason();
+					}
+				}
+				echo"</textarea>
+				</div><br>";
 		/*
 		## Inquire, whether patient was referred for nutrition management.
 		## Print a checkbox for referral, which is checked, if patient was referred.
@@ -567,7 +578,7 @@
 			echo "checked='checked'";
 		}
 		echo">
-				<b>referred for nutrition management</b><br>";
+				nutrition management<br>";
 		
 		## Print checkbox for reattendance, which is checked if it was previously defined to be a review case. 
 		echo"
@@ -577,7 +588,7 @@
 				}
 		
 		## Print input field and icon for searching a diagnosis as well as submit button for the diagnoses.
-		echo"> <b>reattendance</b><br><br>
+		echo"> reattendance<br><br>
 				<div><input type='text' name='search' id='autocomplete' placeholder='search diagnosis' class='autocomplete'>
 				<button type='submit' name='submitsearch'><i class='fas fa-search smallsearch'></i></button></div>
 				<button type='submit' name='submit' value='submit'><i id='submitconsult' class='far fa-check-circle fa-4x'></i></button>";
@@ -672,7 +683,7 @@
 					}
 					echo'</textarea><br>
 					<input type="checkbox" name="completed" ';
-					if($protocol->getCompleted()!=0){
+					if($visit->getCheckout_time()!=='0000-00-00 00:00:00'){
 						echo "checked='checked'";
 					}
 					echo"> <b>treatment in clinic completed</b>
@@ -783,9 +794,9 @@
 	## If so, print the lab number and the test results.
 	## If not in "display-mode" (indicated by $_GET['show']), print a links for adding more tests and editing the results.
 	*/
-	$lab_number=$protocol->getLab_number();
+	$lab_number=$visit->getLab_number();
 	if(! empty($lab_number)){
-		$html=Lab::display_results($protocol_ID,'tooltips on');
+		$html=Lab::display_results($lab_number,'tooltips on');
 		echo"
 				<details>
 					<summary>
@@ -794,37 +805,40 @@
 					<h4>Lab number: <u>$lab_number</u></h4><br>
 					$html
 				"; 
+		
+
+		## In case a file has been attached which contains lab information, display a link to this file. 
+		if(Uploads::getUploadArray($protocol_ID)){
+			$upload_array=Uploads::getUploadArray($protocol_ID);
+			foreach($upload_array AS $ID){
+				$upload=new Uploads($ID);
+				if(! empty($upload->getFilename())){
+					$upload_name=$upload->getFilename();
+					if($upload->getDepartment_ID()==Departments::getDepartmentId('Laboratory')){
+						echo '
+						<br>
+						<div class="tooltip">
+							<a href="./uploads/'.$upload_name.'">
+								<i class="fas fa-paperclip fa-2x"></i>
+							</a>
+							<span class="tooltiptext" style="line-height:normal">
+								uploaded file:<br>
+								'.$upload_name.'
+							</span>
+						</div>
+						';
+					}
+					
+				}
+			}
+		}
+		
 		if(empty($_GET['show'])){
 			echo"
 					<a href=\"order_tests.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID\"><div class =\"box\">add tests</div></a>
 					<a href=\"lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&reset=on\"><div class =\"box\">reset test results</div></a>
 					";
 		}
-
-		## In case a file has been attached which contains lab information, display a link to this file. 
-		$upload_array=Uploads::getUploadArray($protocol_ID);
-		foreach($upload_array AS $ID){
-			$upload=new Uploads($ID);
-			if(! empty($upload->getFilename())){
-				$upload_name=$upload->getFilename();
-				if($upload->getDepartment_ID()==Departments::getDepartmentId('Laboratory')){
-					echo '
-					<br>
-					<div class="tooltip">
-						<a href="./uploads/'.$upload_name.'">
-							<i class="fas fa-paperclip fa-2x"></i>
-						</a>
-						<span class="tooltiptext" style="line-height:normal">
-							uploaded file:<br>
-							'.$upload_name.'
-						</span>
-					</div>
-					';
-				}
-				
-			}
-		}
-		
 		
 		echo "</details>";
 	}
@@ -924,28 +938,29 @@
 			<div class='tableright'>
 				<a href='patient_visit_pdf.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'>create pdf</a>";
 
-				## In case a file has been attached which contains lab information, display a link to this file. 
-				foreach($upload_array AS $ID){
-					$upload=new Uploads($ID);
-					if(! empty($upload->getFilename())){
-						$upload_name=$upload->getFilename();
-						if (strstr($upload_name,'pdf')){
-							echo '<br>
-								<br>
-								<div class="tooltip" >
-									<a href="./uploads/'.$upload_name.'" id="linkbutton">
-										<i class="fas fa-file"></i>
-									</a>
-									<span class="tooltiptext " style="line-height:normal;">
-										uploaded file:<br>
-										'.$upload_name.'
-									</span>
-								</div>';
+				if(isset($upload_array)){
+					## In case a file has been attached which contains lab information, display a link to this file. 
+					foreach($upload_array AS $ID){
+						$upload=new Uploads($ID);
+						if(! empty($upload->getFilename())){
+							$upload_name=$upload->getFilename();
+							if (strstr($upload_name,'pdf')){
+								echo '<br>
+									<br>
+									<div class="tooltip" >
+										<a href="./uploads/'.$upload_name.'" id="linkbutton">
+											<i class="fas fa-file"></i>
+										</a>
+										<span class="tooltiptext " style="line-height:normal;">
+											uploaded file:<br>
+											'.$upload_name.'
+										</span>
+									</div>';
+							}
 						}
 					}
 				}
 				echo"
-			
 			</div>
 			";
 

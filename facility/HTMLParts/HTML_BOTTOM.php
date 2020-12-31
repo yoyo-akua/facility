@@ -15,6 +15,7 @@
 		<?php include_once("HTMLParts/JavaScript/prefill_BMI.js.php");?>
 		<script src="HTMLParts/JavaScript/edit_name.js"></script>
 		<script src="HTMLParts/JavaScript/upload_name.js"></script>
+		<script src="HTMLParts/JavaScript/unfold.js"></script>
 		
 	</body>
 </html>

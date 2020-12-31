@@ -50,7 +50,7 @@
 	## Get all patients' and their visits' data within the timeframe defined by $from and $to.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
-	$query="SELECT * FROM patient,protocol WHERE patient.patient_ID=protocol.patient_ID AND protocol.VisitDate BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 ";
+	$query="SELECT * FROM patient,protocol,visit WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID AND checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 ";
 	$result=mysqli_query($link,$query);
 	/*
 	## The following loop will be run once for each of the output patient visits from the database query.
@@ -62,16 +62,18 @@
 		## Initialise new objects of protocol and patient by their protocol-ID and patient-ID.
 		$patient=new Patient($row->patient_ID);
 		$protocol=new Protocol($row->protocol_ID);
+		$visit=new Visit($row->visit_ID);
+		$insurance=new Insurance($row->visit_ID);
 
 		## These if-branches are used to set a variable $insurance with the insurance status.
-		if(! empty($patient->getNHIS()) AND $protocol->getExpired()==0){
+		if(! empty($patient->getNHIS()) AND $insurance->getExpired()==0){
 			$insurance='insured';
 		}else{
 			$insurance='non insured';
 		}
 
 		## These if-branches are used to set a variable $new_old with the "new/old status".
-		if($protocol->getnew_p()==1){
+		if($visit->getNew_p()==1){
 			$new_old='new';
 		}else{
 			$new_old='old';
@@ -84,8 +86,8 @@
 		foreach($sex_array AS $sex){
 			if($patient->getSex()==$sex){
 				for($age=1;$age<count($age_array);$age++){
-					$agefrom=date("Y-m-d",(strtotime($protocol->getVisitDate())-(365.25*24*3600*$age_array[($age-1)])));
-					$ageto=date("Y-m-d",(strtotime($protocol->getVisitDate())-(365.25*24*3600*$age_array[$age])));
+					$agefrom=date("Y-m-d",(strtotime($visit->getCheckin_time())-(365.25*24*3600*$age_array[($age-1)])));
+					$ageto=date("Y-m-d",(strtotime($visit->getCheckin_time())-(365.25*24*3600*$age_array[$age])));
 
 					if($patient->getBirthdate()<$agefrom AND $patient->getBirthdate()>=$ageto){
 						$all[$insurance][$new_old][$sex][$age_array[$age]]++;

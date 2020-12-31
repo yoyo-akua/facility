@@ -12,6 +12,10 @@
 	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
 	$protocol_ID=$_GET['protocol_ID'];
 	$protocol= new Protocol($protocol_ID);
+
+	## Initialise new object of visit by a certain visit ID, with which the page is called.
+	$visit_ID=$protocol->getVisit_ID();
+	$visit= new Visit($visit_ID);
 	
 
 	## This if-branch is called, if the user submitted the procedure.
@@ -44,7 +48,7 @@
 		
 		## If "treatment completed" was selected, set the patient's visit as completed.
 		if(! empty($_POST['completed'])){
-			$protocol->setcompleted(1);
+			$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 		}
 		
 		## If a procedure was entered, write it to the patient's visit's information in the database and lead back to current patient list.

@@ -68,15 +68,18 @@
 		## Initialising object of protocol by protocol-ID.		
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
-		
+
+		## Initialising object of visit by visit ID.		
+		$visit_ID=$protocol->getVisit_ID();
+		$visit=new Visit($visit_ID);		
 
 		## Add this particular visit's vital signs and ANC data to $html.		
 		$html.=$ANC->display_ANC($protocol_ID,'date on').'<br>'.
 					(new Vital_Signs($protocol_ID))->display_admission_data($patient).'<br>';
 
 		
-		## Function Lab::lab_boolean() is called to check, if the patient has been referred for lab investigations, if so if-branch is opened.
-		if(! empty($protocol->getLab_number())){
+		## Function visit::() is called to check, if the patient has been referred for lab investigations, if so if-branch is opened.
+		if($visit->getLab_number()){
 			## Add the table head for the following table to $html.
 			$html.="<h4>Lab Tests</h4><br>".Lab::result_tablehead();
 			$last_test='';
@@ -135,8 +138,12 @@
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
 
+		## Initialising object of visit by visit ID.		
+		$visit_ID=$protocol->getVisit_ID();
+		$visit=new Visit($visit_ID);
+
 		## Initialising variable with date of delivery.
-		$date=date("d.m.Y",(strtotime($protocol->getVisitDate())));
+		$date=date("d.m.Y",(strtotime($visit->getCheckin_time())));
 		
 		## Add the delivery's records to $html.
 		$html.='<h2>'.$date.' - Delivery</h2>'.

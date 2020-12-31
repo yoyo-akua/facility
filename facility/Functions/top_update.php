@@ -23,7 +23,7 @@
 		
 		
 		## Retrieve all diagnoses that were prescribed during the last month from the database.
-		$query="SELECT diagnosis_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND protocol.VisitDate>=(DATE(NOW()) - INTERVAL 1 MONTH)";
+		$query="SELECT diagnosis_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND protocol.timestamp>=(DATE(NOW()) - INTERVAL 1 MONTH)";
 		$result=mysqli_query($link,$query);
 		
 		## Create an array which will later be used to store the number of times a diagnosis has appeared.

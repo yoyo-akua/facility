@@ -28,20 +28,23 @@
     }else if(strstr($thispage,"non_drugs")){
         $column="Non_Drugname";
         $table="non_drugs";
+    }else if(strstr($thispage,"login.php")){
+        $column="username";
+        $table="staff";
     }else if(strstr($thispage,"current_patients") OR strstr($thispage,"disp_patients") OR strstr($thispage,"vital_signs") OR strstr($thispage,"lab_patients") OR strstr($thispage,"maternity_patients")){
         ## $condition is used to limit the search result further.
         if(strstr($thispage,"current_patients")){
-            $condition=" WHERE patient.patient_ID=protocol.patient_ID AND VisitDate like '%$today%' AND completed like '0' AND onlylab=0";
+            $condition=" WHERE patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID AND checkout_time like '0000-00-00 00:00:00' AND onlylab=0";
         }else if(strstr($thispage,"disp_patients")){
-            $condition=",disp_drugs WHERE patient.patient_ID=protocol.patient_ID and disp_drugs.protocol_ID=protocol.protocol_ID AND onlylab=0 and completed like 0 AND VisitDate>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY protocol.protocol_ID";
+            $condition=",disp_drugs WHERE patient.patient_ID=visit.patient_ID  AND visit.visit_ID=protocol.visit_ID and disp_drugs.protocol_ID=protocol.protocol_ID AND onlylab=0 and checkout_time like '0000-00-00 00:00:00' AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY protocol.protocol_ID";
         }else if(strstr($thispage,"vital_signs")){
-            $condition=" WHERE patient.patient_ID=protocol.patient_ID and VisitDate like '%$today%'AND onlylab=0 AND protocol_ID NOT IN (SELECT protocol_ID FROM vital_signs) AND completed like '0'  ";
+            $condition=" WHERE patient.patient_ID=visit.patient_ID  AND visit.visit_ID=protocol.visit_ID and checkout_time like '0000-00-00 00:00:00' AND onlylab=0 AND protocol_ID NOT IN (SELECT protocol_ID FROM vital_signs) ";
         }else if(strstr($thispage,"lab_patients")){
-            $condition=",lab WHERE patient.patient_ID=protocol.patient_ID AND lab.protocol_ID=protocol.protocol_ID AND labdone=0 AND VisitDate>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY lab.protocol_ID";
+            $condition=",lab_list WHERE patient.patient_ID=visit.patient_ID  AND visit.visit_ID=protocol.visit_ID AND lab_list.protocol_ID.protocol.protocol_ID AND lab_done=0 AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY protocol.protocol_ID";
         }else if(strstr($thispage,"maternity_patients")){
-            $condition=" WHERE patient.patient_ID=protocol.patient_ID and completed like 0  AND onlylab=0 and Sex like 'female' and VisitDate like '%$today%'";
+            $condition=" WHERE patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID and checkout_time like '0000-00-00 00:00:00' AND onlylab=0 and Sex like 'female'";
         }
-        $table="patient,protocol$condition";
+        $table="patient,protocol,visit$condition";
         $column="Name";
         
         ## $extra contains some extra information to be displayed in the autocompletion propositions which are not part of the actual search.

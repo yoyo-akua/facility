@@ -74,15 +74,20 @@
 			return $nutrition;
 		}
 		public static function classify_BMI($protocol_ID,$BMI){
+			
 			global $link;
 
 			$protocol=new Protocol($protocol_ID);
-			$patient_ID=$protocol->getPatient_ID();
+
+			$visit_ID=$protocol->getVisit_ID();
+			$visit=new Visit($visit_ID);
+
+			$patient_ID=$visit->getPatient_ID();
 			$patient=new Patient($patient_ID);
 
 			$sex=$patient->getSex();
 
-			$timestamp=strtotime($protocol->getVisitDate());
+			$timestamp=strtotime($visit->getCheckin_time());
 			$birthdate=strtotime($patient->getBirthdate());
 			$age=floor(($timestamp-$birthdate)/(3600*24*7));
 			if($age<=13){

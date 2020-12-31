@@ -5,13 +5,14 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol= new Protocol($protocol_ID);
-
 	## Initialise new object of patient by a certain patient-ID, with which the page is .
 	$patient_ID=$_GET['patient_ID'];
 	$patient=new Patient($patient_ID);
+
+	## Initialise new object of visit by a certain visit ID, with which the page is .
+	$visit_ID=$_GET['visit_ID'];
+	$visit=new Visit($visit_ID);
+
 
 	/*
 	## Initialise variable $added which is used to differentiate in the notification sent to lab, 
@@ -24,7 +25,7 @@
 	## Get all tests, which are already ordered for the patient.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$test_query="SELECT * FROM lab,parameters WHERE lab.protocol_ID='$protocol_ID' AND lab.parameter_ID=parameters.parameter_ID"; 
+	$test_query="SELECT * FROM lab,parameters,protocol WHERE visit_ID='$visit_ID' AND lab.protocol_ID=protocol.protocol_ID AND lab.parameter_ID=parameters.parameter_ID"; 
 	$test_result=mysqli_query($link,$test_query);
 	$last_tests=array();
 
@@ -74,22 +75,30 @@
 			if(! empty($_GET["test_$test_ID"])){
 				if(! in_array($test_ID,$last_tests)){
 					
-					Lab::new_Lab($protocol_ID,$parameter_ID);
-					
-					## Set labdone=0 in protocol to indicate that tests are ordered on the patient (otherwise the field is just empty).
-					$protocol->setLabdone(0);
-
 					/*
 					## Find out if the patient already has a lab number.
 					## If not, create a new lab number.
 					## Update the patient's visit's data with this lab number 
 					## and replace the previous lab number in the "departments" table of the database so that the next lab number can be calculated correctly.
 					*/	
-					if(empty($protocol->getLab_number())){
+					if(empty($visit->getLab_number())){
 						$lab_number=Settings::new_number('Laboratory','');
-						$protocol->setLab_number($lab_number);
-						Settings::set_new_number('Laboratory',$lab_number,'');	
+						Settings::set_new_number('Laboratory',$lab_number,'');
+						$protocol=Protocol::new_Protocol($visit_ID,'Tests ordered');
+						$protocol_ID=$protocol->getProtocol_ID();
+						$lab_list=Lab_List::new_Lab_List($lab_number);
+						$lab_list_ID=$lab_list->getLab_List_ID();
+					}else if(! isset($protocol_ID)){
+						$protocol=Protocol::new_Protocol($visit_ID,'Tests added');
+						$protocol_ID=$protocol->getProtocol_ID();
+						
+						$query="SELECT lab_list_ID FROM lab,protocol WHERE visit_ID=$visit_ID AND protocol.protocol_ID=lab.protocol_ID";
+						$result2=mysqli_query($link,$query);
+						$object=mysqli_fetch_object($result2);
+						$lab_list_ID=$object->lab_list_ID;
 					}
+					
+					Lab::new_Lab($protocol_ID,$parameter_ID,$lab_list_ID);
 
 					## Set $ordered true in case any tests have been ordered for the patient.
 					$ordered=true;
@@ -149,7 +158,7 @@
 			}else{
 				foreach($delete_array AS $test_array){
 					foreach($test_array AS $parameter_ID){
-						$query="DELETE FROM lab WHERE protocol_ID=$protocol_ID AND parameter_ID=$parameter_ID";
+						$query="DELETE FROM lab WHERE protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID='$visit_ID') AND parameter_ID=$parameter_ID";
 						mysqli_query($link,$query);
 					}
 				}
@@ -180,9 +189,9 @@
 			}
 			Push::new_Notification($title,$text,date("Y-m-d H:i:s",time()),"Laboratory");
 		}
-		/*
+		
 		## Automatically lead to lab list, if the patient is a self-paying lab client, otherwise lead to current patient list.
-		if($protocol->getOnlylab()==1){
+		if($visit->getOnlylab()==1){
 			echo'<script type="text/JavaScript">;
 						window.location.href="lab_patients.php";
 					</script>';
@@ -190,7 +199,8 @@
 			echo'<script type="text/JavaScript">;
 						window.location.href="current_patients.php";
 					</script>';
-		}*/
+		}
+		
 	}
 	
 	## This if-branch is called, when the user is calling the page, before clicking submit.
@@ -252,7 +262,7 @@
 		## It is used to prevent double entries.
 		*/
 		echo"		
-						<input type='hidden' name='protocol_ID' value='$protocol_ID'>
+						<input type='hidden' name='visit_ID' value='$visit_ID'>
 						<input type='hidden' name='patient_ID' value='$patient_ID'>
 						<br><input type='submit' name='submit' value='submit'>
 					</form>

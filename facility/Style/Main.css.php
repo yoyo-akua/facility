@@ -58,6 +58,15 @@ ul {
 	margin: 0px;
 	z-index:1;
 }
+ul.right>li>ul{
+	right:0px;
+	margin-right:30%;
+}
+ul.right>li{
+	right:0;
+	float:right;
+}
+
 ul li {
 	 display: block;
 	 position: relative;
@@ -209,11 +218,11 @@ div.columnleft{
 	color: <?php echo $h1; ?>;
 }
 
-#submitlab{
+#submitbutton{
 	color: <?php echo $main; ?>;
 	text-shadow: 2px 2px rgb(240,240,240);
 }
-#submitlab:hover{
+#submitbutton:hover{
 	color: <?php echo $hover; ?>;
 } 
 #ban_diagnosis:hover{
@@ -313,13 +322,7 @@ td.columns{
 	font-size:26px;
 }
 
-#help{
-	float:right;
-	padding:5px;
-	color:white;
-	font-size:28px;
-}
-#help.shadow:hover,#home.shadow:hover,.shadow:hover{
+#home.shadow:hover,.shadow:hover{
 	color:<?php echo "rgba($colours->light,0.8)"; ?>;
 	text-shadow: 1px 1px 1px #def, 0 0 0 #000, 1px 1px 1px #def;
 }

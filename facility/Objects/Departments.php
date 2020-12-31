@@ -22,5 +22,13 @@
             $ID=mysqli_fetch_object($object);
             return $ID->Department_ID;
         }
+
+        public function getDepartmentName($ID){
+            global $link;
+            $query="SELECT Department FROM departments WHERE Department_ID='$ID'";
+            $object=mysqli_query($link,$query);
+            $name=mysqli_fetch_object($object);
+            return $name->Department;
+        }
     }
 ?>

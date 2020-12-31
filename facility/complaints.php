@@ -60,7 +60,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient WHERE patient.patient_ID=protocol.patient_ID and VisitDate like '%$today%' $searchpara AND onlylab=0 AND protocol.protocol_ID NOT IN (SELECT protocol_ID FROM complaints) AND completed like '0'  ORDER BY VisitDate ASC";
+	$query="SELECT * FROM protocol,patient,visit WHERE visit.patient_ID=patient.patient_ID and protocol.visit_ID=visit.visit_ID $searchpara AND onlylab=0 AND protocol.protocol_ID NOT IN (SELECT protocol_ID FROM complaints) AND checkout_time like '0000-00-00 00:00:00'  ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -105,10 +105,14 @@
 		while($row = mysqli_fetch_object($result)){
 			$protocol_ID=$row->protocol_ID;
 			$protocol= new Protocol($protocol_ID);
+
+			$visit_ID=$row->visit_ID;
+			$visit=new Visit($visit_ID);
+
 			$patient_ID=$row->patient_ID;
 			$patient = new Patient($patient_ID);
 
-			$age=$patient->getAge(strtotime($protocol->getVisitDate()),'calculate');
+			$age=$patient->getAge(strtotime($visit->getCheckin_time()),'calculate');
 
 			$patient->currenttablerow($protocol_ID);
 			

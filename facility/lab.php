@@ -5,12 +5,18 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 	
-	## Initialise new objects of patient and protocol by certain IDs, with which the page is called.
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol= new Protocol($protocol_ID);
+	## Initialise new objects of patient, visit, lab list and protocol by certain IDs, with which the page is called.
+	##Achtung: Diese Zeilen sollen noch weg:
+	##$protocol_ID=$_GET['protocol_ID'];
+	##$protocol= new Protocol($protocol_ID);
+
+	$lab_list=new Lab_List($protocol_ID); ## das hier ist ein Quatsch-Schlüssel, da findest du aber bestimmt den richtigen :)
 
 	$patient_ID=$_GET['patient_ID'];
 	$patient=new Patient($patient_ID);
+
+	$visit_ID=$_GET['visit_ID'];
+	$visit=new Visit($visit_ID);
 
 	## Initialise variable with patient's name.
 	$name=$patient->getName();
@@ -109,7 +115,7 @@
 			
 			## If the patient has only come for lab, not for OPD, indicate that in the protocol.
 			if(empty($_POST['onlylab'])){
-				$protocol->setOnlylab(0);
+				$visit->setOnlylab(0);
 			}
 			
 			## $allset is set false if at least one parameter is not set.
@@ -172,21 +178,21 @@
 		## The new_Notification function is used to store this message in the database.
 		*/
 		if(! empty($_POST['labdone'])){
-			$protocol->setLabdone(1);
+			$lab_list->setLab_done(1);
 
 			$title="Lab results ready";
 			$notif_patient=$name."\'s (".$patient->getOPD().")";
 			$text="$notif_patient lab results can be examined now.";
 			Push::new_Notification($title,$text,date("Y-m-d H:i:s",time()),"Consulting");
 		}else{
-			$protocol->setLabdone(0);
+			$lab_list->setLab_done(0);
 		}
 		
 		## Print a headline and the patient's test results (called by function Lab::display_results()).
 		echo "
 				<h1>Results of $name</h1>
 				<div class='inputform'>
-				".Lab::display_results($protocol_ID,'tooltips on')."
+				".Lab::display_results($visit->getLab_number(),'tooltips on')."
 				</div>
 				";
 		
@@ -240,7 +246,7 @@
 			## $first is used to avoid printing a checkbox for tests which were performed in a different facility at the very beginning of the page.
 			## $result contains a list with all the tests (or rather their parameters) which are performed on the patient from the database.
 			*/
-			$lab_number=$protocol->getLab_number();
+			$lab_number=$visit->getLab_number();
 			$previous_test="";
 			$first=true;
 			$result=mysqli_query($link,$query);
@@ -435,7 +441,7 @@
 							<div class="tooltip">
 								<input type="file" id="'.$upload.'" name="file" onChange="upload_name(\''.$upload.'\')">
 								<label for="'.$upload.'">
-									<i class="fas fa-file-upload fa-2x" id="submitlab"></i>
+									<i class="fas fa-file-upload fa-2x" id="submitbutton"></i>
 								</label>
 								<span class="tooltiptext" style="line-height:normal">
 									upload file to<br> 
@@ -452,7 +458,7 @@
 						## If the patient was only coming for lab initially, he did not appear in the other department's patient lists. 
 						## If this checkbox is deselected, he will appear in those lists.
 						*/
-						if($protocol->getOnlylab()==1){
+						if($visit->getOnlylab()==1){
 							echo"<input type='checkbox' name='onlylab' checked='checked'>only coming for lab<br>";
 						}
 
@@ -469,7 +475,7 @@
 								}
 								echo'> GhC <br>
 						<input type="checkbox" name="labdone"';
-								if($protocol->getLabdone()==1){
+								if($lab_list->getLab_done()==1){
 									echo'checked="checked"';
 								}
 								echo'>tests completed?
