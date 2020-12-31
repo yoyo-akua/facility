@@ -65,4 +65,11 @@
     }
 
     */
+    $query="SELECT * FROM lab_list,protocol,lab WHERE lab.protocol_ID=protocol.protocol_ID AND lab_list.lab_list_ID=lab.lab_list_ID";
+    $result=mysqli_query($link,$query);
+
+    while($row=mysqli_fetch_object($result)){
+        $query="UPDATE lab_list SET visit_ID='$row->visit_ID' WHERE lab_list_ID='$row->lab_list_ID'";
+        mysqli_query($link,$query);
+    }
 ?>

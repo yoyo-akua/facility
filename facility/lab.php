@@ -1,25 +1,20 @@
 <?php
 	/*
-	Test 
-	*/
-	/*
 	## Contains global variables and functions which are needed within this page.
 	## Contains also HTML/CSS structure, which styles the graphical user interface in the browser.
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 	
 	## Initialise new objects of patient, visit, lab list and protocol by certain IDs, with which the page is called.
-	##Achtung: Diese Zeilen sollen noch weg:
-	##$protocol_ID=$_GET['protocol_ID'];
-	##$protocol= new Protocol($protocol_ID);
-
-	$lab_list=new Lab_List($protocol_ID); ## das hier ist ein Quatsch-Schlüssel, da findest du aber bestimmt den richtigen :)
-
 	$patient_ID=$_GET['patient_ID'];
 	$patient=new Patient($patient_ID);
 
 	$visit_ID=$_GET['visit_ID'];
 	$visit=new Visit($visit_ID);
+
+	$lab_list=new Lab_List($visit_ID);
+	$lab_list_ID=$lab_list->getLab_List_ID();
+
 
 	## Initialise variable with patient's name.
 	$name=$patient->getName();
@@ -225,18 +220,36 @@
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 		## $row is used to check, if there are any tests, that haven't been entered yet. If not, print links to edit or add tests.
 		*/
-		$query="SELECT * FROM lab,parameters WHERE lab.protocol_ID=$protocol_ID AND parameters.parameter_ID=lab.parameter_ID ";
+
+		$query="SELECT * FROM lab,parameters WHERE lab.lab_list_ID = $lab_list_ID AND parameters.parameter_ID=lab.parameter_ID";
+
+		## TODO: nächste Zeile löschen. Ist alt, wurde ersetzt durch Zeile über diesem Kommentar
+		#$query="SELECT * FROM lab,parameters WHERE lab.protocol_ID=$protocol_ID AND parameters.parameter_ID=lab.parameter_ID ";
+		/*
+		## This if-brach is always called when the user did not click on the reset button.
+		## All tests, which has an already documented result are left out. 
+		*/
 		if(empty($_GET['reset'])){
-			$query.=" AND test_results=''";
+			$query.=" AND lab.test_results=''";
 		}
-		$query.=" ORDER BY test_ID,parameters.parameter_ID";
+
+		/*
+		## Result list is firstly grouped by the type of an test,
+		## And secondly by its parameters.
+		*/
+		$query.=" ORDER BY parameters.test_ID,parameters.parameter_ID";
 		$result=mysqli_query($link,$query);
 		$row=mysqli_fetch_object($result);
+		
+		/*
+		If no tests of which the results haven't been entered yet exist,
+		Print two Buttons instead.
+		*/
 		if(empty($row)){
 			echo"
 					<h1>This patient's results have been entered completely.</h1>
-					<a href='lab.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&reset=on'><div class='box'>Reset Test Results</div></a>
-					<a href='order_tests.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID'><div class='box'>add tests</div></a>
+					<a href='lab.php?visit_ID=$visit_ID&patient_ID=$patient_ID&reset=on'><div class='box'>Reset Test Results</div></a>
+					<a href='order_tests.php?visit_ID=$visit_ID&patient_ID=$patient_ID'><div class='box'>add tests</div></a>
 					";
 		}
 		
@@ -257,7 +270,7 @@
 			## Print headline, lab number and the beginning of the form.
 			echo"	<h1>Tests on $name</h1>
 					<h1>lab ID: $lab_number</h1>
-					<form action='lab.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID' method='post' enctype='multipart/form-data'>
+					<form action='lab.php?patient_ID=$patient_ID&visit_ID=$visit_ID' method='post' enctype='multipart/form-data'>
 					";
 			
 			## The following loop will be run once for each of the parameters of the ordered tests for the patient.
@@ -457,16 +470,21 @@
 					<br>';
 
 						/*
+						## TODO: Bezahlung soll ganz anders werden. Muss dann hier wieder mit berücksichtigt werden.
 						## If the patient has only come for lab, the user can change that here.
 						## If the patient was only coming for lab initially, he did not appear in the other department's patient lists. 
 						## If this checkbox is deselected, he will appear in those lists.
 						*/
+						/*
 						if($visit->getOnlylab()==1){
 							echo"<input type='checkbox' name='onlylab' checked='checked'>only coming for lab<br>";
 						}
-
+						*/
 						## Print input field for the patient's charges, a checkbox to indicate, if the tests have been completed and the submit button.
-						echo"
+						/*
+						## TODO: Bezahlung soll anders werden
+						## In nachstehendem echo stand noch folgendes zur Bezahlung drin:
+						
 						<input type='checkbox' name='charge_checkbox' ";
 								if($protocol->getCharge()!=='0.00'){
 									echo'checked="checked"';
@@ -477,6 +495,9 @@
 									echo'value='.$protocol->getCharge();
 								}
 								echo'> GhC <br>
+						
+						*/
+						echo'
 						<input type="checkbox" name="labdone"';
 								if($lab_list->getLab_done()==1){
 									echo'checked="checked"';
