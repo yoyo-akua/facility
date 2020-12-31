@@ -1,5 +1,8 @@
 <?php
 	/*
+	Test 
+	*/
+	/*
 	## Contains global variables and functions which are needed within this page.
 	## Contains also HTML/CSS structure, which styles the graphical user interface in the browser.
 	*/
