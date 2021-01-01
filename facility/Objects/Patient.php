@@ -432,12 +432,21 @@
 		## At the end two further columns are printed for Editing a patient by forwarding the user to edit_patient.php,
 		## and for patient's results by forwarding the user to patient_visit.php.
 		*/
-		public function shorttablerow($protocol_ID,$previous,$columns){
-			$Protocol=new Protocol($protocol_ID);
 
-			$visit=new Visit($Protocol->getVisit_ID());
+		## TODO: @Flo: Hier alle Dateien noch anpassen, die diese Funktion aufrufens
+		#public function shorttablerow($protocol_ID,$previous,$columns){
+		public function shorttablerow($visit_ID,$previous,$columns){
 
-			$insurance=new Insurance($Protocol->getVisit_ID());
+			#$Protocol=new Protocol($protocol_ID);
+			/*
+			## Initialise variables, which are needed within this function.
+			*/
+			$visit=new Visit($visit_ID);
+			#$protocol=new Protocol()
+			#$visit=new Visit($Protocol->getVisit_ID());
+
+			$insurance=new Insurance($visit_ID);
+			#$insurance=new Insurance($Protocol->getVisit_ID());
 
 			$patient_ID=$this->ID;
 			
@@ -523,8 +532,12 @@
 				echo "<td style=text-align:left><h4><u>$lab_number</u></h4><br>$html</td>";
 			}
 						
+			##TODO: Surgery soll noch in eine eigene Tabelle. 
+			## Dann ist das hier mit anzupassen.
+			## Solange bleibt der Code auskommentiert. 
 			## Prints optional, depending on which columns are requested and only if existing the patient's surgery information.
-			if($columns['surgery']=='on'){
+			/*
+			f($columns['surgery']=='on'){
 				echo"<td>";
 				$surgery=$Protocol->getsurgery();
 				if(! empty($surgery)){
@@ -532,19 +545,24 @@
 				}
 				echo"</td>";
 			}
+			*/
 			
 			## Prints optional, depending on which columns are requested and only if existing the prescribed drugs of a patient.
 			if($columns['drugs']=='on'){
-				if(Disp_Drugs::drugs_prescribed($protocol_ID)){
-					$html=Disp_Drugs::display_disp_drugs($protocol_ID,'print');
+				if(Disp_Drugs::drugs_prescribed($visit_ID)){
+					$html=Disp_Drugs::display_disp_drugs($visit_ID,'print');
 					echo"<td style=text-align:left>$html</td>";
 				}else{
 					echo '<td></td>';
 				}
 			}
 
-			
+			## TODO: display_diagnoses Funktion muss aus dem Protocol Objekt herausgezogen
+			## und in das Visit-Objekt verschieben
+			## @Flo: Das noch mit erledigen beim aktuellen Umbau
+			## Solange bleibt der Code erstmal auskommentiert.
 			## Prints optional, depending on which columns are requested and only if existing the patient's primary and secondary diagnoses.
+			/*
 			if($columns['primary']=='on'){
 				$html=$Protocol->display_diagnoses('primary');
 				echo "<td style='text-align:left'>$html</td>";
@@ -557,8 +575,15 @@
 				$html=$Protocol->display_diagnoses('provisional');
 				echo "<td style='text-align:left'>$html</td>";
 			}
+			*/
 			
+			##TODO: Hier muss erst noch die Protocol ID in die ANC Tabelle
+			## Danach kann die getANC_ID in das ANC Object verschoben werden
+			## Anschließend kann in der get Methode über die Visit-ID und die Protocol ID
+			## nach der ANC-ID gesucht werden.
+			## Bis zum Abschluss dieses Umbaus bleibt der nachstehende Code auskommentiert.
 			## Prints optional, depending on which columns are requested and only if existing the patient's ANC information.
+			/*
 			if($columns['ANC']=='on'){
 				$ANC_ID=$Protocol->getANC_ID();
 				if(! empty($ANC_ID)){
@@ -575,11 +600,12 @@
 				}
 				echo"<td style='text-align:left'>$ANC</td>";
 			}
-			
+			*/
+
 			##Prints optional, depending on which columns are requested the information, whether patient has been entered in Claim It or not
 			if($columns['entered']=='on'){
 				global $thispage;
-				if(! empty($_GET['entered']) AND $_GET['entered']==$protocol_ID){
+				if(! empty($_GET['entered']) AND $_GET['entered']==$visit_ID){
 					if($insurance->getEntered()==1){
 						$insurance->setEntered(0);
 					}else{
@@ -604,7 +630,7 @@
 				}
 
 				echo"
-						<td><a href='$thispage?from=$from&to=$to$&entered=$protocol_ID'>
+						<td><a href='$thispage?from=$from&to=$to$&entered=$visit_ID'>
 						<input type='checkbox'";
 				if($insurance->getEntered()==1){
 					echo"checked='checked'";
@@ -612,19 +638,25 @@
 				echo"></a></td>";
 			}
 
+			## TODO: Vital_Signs::print_nutrition($visit_ID) muss noch umgeschrieben werden
+			## Vorher wurde hier die protocol_ID übergeben
+			## @Flo: selber umbauen
+			## Solange bleibt der Code noch auskommentiert.
 			## Prints optional, depending on which columns are requested and only if existing the nutrition management of a patient.
+			/*
 			if($columns['nutrition']=='on'){
-				$html=Vital_Signs::print_nutrition($protocol_ID);
+				$html=Vital_Signs::print_nutrition($visit_ID);
 				echo "<td style='text-align:left'>$html</td>";
 			}
-			
+			*/
+
 			## Prints links for editing patient as well as for show its results in patient diagnoses overview.
 			echo"
 				<td>
-					<a href=\"edit_patient.php?patient_ID=$this->ID&protocol_ID=$protocol_ID\">See/Edit</a>
+					<a href=\"edit_patient.php?patient_ID=$this->ID&visit_ID=$visit_ID\">See/Edit</a>
 				</td>
 				<td>
-					<a href=\"patient_visit.php?show=on&protocol_ID=$protocol_ID&patient_ID=$patient_ID\">Results</a>
+					<a href=\"patient_visit.php?show=on&pvisit_ID=$visit_ID&patient_ID=$patient_ID\">Results</a>
 				</td>
 			";
 		}
