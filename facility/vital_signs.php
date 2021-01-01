@@ -17,12 +17,10 @@
 	## The patient's vital signs are added to the system, if they were defined in browser.
 	*/
 	if(! empty($_POST['submit'])){
-		$protocol_ID=$_POST['protocol_ID'];
-		if(Vital_Signs::already_set($protocol_ID)){
-			(new Vital_Signs($protocol_ID))->setVital_signs('post');
-		}else{
-			$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_POST['BP'],$_POST['weight'],$_POST['pulse'],$_POST['temperature'],$_POST['MUAC']);
-		}
+		$visit_ID=$_POST['visit_ID'];
+		$protocol=protocol::new_Protocol($visit_ID,'vital signs taken');
+		$protocol_ID=$protocol->getProtocol_ID();
+		$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_POST['BP'],$_POST['weight'],$_POST['pulse'],$_POST['temperature'],$_POST['MUAC']);
 	}
 
 	
@@ -43,7 +41,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,visit WHERE patient.patient_ID=visit.patient_ID and protocol.visit_ID=visit.visit_ID  $searchpara AND onlylab=0 AND protocol_ID NOT IN (SELECT protocol_ID FROM vital_signs) AND checkout_time like '0000-00-00 00:00:00'  ORDER BY checkin_time ASC";
+	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID  $searchpara AND onlylab=0 AND visit_ID NOT IN (SELECT visit_ID FROM protocol,vital_signs WHERE protocol.protocol_ID=vital_signs.protocol_ID) AND checkout_time like '0000-00-00 00:00:00'  ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 	
 	/*
@@ -88,19 +86,16 @@
 		while($row = mysqli_fetch_object($result)){
 			
 			## Initialise new objects of the patient, protocol entry and visit.
-			$protocol_ID=$row->protocol_ID;
-			$protocol= new Protocol($protocol_ID);
-
 			$patient_ID=$row->patient_ID;
 			$patient = new Patient($patient_ID);
 
 			$visit_ID=$row->visit_ID;
 			$visit=new Visit($visit_ID);
 
-			$BP_last=Vital_Signs::last_BPs($protocol_ID);
+			$BP_last=Vital_Signs::last_BPs($visit_ID,'addVitals');
 			$age=$patient->getAge(strtotime($visit->getCheckin_time()),'calculate');
 
-			$patient->currenttablerow($protocol_ID);
+			$patient->currenttablerow($visit_ID);
 			
 			echo"
 				<form action='vital_signs.php' method='post'>
@@ -136,7 +131,7 @@
 						}
 						echo"
 					<td>
-						<input type='hidden' name='protocol_ID' value='".$row->protocol_ID."'>
+						<input type='hidden' name='visit_ID' value='".$row->visit_ID."'>
 						<input type='submit' name='submit' value='submit'>
 					</td>
 				</form>
