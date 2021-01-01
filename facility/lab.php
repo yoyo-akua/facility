@@ -31,10 +31,10 @@
 
 			## The protocoled event differs depending on whether the tests are completed or not.
 			If (! empty($_POST['labdone'])){
-				Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
+				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
 			}
 			else{
-				Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
+				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
 			}
 		}	
 
@@ -121,7 +121,13 @@
 			}
 			*/
 			
-			
+			/*
+			## Write in database lab table a reference to the protocol entry, 
+			## which represents the submitted test results
+			*/
+			$lab->setProtocol_ID_results($Protocol_ID_results);
+
+
 			## If the test was performed in a different facility, indicate that in the lab list
 			if(! empty($_POST["other_facility_$test_name"])){
 				$lab->setOther_facility(1);
@@ -152,7 +158,6 @@
 			## 		  and the filetype to create the new name with which it will be saved 
 			##		- $targetFilePath compiles $targetDir and $newfilename to the complete directory for saving
 			##		- $allowTypes defines which file formats are allowed for the uploaded file
-			##		- $protocol_ID to create an upload event as protocol entry. 
 			*/
 			$targetDir = "./uploads/";
 			
