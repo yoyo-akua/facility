@@ -149,6 +149,7 @@
 	## as well as checkbox to enable or disable protection of patient's diagnosis
 	## Check checkbox if patient's diagnosis is protected.
 	*/
+	$html=(new Vital_Signs($protocol_ID))->display_admission_data();
 	echo "<br>
 				<a href='patient_visit.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
 					<input type='checkbox'";
@@ -157,7 +158,7 @@
 					}
 					echo"></input> protected by password
 				</a><br>
-				".(new Vital_Signs($protocol_ID))->display_admission_data($patient)."
+				".$html."
 			</div>
 			";
 

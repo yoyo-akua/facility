@@ -205,11 +205,13 @@
 		public function display_admission_data(){
 			$html='';
 			global $thispage;
-			
 			if(! empty($this->BP)){
 				if(!strstr($thispage,'pdf')){
 				
-					$BP_last=Vital_Signs::last_BPs($this->protocol_ID);
+					$protocol_ID=$this->protocol_ID;
+					$protocol=new Protocol($protocol_ID);
+					$visit_ID=$protocol->getProtocol_ID();
+					$BP_last=Vital_Signs::last_BPs($visit_ID,$this->protocol_ID);
 					if(!empty($BP_last)){
 						$html.="<h4>Blood Pressure:</h4>
 							<div class='tooltip' style='line-height:normal'>
@@ -301,13 +303,21 @@
 		/*	
 		## This function is used to inquire whether the patient has come to the facility before, 
 		## if so initialise variable $BP_last with the BP of the 5 previous visits.
-		## The sent parameters $protocol_ID and $patient_ID are used to link to the patient and his visit's data.
+		## The sent parameter $visit_ID is used to link to the patient and his visit's data.
+		## $function is indicating whether the vital signs for the patient are supposed to be added or edited:
+		##		- if $functions equals "addVitals" that means that there is no vital signs entry to be excluded from the search (when adding)
+		##		- if $function is a figure that is a protocol ID which is used to exclude the vitals with this specific ID from the search (when editing)
 		## Return $BP_last.
 		*/
-		public static function last_BPs($protocol_ID){
+		public static function last_BPs($visit_ID,$function){
 			global $link;
-			global $today;
-			$querylast="SELECT * FROM protocol,vital_signs,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=(SELECT visit.patient_ID FROM visit,protocol WHERE visit.visit_ID=protocol.protocol_ID AND protocol_ID=$protocol_ID) AND vital_signs.protocol_ID=protocol.protocol_ID AND protocol.protocol_ID!=$protocol_ID AND checkin_time<='$today' ORDER BY checkin_time DESC LIMIT 0,5";
+
+			if($function=='addVitals'){
+				$para='';
+			}else{
+				$para="AND protocol.protocol_ID!=$function";
+			}
+			$querylast="SELECT * FROM protocol,vital_signs,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=(SELECT visit.patient_ID FROM visit WHERE visit_ID=$visit_ID) AND vital_signs.protocol_ID=protocol.protocol_ID $para ORDER BY checkin_time DESC LIMIT 0,5";
 			$resultlast=mysqli_query($link,$querylast);
 			if(mysqli_num_rows($resultlast)!==0){
 				$BP_last="last visits' BPs <br>";
