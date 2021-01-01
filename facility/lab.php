@@ -39,7 +39,6 @@
 		}	
 
 		## $allset is used to determine, if some tests are not dealt with yet.
-		## TODO: Wird diese Variable noch gebraucht, wenn es doch mittlerweile $_POST['labdone'] gibt?
 		$allset=true;
 
 		/*
@@ -122,11 +121,13 @@
 			*/
 			
 			/*
-			## Write in database lab table a reference to the protocol entry, 
-			## which represents the submitted test results
+			## Write in database table lab a reference to the protocol entry, 
+			## which represents the submitted test results.
+			## But do this only for those parameters to which a result is submitted.
 			*/
-			$lab->setProtocol_ID_results($Protocol_ID_results);
-
+			if(! empty($_POST["parameter_$parameter_ID"])){
+				$lab->setProtocol_ID_results($Protocol_ID_results->getProtocol_ID());
+			}
 
 			## If the test was performed in a different facility, indicate that in the lab list
 			if(! empty($_POST["other_facility_$test_name"])){
@@ -244,14 +245,9 @@
 		## Get data from database.
 		## Get a list with all the tests (or rather their parameters) which are performed on the patient.
 		## If the user hasn't decided to reset the test results, only tests of which the results haven't been entered yet are displayed.
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
-		## $row is used to check, if there are any tests, that haven't been entered yet. If not, print links to edit or add tests.
 		*/
-
 		$query="SELECT * FROM lab,parameters WHERE lab.lab_list_ID = $lab_list_ID AND parameters.parameter_ID=lab.parameter_ID";
 
-		## TODO: nächste Zeile löschen. Ist alt, wurde ersetzt durch Zeile über diesem Kommentar
-		#$query="SELECT * FROM lab,parameters WHERE lab.protocol_ID=$protocol_ID AND parameters.parameter_ID=lab.parameter_ID ";
 		/*
 		## This if-brach is always called when the user did not click on the reset button.
 		## All tests, which has an already documented result are left out. 
@@ -269,8 +265,8 @@
 		$row=mysqli_fetch_object($result);
 		
 		/*
-		If no tests of which the results haven't been entered yet exist,
-		Print two Buttons instead.
+		##If no tests of which the results haven't been entered yet exist,
+		##Print two Buttons instead.
 		*/
 		if(empty($row)){
 			echo"
