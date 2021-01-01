@@ -5,7 +5,8 @@
 		## In the following all its parameters are described.
 		*/
 		private $lab_ID;			## ID of Laboratory register entry.
-		private $protocol_ID;		## ID of corresponding protocol entry.
+		private $protocol_ID_ordered;		## ID of protocol entry describing the ordering of the test.
+		private $protocol_ID_results;		## ID of protocol entry describing the submission of results of the test.
 		private $parameter_ID;		## ID of the result's corresponding parameter. 
 		private $test_results;		## Contains the parameter's result.
 		private $other_facility;	## Status, whether the parameter/the corresponding test has to be tested in another facility's Laboratory. 
@@ -23,11 +24,12 @@
 			$query = "SELECT * FROM lab WHERE lab_ID = $lab_ID";
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
-			   		$this->protocol_ID = $row->protocol_ID;
+			   		$this->protocol_ID_ordered = $row->protocol_ID_ordered;
 					$this->parameter_ID = $row->parameter_ID;
 					$this->test_results = $row->test_results;
 					$this->other_facility = $row->other_facility;
 					$this->lab_list_ID = $row->lab_list_ID;
+					$this->protocol_ID_results = $row->protocol_ID_results;
 			}
 			$this->lab_ID = $lab_ID;
 		}
@@ -39,9 +41,9 @@
 		## Save this data also in a new created Laboratory register entry object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_Lab($protocol_ID,$parameter_ID,$lab_list_ID){
+		public static function new_Lab($protocol_ID_ordered,$parameter_ID,$lab_list_ID){
 			global $link;
-			$query = "INSERT INTO `lab`(`protocol_ID`,`parameter_ID`,`lab_list_ID`) VALUES ('$protocol_ID','$parameter_ID','$lab_list_ID')";
+			$query = "INSERT INTO `lab`(`protocol_ID_ordered`,`parameter_ID`,`lab_list_ID`) VALUES ('$protocol_ID_ordered','$parameter_ID','$lab_list_ID')";
 			mysqli_query($link,$query);
 			
 			$lab_ID = mysqli_insert_id($link);
@@ -55,6 +57,22 @@
 		*/
 		public function getTest_results(){
 			return $this->test_results;
+		}
+
+		/*
+		## Getter function.
+		## Returns the ID of protocol entry describing the ordering of the test of that Laboratory register entry, on which the function is called.
+		*/
+		public function getProtocol_ID_ordered(){
+			return $this->protocol_ID_ordered;
+		}
+
+		/*
+		## Getter function.
+		## Returns the ID of protocol entry describing the submission of the test of that Laboratory register entry, on which the function is called.
+		*/
+		public function getProtocol_ID_results(){
+			return $this->protocol_ID_results;
 		}
 
 		/*
@@ -92,6 +110,20 @@
 			mysqli_query($link,$query);
 			return $this->other_facility = $var;
 		}
+
+		/*
+		## Setter function.
+		## Updates the ID of protocol entry describing the submission of the test in database of that Laboratory register entry, on which the function is called.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public function setProtocol_ID_results($var){
+			global $link;
+			$query = "UPDATE lab SET protocol_ID_results='$var' WHERE lab_ID = $this->lab_ID";
+			mysqli_query($link,$query);
+			return $this->protocol_ID_results = $var;
+		}
+
 
 		/*
 		## This function is responsible for displaying the results of all test parameters corresponding to a certain patient's visit in a list.
