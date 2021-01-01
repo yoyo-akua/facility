@@ -5,7 +5,7 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 	
-	## Initialise new objects of patient, visit, lab list and protocol by certain IDs, with which the page is called.
+	## Initialise new objects of patient, visit and lab list by certain IDs, with which the page is called.
 	$patient_ID=$_GET['patient_ID'];
 	$patient=new Patient($patient_ID);
 
@@ -23,7 +23,23 @@
 	## This if-branch is called, if the user submitted the test results.
 	if(! empty($_POST['submit'])){
 		
+		/*
+		## Check, if the user has documented at least one test result.
+		## If so, the system creates a protocol entry.
+		*/		
+		If (implode($_POST) !== "submit"){
+
+			## The protocoled event differs depending on whether the tests are completed or not.
+			If (! empty($_POST['labdone'])){
+				Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
+			}
+			else{
+				Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
+			}
+		}	
+
 		## $allset is used to determine, if some tests are not dealt with yet.
+		## TODO: Wird diese Variable noch gebraucht, wenn es doch mittlerweile $_POST['labdone'] gibt?
 		$allset=true;
 
 		/*
@@ -31,7 +47,7 @@
 		## Get a list with all the tests (or rather their parameters) which are ordered for the patient.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 		*/
-		$query="SELECT * FROM lab WHERE protocol_ID=$protocol_ID";
+		$query="SELECT * FROM lab WHERE lab_list_ID=$lab_list_ID";
 		$result=mysqli_query($link,$query);
 		
 		## The following loop will be run once for each of the parameters of the ordered tests for the patient.
@@ -84,6 +100,7 @@
 				## If there have really checkboxes been entered, write them to database.
 				if(! empty($checkboxes)){
 					$lab->setTest_results($checkboxes);
+
 				}
 			}
 			
@@ -94,14 +111,15 @@
 				}
 			}
 			
-			
+			## TODO: Bezahlung soll später ganz anders werden. Dann hier mit bearbeiten. Bis dahin auskommentiert.
 			## If the patient is paying for tests, enter that in the lab list.
+			/*
 			if(! empty($_POST['charge_checkbox']) AND ! empty($_POST['charge_number'])){
 				$protocol->setCharge($_POST['charge_number']);
 			}else if(empty($_POST['charge_checkbox']) AND empty($_POST['charge_number'])){
 				$protocol->setCharge('0.00');
 			}
-			
+			*/
 			
 			
 			## If the test was performed in a different facility, indicate that in the lab list
@@ -134,6 +152,7 @@
 			## 		  and the filetype to create the new name with which it will be saved 
 			##		- $targetFilePath compiles $targetDir and $newfilename to the complete directory for saving
 			##		- $allowTypes defines which file formats are allowed for the uploaded file
+			##		- $protocol_ID to create an upload event as protocol entry. 
 			*/
 			$targetDir = "./uploads/";
 			
@@ -146,16 +165,19 @@
 
 			$allowTypes = array('jpg','png','jpeg','pdf');
 
+			
+
 			## Check, if the uploaded file has an allowed file format.
 			if(in_array($fileType, $allowTypes)){
 				
 				/*
 				## Upload file to server.
 				## Write information about upload to database.
+				## Else give the user a message of failure.
 				*/
 				if(move_uploaded_file($_FILES["file"]["tmp_name"], $targetFilePath)){
 					$message = "The file ".$newfilename. " has been uploaded.";
-
+					$protocol_ID = Protocol::new_Protocol($visit_ID, "file ".$newfilename. " uploaded.");
 					$department = Departments::getDepartmentID("Laboratory");
 					Uploads::new_Uploads($protocol_ID,$newfilename,$department);
 				}else{
@@ -196,12 +218,12 @@
 		
 		## If at least one parameter hasn't been entered yet, print a link to continue the entries of the results.
 		if(! $allset){
-			echo"<a href='lab.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID'><div class='box'>continue entering this patient's test results</div></a>";
+			echo"<a href='lab.php?visit_ID=$visit_ID&patient_ID=$patient_ID'><div class='box'>continue entering this patient's test results</div></a>";
 		}
 		
 		## Print links to reset the results, add further tests or go back to the list of patients in lab.
 		echo"
-				<a href='lab.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&reset=on'><div class='box'>edit this patient's test results</div></a>
+				<a href='lab.php?visit_ID=$visit_ID&patient_ID=$patient_ID&reset=on'><div class='box'>edit this patient's test results</div></a>
 				<a href='order_tests.php?visit_ID=$visit_ID&patient_ID=$patient_ID'><div class='box'>add tests</div></a>
 				<a href='lab_patients.php'><div class='box'>back to all lab patients</div></a>
 				";
