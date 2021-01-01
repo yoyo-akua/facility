@@ -31,15 +31,14 @@
 
 			## The protocoled event differs depending on whether the tests are completed or not.
 			If (! empty($_POST['labdone'])){
-				Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
+				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
 			}
 			else{
-				Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
+				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
 			}
 		}	
 
 		## $allset is used to determine, if some tests are not dealt with yet.
-		## TODO: Wird diese Variable noch gebraucht, wenn es doch mittlerweile $_POST['labdone'] gibt?
 		$allset=true;
 
 		/*
@@ -121,7 +120,15 @@
 			}
 			*/
 			
-			
+			/*
+			## Write in database table lab a reference to the protocol entry, 
+			## which represents the submitted test results.
+			## But do this only for those parameters to which a result is submitted.
+			*/
+			if(! empty($_POST["parameter_$parameter_ID"])){
+				$lab->setProtocol_ID_results($Protocol_ID_results->getProtocol_ID());
+			}
+
 			## If the test was performed in a different facility, indicate that in the lab list
 			if(! empty($_POST["other_facility_$test_name"])){
 				$lab->setOther_facility(1);
@@ -152,7 +159,6 @@
 			## 		  and the filetype to create the new name with which it will be saved 
 			##		- $targetFilePath compiles $targetDir and $newfilename to the complete directory for saving
 			##		- $allowTypes defines which file formats are allowed for the uploaded file
-			##		- $protocol_ID to create an upload event as protocol entry. 
 			*/
 			$targetDir = "./uploads/";
 			
@@ -239,14 +245,9 @@
 		## Get data from database.
 		## Get a list with all the tests (or rather their parameters) which are performed on the patient.
 		## If the user hasn't decided to reset the test results, only tests of which the results haven't been entered yet are displayed.
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
-		## $row is used to check, if there are any tests, that haven't been entered yet. If not, print links to edit or add tests.
 		*/
-
 		$query="SELECT * FROM lab,parameters WHERE lab.lab_list_ID = $lab_list_ID AND parameters.parameter_ID=lab.parameter_ID";
 
-		## TODO: nächste Zeile löschen. Ist alt, wurde ersetzt durch Zeile über diesem Kommentar
-		#$query="SELECT * FROM lab,parameters WHERE lab.protocol_ID=$protocol_ID AND parameters.parameter_ID=lab.parameter_ID ";
 		/*
 		## This if-brach is always called when the user did not click on the reset button.
 		## All tests, which has an already documented result are left out. 
@@ -264,8 +265,8 @@
 		$row=mysqli_fetch_object($result);
 		
 		/*
-		If no tests of which the results haven't been entered yet exist,
-		Print two Buttons instead.
+		##If no tests of which the results haven't been entered yet exist,
+		##Print two Buttons instead.
 		*/
 		if(empty($row)){
 			echo"
