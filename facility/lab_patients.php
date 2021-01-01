@@ -27,7 +27,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,visit,lab_list,lab WHERE lab_list.lab_list_ID=lab.lab_list_ID AND lab.protocol_ID=protocol.protocol_ID AND patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID AND lab_done=0 $searchpara AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY lab_list.lab_number ORDER BY SUBSTRING(lab_list.lab_number FROM -2 FOR 2), lab_list.lab_number";
+	$query="SELECT * FROM protocol,patient,visit,lab_list,lab WHERE lab_list.lab_list_ID=lab.lab_list_ID AND lab.protocol_ID_ordered=protocol.protocol_ID AND patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID AND lab_done=0 $searchpara AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) GROUP BY lab_list.lab_number ORDER BY SUBSTRING(lab_list.lab_number FROM -2 FOR 2), lab_list.lab_number";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -81,9 +81,8 @@
 		## This loop will be run once for each of the output patients from the database query.
 		while($row = mysqli_fetch_object($result)){
 			
-			## Initialise objects of patient and protocol by their IDs.
+			## Initialise objects of patient and visit by their IDs.
 			$patient = new Patient($row->patient_ID);
-			$protocol=new Protocol($row->protocol_ID);
 			$visit=new Visit($row->visit_ID);
 			
 			## Print the patient's data in the table and in the last column a link for entering their test results.

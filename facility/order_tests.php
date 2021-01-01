@@ -25,7 +25,7 @@
 	## Get all tests, which are already ordered for the patient.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$test_query="SELECT * FROM lab,parameters,protocol WHERE visit_ID='$visit_ID' AND lab.protocol_ID=protocol.protocol_ID AND lab.parameter_ID=parameters.parameter_ID"; 
+	$test_query="SELECT * FROM lab,parameters,protocol WHERE visit_ID='$visit_ID' AND lab.protocol_ID_ordered=protocol.protocol_ID AND lab.parameter_ID=parameters.parameter_ID"; 
 	$test_result=mysqli_query($link,$test_query);
 	$last_tests=array();
 
@@ -84,18 +84,18 @@
 					if(empty($visit->getLab_number())){
 						$lab_number=Settings::new_number('Laboratory','');
 						Settings::set_new_number('Laboratory',$lab_number,'');
-						$protocol=Protocol::new_Protocol($visit_ID,'Tests ordered');
-						$protocol_ID=$protocol->getProtocol_ID();
+						$protocol=Protocol::new_Protocol($visit_ID,'tests ordered');
+						$protocol_ID_ordered=$protocol->getProtocol_ID();
 						$lab_list=Lab_List::new_Lab_List($lab_number,$visit_ID);
 						$lab_list_ID=$lab_list->getLab_List_ID();
 					}else if(! isset($protocol_ID)){
-						$protocol=Protocol::new_Protocol($visit_ID,'Tests added');
-						$protocol_ID=$protocol->getProtocol_ID();
+						$protocol=Protocol::new_Protocol($visit_ID,'tests added');
+						$protocol_ID_ordered=$protocol->getProtocol_ID();
 						
 						$lab_list=new Lab_List($visit_ID);
 						$lab_list_ID=$lab_list->getLab_List_ID();
 					}
-					Lab::new_Lab($protocol_ID,$parameter_ID,$lab_list_ID);
+					Lab::new_Lab($protocol_ID_ordered,$parameter_ID,$lab_list_ID);
 
 					## Set $ordered true in case any tests have been ordered for the patient.
 					$ordered=true;
@@ -155,7 +155,7 @@
 			}else{
 				foreach($delete_array AS $test_array){
 					foreach($test_array AS $parameter_ID){
-						$query="DELETE FROM lab WHERE protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID='$visit_ID') AND parameter_ID=$parameter_ID";
+						$query="DELETE FROM lab WHERE protocol_ID_ordered IN (SELECT protocol_ID FROM protocol WHERE visit_ID='$visit_ID') AND parameter_ID=$parameter_ID";
 						mysqli_query($link,$query);
 					}
 				}
