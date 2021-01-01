@@ -546,6 +546,8 @@ CREATE TABLE `facility`.`lab_list` ( `lab_list_ID` INT NOT NULL AUTO_INCREMENT ,
 ALTER TABLE `lab_list` CHANGE `lab_done` `lab_done` TINYINT(1) NOT NULL, CHANGE `lab_number` `lab_number` VARCHAR(20) NOT NULL; 
 ALTER TABLE `lab` ADD `lab_list_ID` INT NOT NULL AFTER `lab_ID`; 
 ALTER TABLE lab_list ADD visit_ID INT NOT NULL AFTER lab_number;
+ALTER TABLE lab CHANGE protocol_ID protocol_ID_ordered INT(11) NOT NULL;
+ALTER TABLE `lab` ADD `protocol_ID_results` INT NOT NULL AFTER `protocol_ID_ordered`; 
 
 
 new.php

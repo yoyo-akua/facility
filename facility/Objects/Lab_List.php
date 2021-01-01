@@ -35,9 +35,7 @@
 			$query = "INSERT INTO `lab_list`(`lab_number`,`visit_ID`) VALUES ('$lab_number','$visit_ID')";
 			mysqli_query($link,$query);
 
-			$lab_list_ID = mysqli_insert_id($link);
-
-			$instance = new self($lab_list_ID);
+			$instance = new self($visit_ID);
 			return $instance;		
 		}
 
@@ -46,7 +44,7 @@
 		## Returns the ID of that lab list entry, on which the function is called.
 		*/
 		public function getLab_List_ID(){
-			return $this->lab_list_ID;
+			return $this->lab_list_ID;			
 		}
 
 		/*
