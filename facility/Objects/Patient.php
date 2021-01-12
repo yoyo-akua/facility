@@ -432,9 +432,6 @@
 		## At the end two further columns are printed for Editing a patient by forwarding the user to edit_patient.php,
 		## and for patient's results by forwarding the user to patient_visit.php.
 		*/
-
-		## TODO: @Flo: Hier alle Dateien noch anpassen, die diese Funktion aufrufens
-		#public function shorttablerow($protocol_ID,$previous,$columns){
 		public function shorttablerow($visit_ID,$previous,$columns){
 
 			#$Protocol=new Protocol($protocol_ID);

@@ -2218,7 +2218,7 @@
 		$visit = new Visit($row->visit_ID);
 		
 		## Print the table row for the patient (visit).
-		$patient->shorttablerow($row->protocol_ID,$previous,$columns);
+		$patient->shorttablerow($row->visit_ID,$previous,$columns);
 		
 		## If the user wants to inquire the amount of incomes (either from surgery or lab), add the charge of the patient to $payment.
 		if(isset($paying) AND $paying=='yes'){
