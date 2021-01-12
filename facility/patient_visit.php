@@ -145,22 +145,22 @@
 	echo '</h1><div class="inputform">'.$patient->display_general(strtotime($visit->getCheckin_time()));
 
 	/*
-	## Function for displaying patient's vital signs is called and printed,
-	## as well as checkbox to enable or disable protection of patient's diagnosis
+	## Printing checkbox to enable or disable protection of patient's diagnosis
 	## Check checkbox if patient's diagnosis is protected.
 	*/
-	$html=(new Vital_Signs($protocol_ID))->display_admission_data();
+
+		
 	echo "<br>
-				<a href='patient_visit.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
-					<input type='checkbox'";
-					if($visit->getProtect()==1){
-						echo "checked='checked'";
-					}
-					echo"></input> protected by password
-				</a><br>
-				".$html."
+			<a href='patient_visit.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
+				<input type='checkbox'";
+				if($visit->getProtect()==1){
+					echo "checked='checked'";
+				}
+				echo"></input> protected by password
+			</a><br>
 			</div>
-			";
+		";
+
 
 
 	/*
@@ -281,6 +281,18 @@
 	## In the following, print content on the left hand side of the patient's diagnosis page.
 	echo "<div class='columnleft'>";
 
+	$vital_signs=Vital_Signs::display_admission_data($visit_ID);	
+	if($vital_signs){
+		echo "
+			<details>
+				<summary>
+					<h2>Vital Signs</h2>
+				</summary>
+				$vital_signs
+			</details>
+			";
+	}
+	
 
 	/*
 	## Show content of patient's diagnosis page if

@@ -95,7 +95,7 @@
 			$BP_last=Vital_Signs::last_BPs($visit_ID,'addVitals');
 			$age=$patient->getAge(strtotime($visit->getCheckin_time()),'calculate');
 
-			$patient->currenttablerow($visit_ID);
+			$patient->currenttablerow();
 			
 			echo"
 				<form action='vital_signs.php' method='post'>

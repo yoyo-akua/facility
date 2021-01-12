@@ -202,44 +202,60 @@
 		## Variable $html is used as buffer of HTML commands to print the patient's admission information later.
 		## Add all known patient's admission information and their unit to that HTML buffer.
 		*/
-		public function display_admission_data(){
+		public function display_admission_data($visit_ID){
 			$html='';
 			global $thispage;
-			if(! empty($this->BP)){
-				if(!strstr($thispage,'pdf')){
-				
-					$protocol_ID=$this->protocol_ID;
-					$protocol=new Protocol($protocol_ID);
-					$visit_ID=$protocol->getProtocol_ID();
-					$BP_last=Vital_Signs::last_BPs($visit_ID,$this->protocol_ID);
-					if(!empty($BP_last)){
-						$html.="<h4>Blood Pressure:</h4>
-							<div class='tooltip' style='line-height:normal'>
-								".$this->BP." mmHg
-									<span class='tooltiptext' style='text-align:left'>
-										$BP_last
-									</span>
-							</div><br>";
+			global $link;
+
+			$query="SELECT * FROM vital_signs,protocol WHERE vital_signs.protocol_ID=protocol.protocol_ID AND protocol.visit_ID='$visit_ID'";
+			$result=mysqli_query($link,$query);
+			while($row=mysqli_fetch_object($result)){
+				$protocol_ID=$row->protocol_ID;
+				$vitals=new self($protocol_ID);
+
+				$protocol=new Protocol($protocol_ID);
+			
+				$time=date('d/m/Y H:i',strtotime($protocol->getTimestamp()));
+
+				$html.="<u><h4>$time</h4></u><br>";
+				if(! empty($vitals->getBP())){
+					if(!strstr($thispage,'pdf')){
+					
+						$BP_last=Vital_Signs::last_BPs($visit_ID,$protocol_ID);
+						if(!empty($BP_last)){
+							$html.="<b>Blood Pressure:</b>
+								<div class='tooltip' style='line-height:normal'>
+									".$vitals->getBP()." mmHg
+										<span class='tooltiptext' style='text-align:left'>
+											$BP_last
+										</span>
+								</div><br>";
+						}else{
+							$html.="<b>Blood Pressure:</b> ".$vitals->getBP()." mmHg<br>";
+						}
 					}else{
-						$html.="<h4>Blood Pressure:</h4> ".$this->BP." mmHg<br>";
+						$html.="<b>Blood Pressure:</b> ".$vitals->getBP()." mmHg<br>";
 					}
-				}else{
-					$html.="<h4>Blood Pressure:</h4> ".$this->BP." mmHg<br>";
 				}
+				if(! empty($vitals->getpulse())){
+					$html.="<b>Pulse:</b> ".$vitals->getpulse()." bpm<br>";
+				}
+				if($vitals->getweight()!=0.0){
+					$html.="<b>Weight:</b> ".$vitals->getweight()." kg<br>";
+				}
+				if($vitals->gettemperature()!=0.0){
+					$html.="<b>Temperature:</b> ".$vitals->gettemperature().' °C<br>';
+				}
+				if($vitals->getMUAC()!=0.0){
+					$html.="<b>MUAC:</b> ".$vitals->getMUAC()." cm<br>";
+				}	
 			}
-			if(! empty($this->pulse)){
-				$html.="<h4>Pulse:</h4> ".$this->pulse." bpm<br>";
+			if (! empty($html)){
+				return $html.'<br>';
+			}else{
+				return false;
 			}
-			if($this->weight!=0.0){
-				$html.="<h4>Weight:</h4> ".$this->weight." kg<br>";
-			}
-			if($this->temperature!=0.0){
-				$html.="<h4>Temperature:</h4> ".$this->temperature.' °C<br>';
-			}
-			if($this->MUAC!=0.0){
-				$html.="<h4>MUAC:</h4> ".$this->MUAC." cm<br>";
-			}	
-			return '<br>'.$html.'<br>';
+			
 		}
 
 		/*
@@ -317,7 +333,7 @@
 			}else{
 				$para="AND protocol.protocol_ID!=$function";
 			}
-			$querylast="SELECT * FROM protocol,vital_signs,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=(SELECT visit.patient_ID FROM visit WHERE visit_ID=$visit_ID) AND vital_signs.protocol_ID=protocol.protocol_ID $para ORDER BY checkin_time DESC LIMIT 0,5";
+			$querylast="SELECT * FROM protocol,vital_signs,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=(SELECT visit.patient_ID FROM visit WHERE visit_ID=$visit_ID) AND vital_signs.protocol_ID=protocol.protocol_ID AND vital_signs.BP NOT LIKE '' $para ORDER BY checkin_time DESC LIMIT 0,5";
 			$resultlast=mysqli_query($link,$querylast);
 			if(mysqli_num_rows($resultlast)!==0){
 				$BP_last="last visits' BPs <br>";

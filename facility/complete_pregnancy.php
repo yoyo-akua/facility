@@ -62,8 +62,8 @@
 		$protocol=new Protocol($protocol_ID);
 		
 		## Print this particular visit's vital signs and ANC data.
-		echo $ANC->display_ANC($protocol_ID,'date on').'<br>'.
-				(new Vital_Signs($protocol_ID))->display_admission_data($patient);
+		echo $ANC->display_ANC($protocol_ID,'date on').'
+			<h3>Vital Signs</h3><br>'.(Vital_Signs::display_admission_data($visit_ID)).'<br>';
 		
 		/*
 		## Check, if the patient has been referred for lab investigations.

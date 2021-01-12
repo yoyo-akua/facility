@@ -74,8 +74,8 @@
 		$visit=new Visit($visit_ID);		
 
 		## Add this particular visit's vital signs and ANC data to $html.		
-		$html.=$ANC->display_ANC($protocol_ID,'date on').'<br>'.
-					(new Vital_Signs($protocol_ID))->display_admission_data($patient).'<br>';
+		$html.=$ANC->display_ANC($protocol_ID,'date on').'<br>
+				<h3>Vital Signs</h3><br>'.(Vital_Signs::display_admission_data($visit_ID)).'<br>';
 
 		
 		## Function visit::() is called to check, if the patient has been referred for lab investigations, if so if-branch is opened.
