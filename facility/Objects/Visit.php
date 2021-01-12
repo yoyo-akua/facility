@@ -212,6 +212,92 @@
 				return false;
 			}
 		}
+
+		/*
+		## Display all diagnoses, which are known within the system.
+		## Identify, which of them is marked as primary disease and which as secondary disease(s) for the patient's visit, 
+		## on which this function is called.
+		## The sent parameter $circumference defines, whether only primary, only secondary or both - primary and secondary - diseases are displayed.
+		*/
+		public function display_diagnoses($circumference){
+
+			/*
+			## Initialise variables.
+			## $Diagnosis_IDs contains all known diseases ordered by their classes
+			## Variable $html is used as buffer of HTML commands to print the list of diseases.
+			## Variable $primary is used as buffer of the disease, which is marked as primary diagnose.
+			## Variable $secondary is used as buffer of these diseases, which are marked as secondary diagnoses.
+			*/
+			$Diagnosis_IDs=Diagnosis_IDs::getDiagnosis_IDs($this->visit_ID);
+			$html='';
+			$primary='';
+			$secondary='';
+			$provisional='';
+
+			## Check, if the patient needs to reattending. If so, print a correspondent notice. 
+			if(in_array(0,Diagnosis_IDs::getImportances($this->visit_ID))){
+				$html.='Patient is <h4>reattending</h4><br>';
+			}
+
+			/*
+			## This loop is run for each disease, which was gotten from database before.
+			## Check, if a disease is marked as primary or as secondary diagnose,
+			## and add a notice in the correspondent buffer ($primary or $secondary).
+			*/
+			foreach($Diagnosis_IDs AS $Diagnosis_ID){
+				$Diagnosis = new Diagnoses($Diagnosis_ID);
+				$importance=Diagnosis_IDs::getImportance($this->visit_ID,$Diagnosis_ID);
+				$DiagnosisName=$Diagnosis->getDiagnosisName();
+				if ($importance==1){
+					$primary.="-$DiagnosisName<br>";
+				}else if ($importance==2){
+					$secondary.="-$DiagnosisName<br>";
+				}else if($importance==3){
+					$provisional.="-$DiagnosisName<br>";
+				}
+			}
+
+			/*	
+			## Add the as primary marked diagnoses to HTML buffer for printing it later. 
+			## Add also a headline for primary diagnosis, if both - primary and secondary diagnoses - are printed.
+			*/ 
+			if(! empty($primary) AND $circumference!=='secondary' AND $circumference!=='provisional'){
+				if($circumference!=='primary'){
+				$html.="<h3>primary diagnosis:</h3>";
+				}
+				$html.=$primary;
+			}
+
+			/*
+			## Add all as secondary marked diagnoses to HTML buffer for printing them later. 
+			## Add also a headline for secondary diagnosis, if both - primary and secondary diagnoses - are printed.
+			*/ 
+			if(! empty($secondary) AND $circumference!=='primary' AND $circumference!=='provisional'){
+				if($circumference!=='secondary'){
+				$html.="<h3>secondary diagnosis:</h3>";
+				}
+				$html.=$secondary;
+			}
+
+			/*
+			## Add all as provisional marked diagnoses to HTML buffer for printing them later. 
+			## Add also a headline for provisional diagnosis, if both - primary and secondary diagnoses - are printed.
+			*/ 
+			if(! empty($provisional) AND $circumference!=='primary' AND $circumference!=='secondary'){
+				if($circumference!=='provisional'){
+				$html.="<h3>provisional diagnosis:</h3>";
+				}
+				$html.=$provisional;
+			}
+			
+			## If it is not empty and both - secondary and primary diagnoses - are printed, also print the consultant's remarks on the diagnosis.
+			if($circumference=='both' AND ! empty ($this->remarks)){
+				$html.="<h3>Remarks:</h3>".$this->remarks;
+			}
+			
+			return $html;
+		}
+
 	}
 
 ?>

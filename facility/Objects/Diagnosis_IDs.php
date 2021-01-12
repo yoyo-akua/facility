@@ -23,9 +23,9 @@
 		## Getter function.
 		## Returns an array of the patient's diagnosis IDs of that visit, of which the function is called.
 		*/
-		public function getDiagnosis_IDs($protocol_ID){
+		public function getDiagnosis_IDs($visit_ID){
 			global $link;
-			$query = "SELECT * FROM diagnosis_ids WHERE protocol_ID=$protocol_ID";
+			$query = "SELECT d.diagnosis_ID FROM diagnosis_ids d, protocol p WHERE d.protocol_ID = p.protocol_ID AND p.visit_ID = $visit_ID";
 			$result=mysqli_query($link,$query);
 			
 			$diagnoses=array();
@@ -36,14 +36,13 @@
 			return $diagnoses;
 		}
 		
-		
 		/*
 		## Getter function.
 		## Returns whether a specific diagnosis is primary or secondary.
 		*/
-		public function getImportance($protocol_ID,$diagnosis_ID){
+		public function getImportance($visit_ID,$diagnosis_ID){
 			global $link;
-			$query = "SELECT * FROM diagnosis_ids WHERE protocol_ID=$protocol_ID AND diagnosis_ID=$diagnosis_ID";
+			$query = "SELECT d.importance FROM diagnosis_ids d, protocol p WHERE d.protocol_ID = p.protocol_ID AND p.visit_ID = $visit_ID AND d.diagnosis_ID=$diagnosis_ID";
 			$result=mysqli_query($link,$query);
 			
 			$result=mysqli_fetch_object($result);
@@ -56,13 +55,9 @@
 			return $importance;
 		}
 		
-		/*
-		## Getter function.
-		## Returns an array which contains information, if the patient's diagnoses on that visit on which the function is called are primary or secondary.
-		*/
-		public function getImportances($protocol_ID){
+		public function getImportances($visit_ID){
 			global $link;
-			$query = "SELECT * FROM diagnosis_ids WHERE protocol_ID=$protocol_ID";
+			$query = "SELECT d.importance FROM diagnosis_ids d, protocol p WHERE d.protocol_ID = p.protocol_ID AND p.visit_ID = $visit_ID";
 			$result=mysqli_query($link,$query);
 			
 			$importances=array();

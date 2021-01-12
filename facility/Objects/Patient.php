@@ -554,25 +554,20 @@
 				}
 			}
 
-			## TODO: display_diagnoses Funktion muss aus dem Protocol Objekt herausgezogen
-			## und in das Visit-Objekt verschieben
-			## @Flo: Das noch mit erledigen beim aktuellen Umbau
-			## Solange bleibt der Code erstmal auskommentiert.
 			## Prints optional, depending on which columns are requested and only if existing the patient's primary and secondary diagnoses.
-			/*
+			## ToDo Flo: Aufstellen neuer Diagnosen protokollieren in protocol table
 			if($columns['primary']=='on'){
-				$html=$Protocol->display_diagnoses('primary');
+				$html=$visit->display_diagnoses('primary');
 				echo "<td style='text-align:left'>$html</td>";
 			}
 			if($columns['secondary']=='on'){
-				$html=$Protocol->display_diagnoses('secondary');
+				$html=$visit->display_diagnoses('secondary');
 				echo "<td style='text-align:left'>$html</td>";
 			}
 			if($columns['provisional']=='on'){
-				$html=$Protocol->display_diagnoses('provisional');
+				$html=$visit->display_diagnoses('provisional');
 				echo "<td style='text-align:left'>$html</td>";
 			}
-			*/
 			
 			##TODO: Hier muss erst noch die Protocol ID in die ANC Tabelle
 			## Danach kann die getANC_ID in das ANC Object verschoben werden
