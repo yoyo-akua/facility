@@ -73,9 +73,13 @@ i<?php
 	## Variable $html is used to buffer any content that is to be displayed in the pdf file.
 	*/
 	$html = Settings::pdf_header($style,$patient_data)
-				.'<h1 style="text-align:center"><u>Results</u></h1>'.
-				(new Vital_Signs($protocol_ID))->display_admission_data();
+			.'<h1 style="text-align:center"><u>Results</u></h1>';
 
+
+	$vital_signs=Vital_Signs::display_admission_data($visit_ID);	
+	if($vital_signs){
+		$html.= "<h2>Vital Signs</h2>$vital_signs";
+	}
 	## Check if patient is pregnant, if so, add that information to $html.
 	if($visit->getPregnant()==1){
 		$html.="<br>Patient is <b>pregnant</b><br>";
