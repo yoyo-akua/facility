@@ -117,6 +117,10 @@
 			}
 		}
 	}
+
+	## This if-branch is called when the user is not logged in 
+	## and trying to open a page, he should only open being logged in. 
+	## In this case, forward him to the login page.
 	if(strstr($thispage,'patient_visit.php') AND ! isset($_SESSION['staff_ID'])){
 		echo'<script type="text/JavaScript">;
 				if(window.confirm("Please log in to continue.")){
