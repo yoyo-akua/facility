@@ -14,11 +14,12 @@
 
 	/*
 	## This if-branch is called, if the user is clicking on one OPD patient's submit button.
-	## This visit (by this particular patient) is identified by variable $protocol_ID.
+	## This visit (by this particular patient) is identified by variable $visit_ID.
 	## The patient's complaints are added to the database, if they were defined in browser.
+	## There is also an entry added to the protocol, which states that complaints have been recorded.
 	*/
 	if(! empty($_POST['submit'])){
-		$protocol_ID=$_POST['protocol_ID'];
+		$visit_ID=$_POST['visit_ID'];
 		if(! empty($_POST['coughing'])){
 			$coughing=1;
 		}else{
@@ -39,6 +40,9 @@
 		}else{
 			$diarrhoea=0;
 		}
+		$protocol=protocol::new_Protocol($visit_ID,'complaints recorded');
+		$protocol_ID=$protocol->getProtocol_ID();
+
 		$complaints=Complaints::new_Complaints($protocol_ID,$coughing,$vomitting,$fever,$diarrhoea,$_POST['others']);
 	}
 
@@ -60,7 +64,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,visit WHERE visit.patient_ID=patient.patient_ID and protocol.visit_ID=visit.visit_ID $searchpara AND onlylab=0 AND protocol.protocol_ID NOT IN (SELECT protocol_ID FROM complaints) AND checkout_time like '0000-00-00 00:00:00'  ORDER BY checkin_time ASC";
+	$query="SELECT * FROM patient,visit WHERE visit.patient_ID=patient.patient_ID $searchpara AND onlylab=0 AND visit_ID NOT IN (SELECT visit_ID FROM complaints,protocol WHERE protocol.protocol_ID=complaints.protocol_ID) AND checkout_time like '0000-00-00 00:00:00'  GROUP BY visit.visit_ID ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -103,8 +107,6 @@
 		
 		
 		while($row = mysqli_fetch_object($result)){
-			$protocol_ID=$row->protocol_ID;
-			$protocol= new Protocol($protocol_ID);
 
 			$visit_ID=$row->visit_ID;
 			$visit=new Visit($visit_ID);
@@ -114,7 +116,7 @@
 
 			$age=$patient->getAge(strtotime($visit->getCheckin_time()),'calculate');
 
-			$patient->currenttablerow($protocol_ID);
+			$patient->currenttablerow();
 			
 			echo"
 				<form action='complaints.php' method='post'>
@@ -133,7 +135,7 @@
 					<td>
 						<textarea name='others' length='1000' style=width:90px;height:25px></textarea>
 					<td>
-						<input type='hidden' name='protocol_ID' value='".$row->protocol_ID."'>
+						<input type='hidden' name='visit_ID' value='".$row->visit_ID."'>
 						<input type='submit' name='submit' value='submit'>
 					</td>
 				</form>
