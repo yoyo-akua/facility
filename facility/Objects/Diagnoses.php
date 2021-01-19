@@ -97,27 +97,27 @@
 		## Check, if that disease is defined as primary or secondary disease and activate the correspondent checkbox.
 		## Print the disease's name in the third column.
 		*/
-		public function diagnoses_tablerow($protocol_ID,$Diagnosis_ID){
+		public function diagnoses_tablerow($visit_ID,$Diagnosis_ID){
 			$Diagnosis_Name=(new Diagnoses($Diagnosis_ID))->getDiagnosisname();
 			echo"
 					<tr>
 						<td style='border-left:none'>
 							<input type='checkbox'  id='3_$Diagnosis_ID' name='prov_$Diagnosis_ID'";
-							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==3 OR ! empty($_POST["prov_$Diagnosis_ID"])){
+							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==3 OR ! empty($_POST["prov_$Diagnosis_ID"])){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
 							<input type='radio' id='1_$Diagnosis_ID' name='$Diagnosis_ID' value='1'";
-							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==1 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==1)){
+							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==1 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==1)){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
 							<input type='radio' id='2_$Diagnosis_ID' name='$Diagnosis_ID' value='2'";
-							if(Diagnosis_IDs::getImportance($protocol_ID,$Diagnosis_ID)==2 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==2)){
+							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==2 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==2)){
 								echo "checked='checked'";
 							}
 							echo">

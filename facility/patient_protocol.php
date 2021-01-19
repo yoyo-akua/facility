@@ -354,7 +354,7 @@
 		## Completing variables to add the lab database table to the search.
 		$IDs.=" and lab.protocol_ID=protocol.protocol_ID";
 		$tables.=",lab";
-		$grouping.=" GROUP BY lab.protocol_ID";
+		$grouping.=", lab.protocol_ID";
 		
 		/*
 		## If the user explicitly searchs for all lab patients (including the self-paying ones),
@@ -2206,7 +2206,7 @@
 	## Get all patients' and their visits' data on which the search parameters apply.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
-	$query="SELECT * FROM protocol,patient,visit$tables WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID $IDs $searchpara $grouping $having ORDER BY visit.checkin_time ASC ";
+	$query="SELECT * FROM protocol,patient,visit$tables WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID $IDs $searchpara GROUP BY visit.visit_ID $grouping $having ORDER BY visit.checkin_time ASC ";
 	$result = mysqli_query($link,$query);
 
 	## This loop will be run once for each of the output patient visits from the search in the database.

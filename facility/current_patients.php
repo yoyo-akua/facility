@@ -88,7 +88,7 @@
 			*/
 			echo"
 				<td>
-					<a href=\"patient_visit.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Diagnosis</a>
+					<a href=\"patient_visit.php?patient_ID=$row->patient_ID&visit_ID=$row->visit_ID\">Diagnosis</a>
 				</td>
 				";
 			
