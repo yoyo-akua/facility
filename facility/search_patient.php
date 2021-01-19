@@ -75,16 +75,8 @@
 
 			$patient_ID=$_POST['ID'];
 			
-			if(! empty($_POST['CCC'])){
-				$CCC=$_POST['CCC'];
-			}else{
-				$CCC='';
-			}
-			if(! empty($_POST['Expired'])){
-				$Expired=1;
-			}else{
-				$Expired=0;
-			}
+			
+			
 			if(strstr($today,$YEAR)){
 				if(! empty($_POST['new_p'])){
 					$new_p=1;
@@ -95,6 +87,29 @@
 			$visit=Visit::new_Visit($patient_ID,$new_p);
 			$visit_ID=$visit->getVisit_ID();
 			$protocol = Protocol::new_Protocol($visit_ID,'admission');
+
+
+			/*
+			## This if-branch is called if the patient is insured.
+			## It creates a new database entry in the insurance table, using the entered parameters CCC, expired and visit ID.
+			*/
+			if(! empty($_POST['NHIS'])){
+
+				if(! empty($_POST['Expired'])){
+					$exp=1;
+				}else{
+					$exp=0;
+				}
+
+				if(! empty($_POST['CCC'])){
+					$CCC=$_POST['CCC'];
+				}else{
+					$CCC="";
+				}
+
+				$insurance=Insurance::new_Insurance($visit_ID,$CCC,$exp);
+			}
+
 			if(! empty($_POST['onlylab'])){
 				$visit->setOnlylab(1);
 				echo "<script>window.location.href=('order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID')</script>";

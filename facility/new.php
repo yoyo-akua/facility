@@ -72,5 +72,15 @@
         $query="UPDATE lab_list SET visit_ID='$row->visit_ID' WHERE lab_list_ID='$row->lab_list_ID'";
         mysqli_query($link,$query);
     }
+    
+
+    $query="SELECT * FROM visit,patient,protocol WHERE visit.patient_ID=patient.patient_ID AND protocol.visit_ID=visit.visit_ID AND NHIS NOT LIKE ''";
+    $result=mysqli_query($link,$query);
+
+    while($row=mysqli_fetch_object($result)){
+        $query = "INSERT INTO `insurance`(`visit_ID`,`CCC`,`expired`) VALUES ('$row->visit_ID','$row->CCC','$row->Expired')";
+        mysqli_query($link,$query);
+    }
     */
+
 ?>
