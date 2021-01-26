@@ -556,6 +556,7 @@
 
 			## Prints optional, depending on which columns are requested and only if existing the patient's primary and secondary diagnoses.
 			## ToDo Flo: Aufstellen neuer Diagnosen protokollieren in protocol table
+			## Dazu muss erstmal die gesamte patient_visit.php Datei von protocol_ID auf visit_ID umgestellt werden!!!
 			if($columns['primary']=='on'){
 				$html=$visit->display_diagnoses('primary');
 				echo "<td style='text-align:left'>$html</td>";
