@@ -41,11 +41,8 @@
 			$diarrhoea=0;
 		}
 		$protocol=protocol::new_Protocol($visit_ID,'complaints recorded');
-		$protocol_ID=$protocol->getProtocol_ID();
-
-		$complaints=Complaints::new_Complaints($protocol_ID,$coughing,$vomitting,$fever,$diarrhoea,$_POST['others']);
+		$complaints=Complaints::new_Complaints($protocol->getProtocol_ID(),$coughing,$vomitting,$fever,$diarrhoea,$_POST['others']);
 	}
-
 	
 	echo "<h1>Complaints</h1>";
 	/*

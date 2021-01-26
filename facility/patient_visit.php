@@ -28,6 +28,7 @@
 
 	## Inquire whether the patient has received nutrition management for this visit.
 	##TODO Flo: müsste noch umgebaut werden und über visit-ID ermittelt werden
+	## Liebste muss sich erst entscheiden, ob es in eine gesonderte DB-Tabelle ausgelagert werden soll
 	## Solange bleibt es erstmal auskommentiert
 	#$nutrition=Nutrition::nutritionBoolean($protocol_ID);
 
@@ -199,36 +200,52 @@
 		$protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
 		$protocol_ID = $protocol->getProtocol_ID();
 
-		## Initialise variable containing object with patient's complains on that visit.
-		## ToDo Flo: Muss aufgerufe werden mit visit_ID, da unterhalb des aktuellen If-Branches
-		## wo die Protocol_ID nicht mehr verfügbar ist, auch nochmal complaints abgefragt werden
-		$complaints=new Complaints($protocol_ID);
-
-		## Set all the complains to database as entered by the user. 
+		## Initialise variables with submitted patient's complaints
 		if(! empty($_POST['coughing'])){
-			$complaints->setCoughing(1);
+			$Coughing = 1;
 		}else{
-			$complaints->setCoughing(0);
+			$Coughing = 0;
 		}
 		if(! empty($_POST['vomitting'])){
-			$complaints->setVomitting(1);
+			$Vomitting = 1;
 		}else{
-			$complaints->setVomitting(0);
+			$Vomitting = 0;
 		}
 		if(! empty($_POST['fever'])){
-			$complaints->setFever(1);
+			$Fever = 1;
 		}else{
-			$complaints->setFever(0);
+			$Fever = 0;
 		}
 		if(! empty($_POST['diarrhoea'])){
-			$complaints->setDiarrhoea(1);
+			$Diarrhoea = 1;
 		}else{
-			$complaints->setDiarrhoea(0);
+			$Diarrhoea = 0;
 		}
 		if(! empty($_POST['others'])){
-			$complaints->setOthers($_POST['others']);
+			$Others=$_POST['others'];
 		}else{
-			$complaints->setOthers('');
+			$Others='';
+		}
+		
+		/*
+		## Check, if already patient's complaints exist. 
+		## If so, update these complaints with submitted diagnosis data.
+		## Otherwise create a new patient's complaints record in database.
+		*/
+		If (Complaints::complaints_exist($visit_ID)){
+
+			## Initialise variable containing object with patient's complaints on that visit.
+			$complaints=new Complaints($visit_ID);
+
+			## Set all the complaints to database as entered by the user. 
+			$complaints->setCoughing($Coughing);
+			$complaints->setVomitting($Vomitting);
+			$complaints->setFever($Fever);
+			$complaints->setDiarrhoea($Diarrhoea);
+			$complaints->setOthers($Others);
+		}
+		else {
+			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
 		}
 
 
@@ -347,10 +364,7 @@
 		## Check if any complaints for the patient have been stated on that visit.
 		## If so, display them, using the function display_Complaints().
 		*/
-		#TODO Flo: muss noch umgebaut werden auf visit_ID
-		#bleibt solange auskommentiert
-		/*
-		$complaints=Complaints::display_Complaints($protocol_ID);
+		$complaints=Complaints::display_Complaints($visit_ID);
 		if(! empty($complaints)){
 			echo "
 				<details>
@@ -361,7 +375,6 @@
 				</details>
 				";
 		}
-		*/
 
 		## In case of a new or updated diagnosis some information are added to database, if they are known.
 		if(! empty($_POST['submit'])){
@@ -489,24 +502,8 @@
 
 	## Show input form in case the diagnosis still need's to be set.
 	else{
-		
 		/*
-		## Inquire whether complaits have already been noted.
-		## If so, initialise variable $complaints with these previously stated complaints,
-		## otherwise create a new, empty complaints entry.
-		*/
-		#TODO Flo: muss noch umgebaut werden auf visit_ID
-		#bleibt solange auskommentiert
-		/*
-		if(Complaints::complaints_Boolean($protocol_ID)==true){
-			$complaints=new Complaints($protocol_ID);
-		}else{
-			$complaints=Complaints::new_Complaints($protocol_ID,0,0,0,0,'');
-		}
-		*/
-
-		/*
-		## Display a table head containing the most common complains (coughing, vomitting, fever, diarrhoea) and a general category "others" for further complaints.
+		## Display a table head containing the most common complaints (coughing, vomitting, fever, diarrhoea) and a general category "others" for further complaints.
 		## In a table row display checkboxes for the most common complaints and an input field for "others".
 		## These input fields are to be prefilled with previously entered values, if available. 
 		*/
@@ -532,69 +529,82 @@
 							<th>
 								Others
 							</th>
-						</tr>  
-						<tr>
-							<form action='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID' method='post' autocomplete='off'>
-								<td style='border-left:none'>
-									<input type='checkbox' name='coughing' value='1'";
-									#TODO Flo: muss noch umgebaut werden auf visit_ID
-									#bleibt solange auskommentiert
-									/*
-									if($complaints->getCoughing()==1){
-										echo" checked='checked'";
-									}
-									*/
-									echo">			
-								</td>
-								<td>
-									<input type='checkbox' name='vomitting' value='1'";
-									#TODO Flo: muss noch umgebaut werden auf visit_ID
-									#bleibt solange auskommentiert
-									/*								
-									if($complaints->getVomitting()==1){
-										echo" checked='checked'";
-									}
-									*/
-									echo">
-								</td>
-								<td>
-									<input type='checkbox' name='fever' value='1'";
-									#TODO Flo: muss noch umgebaut werden auf visit_ID
-									#bleibt solange auskommentiert
-									/*	
-									if($complaints->getFever()==1){
-										echo" checked='checked'";
-									}
-									*/
-									echo">
-								</td>
-								<td>
-									<input type='checkbox' name='diarrhoea' value='1'";
-									#TODO Flo: muss noch umgebaut werden auf visit_ID
-									#bleibt solange auskommentiert
-									/*	
-									if($complaints->getDiarrhoea()==1){
-										echo" checked='checked'";
-									}
-									*/
-									echo">
-								</td>
-								<td>
-									<textarea name='others' length='1000' style=width:90px;height:25px>";
-									#TODO Flo: muss noch umgebaut werden auf visit_ID
-									#bleibt solange auskommentiert
-									/*	
-									if(! empty($complaints->getOthers())){
-										echo $complaints->getOthers();
-									}
-									*/
-									echo"</textarea>
-								</td>
-						</tr>
-					</table>
-				
-			</details>
-		";
+						</tr>";
+		
+						/*
+						## Inquire whether complaits have already been noted.
+						## If so, initialise variable $complaints with these previously stated complaints,
+						*/
+						if(Complaints::complaints_exist($visit_ID)==true){
+							$complaints=new Complaints($visit_ID);
+							echo "
+								<tr>
+									<form action='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID' method='post' autocomplete='off'>
+										<td style='border-left:none'>
+											<input type='checkbox' name='coughing' value='1'";
+											if($complaints->getCoughing()==1){
+												echo" checked='checked'";
+											}
+											echo">			
+										</td>
+										<td>
+											<input type='checkbox' name='vomitting' value='1'";						
+											if($complaints->getVomitting()==1){
+												echo" checked='checked'";
+											}
+											echo">
+										</td>
+										<td>
+											<input type='checkbox' name='fever' value='1'";
+											if($complaints->getFever()==1){
+												echo" checked='checked'";
+											}
+											echo">
+										</td>
+										<td>
+											<input type='checkbox' name='diarrhoea' value='1'";
+											if($complaints->getDiarrhoea()==1){
+												echo" checked='checked'";
+											}
+											echo">
+										</td>
+										<td>
+											<textarea name='others' length='1000' style=width:90px;height:25px>";	
+											if(! empty($complaints->getOthers())){
+												echo $complaints->getOthers();
+											}
+											echo"</textarea>
+										</td>
+								</tr>
+							";
+
+						}
+						else{
+							echo"
+								<tr>
+									<form action='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID' method='post' autocomplete='off'>
+									<td style='border-left:none'>
+										<input type='checkbox' name='coughing' value='1'>			
+									</td>
+									<td>
+										<input type='checkbox' name='vomitting' value='1'>
+									</td>
+									<td>
+										<input type='checkbox' name='fever' value='1'>
+									</td>
+									<td>
+										<input type='checkbox' name='diarrhoea' value='1'>
+									</td>
+									<td>
+										<textarea name='others' length='1000' style=width:90px;height:25px></textarea>
+									</td>
+								</tr>
+							";
+						}
+						echo "
+							</table>
+							</details>
+						";
 		
 		## Print the name of the attendant.
 		echo '<details ';

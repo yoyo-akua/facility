@@ -3,7 +3,7 @@
 	class Complaints{
 
 		## Define all complaints.
-		private $protocol_ID;	## ID of the patient's visit.
+		private $protocol_ID;	## ID of that database entry, which refers to the patient's visit.
 		private $Coughing;	## Boolean indicating whether the patient is complaining about Coughing.
 		private $Vomitting;	## Boolean indicating whether the patient is complaining about Vomitting.
 		private $Fever;	## Boolean indicating whether the patient is complaining about Fever.
@@ -12,12 +12,12 @@
 		
 		/*
 		## This function is called, if a new complaints object is needed for futher actions.
-		## Saves the information of that entry from database (identified by protocol ID) in that new complaints object.
+		## Saves the information of that entry from database (identified by visit ID) in that new complaints object.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public function Complaints($protocol_ID){
+		public function Complaints($visit_ID){
 			global $link;
-			$query = "SELECT * FROM complaints WHERE protocol_ID = $protocol_ID";
+			$query = "SELECT * FROM complaints c, protocol p WHERE p.visit_ID = $visit_ID AND c.protocol_ID = p.protocol_ID";
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
 				$this->Coughing = $row->Coughing;
@@ -25,13 +25,13 @@
 				$this->Fever = $row->Fever;
 				$this->Diarrhoea = $row->Diarrhoea;
 				$this->Others = $row->Others;
+				$this->protocol_ID = $row->protocol_ID;
 			}
-			$this->protocol_ID = $protocol_ID;
 		}
 		
 		/*
 		## Constructor of new complaints entry.
-		## Is called, if a complaints database entry is created.
+		## Is called, if a new complaints database entry is created.
 		## The data of new complaints entry is saved in database for all its parameters.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
@@ -39,12 +39,9 @@
 			global $link;
 			$query = "INSERT INTO `complaints`(`protocol_ID`,`Coughing`,`Vomitting`,`Fever`,`Diarrhoea`,`Others`) VALUES ('$protocol_ID','$Coughing','$Vomitting','$Fever','$Diarrhoea','$Others')";
 			mysqli_query($link,$query);
-			
-			$protocol_ID = mysqli_insert_id($link);
 			$instance = new self($protocol_ID);
 			return $instance;	
 		}
-		
 		
 		/*
 		## Getter function.
@@ -150,22 +147,21 @@
 			mysqli_query($link,$query);
 			return $this->Others = $var;
 		}
-		
 
 		/*
 		## This function is used to inquire whether a complaints entry exists for a patient on a particular visit or not. 
 		## It checks for that information in the database and returns a boolean. 
 		*/
-		public function complaints_Boolean($protocol_ID){
+		public static function complaints_exist($visit_ID){
 			global $link;
-			$query = "SELECT * FROM complaints WHERE protocol_ID='$protocol_ID'";
+			$query = "SELECT c.protocol_ID FROM complaints c, protocol p WHERE p.visit_ID=$visit_ID AND c.protocol_ID=p.protocol_ID";
 			$object=mysqli_fetch_object(mysqli_query($link,$query));
 			if(! empty($object)){
-				$boolean=true;
+				$exist=true;
 			}else{
-				$boolean=false;
+				$exist=false;
 			}
-			return $boolean;
+			return $exist;
 		}
 
 		/*
@@ -173,8 +169,8 @@
 		## It checks each category and in case any complaints have been stated adds it to the buffer $html.
 		## $html is returned. 
 		*/
-		public function display_Complaints($protocol_ID){
-			$complaints=new Complaints($protocol_ID);
+		public static function display_Complaints($visit_ID){
+			$complaints=new Complaints($visit_ID);
 			$html='';
 			if(! empty($complaints->getCoughing())){
 				$html.="- Coughing<br>";
@@ -191,7 +187,6 @@
 			if(! empty($complaints->getOthers())){
 				$html.="- ".$complaints->getOthers();
 			}
-			
 			return $html;
 		}
     }
