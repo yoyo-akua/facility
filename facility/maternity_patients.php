@@ -47,7 +47,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,visit WHERE patient.patient_ID=visit.patient_ID and protocol.visit_ID=visit.visit_ID AND checkout_time like '0000-00-00 00:00:00'  AND onlylab=0 and Sex like 'female' $searchpara ORDER BY checkin_time ASC";
+	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID AND checkout_time like '0000-00-00 00:00:00'  AND onlylab=0 and Sex like 'female' $searchpara ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -86,11 +86,15 @@
 		*/		
 		while($row = mysqli_fetch_object($result)){
 			
-			## Create a new patient object.
-			$patient = new Patient($row->patient_ID);
+			## Initialise variable with the patient's ID and use it to create a new patient object.
+			$patient_ID=$row->patient_ID;
+			$patient = new Patient($patient_ID);
+
+			## Initialise variable with the patient's visit ID.
+			$visit_ID=$row->visit_ID;
 			
 			## Print a new table row for created patient object.
-			$patient->currenttablerow($row->protocol_ID);
+			$patient->currenttablerow();
 			
 			## Get the patient's age and save it in a variable.
 			$age=$patient->getAge(time(),'calculate');
@@ -99,79 +103,119 @@
 			## Complete table row with additional information.
 			## A hyperlink to Diagnosis for adding diagnoses.
 			## A hyperlink to Laboratory for adding tests
-			## A hyperlink to a new ANC visit or for editing their ANC visit, if they have already been there.
 			*/
 			echo"
 					<td>
-						<a href=\"patient_visit.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Diagnosis</a>
+						<a href=\"patient_visit.php?visit_ID=$visit_ID\">Diagnosis</a>
 					</td>
 					<td>
-						<a href=\"order_tests.php?patient_ID=$row->patient_ID&visit_ID=$row->visit_ID\">Laboratory</a>
+						<a href=\"order_tests.php?patient_ID=$patient_ID&visit_ID=$visit_ID\">Laboratory</a>
 					</td>
 				";
-				if(empty($row->ANC_ID)){
+			
+			
+			
+				
+			/*
+			## Get client's pregnancy data from database.
+			## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
+			## If client has visited maternity in this facility, call the if-branch.
+			*/
+			$query2="SELECT * FROM maternity WHERE patient_ID=$patient_ID ORDER BY maternity_ID DESC LIMIT 1";
+			$result2=mysqli_query($link,$query2);
+			$object=mysqli_fetch_object($result2);
+			if(! empty($object)){
+
+				## Initialise variable $maternity ID, containing the ID of the maternity register entry.
+				$maternity_ID=$object->maternity_ID;
+
+				/*
+				## Check in the database, whether the client has already come for ANC during this visit to the facility. 
+				## If so, print a link for editing the ANC visit.
+				## If not, print a link for adding an ANC visit.
+				*/
+				$query3="SELECT * FROM visit,anc,protocol WHERE visit.visit_ID=$visit_ID AND visit.visit_ID=protocol.visit_ID AND anc.protocol_ID=protocol.protocol_ID AND anc.maternity_ID=$maternity_ID";
+				$result3=mysqli_query($link,$query3);
+				$object3=mysqli_fetch_object($result3);
+				if(! empty($object3)){
 					echo"
-							<td>
-								<a href=\"anc.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">ANC</a>
-							</td>
-						";
+						<td>
+							<a href=\"anc.php?ANC_ID=$object3->ANC_ID&maternity_ID=$maternity_ID\">edit ANC</a>
+						</td>
+					";
 				}else{
 					echo"
-							<td>
-								<a href=\"anc.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID&edit=$row->ANC_ID\">edit ANC</a>
-							</td>
-						";
+						<td>
+							<a href=\"anc.php?maternity_ID=$maternity_ID\">ANC</a>
+						</td>
+					";
 				}
+
+				## Initialise variable with the client's conception date to calculate the week of pregnancy.
+				$conception_stamp=strtotime($object->conception_date);
 				
-				/*
-				## Get client's pregnancy data from database.
-				## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
-				## If client has visited ANC in this facility 
-				##		- and is between 32 and 45 weeks pregnant and did not deliver yet, print a hyperlink to "Delivery".
-				## 		- and is more than 32 weeks "pregnant", add a checkbox for PNC.
-				## 		- print a link to "Pregnancy Overview".
-				*/
-				$query2="SELECT * FROM maternity WHERE patient_ID=$row->patient_ID ORDER BY maternity_ID DESC LIMIT 1";
-				$result2=mysqli_query($link,$query2);
-				$object=mysqli_fetch_object($result2);
-				if(! empty($object)){
-					$conception_stamp=strtotime($object->conception_date);
-					
-					if($conception_stamp<=(time()-(3600*24*7*32))){
-						if($conception_stamp>=(time()-(3600*24*7*45))){
-							
-							if($row->delivery==0){
+				## If the client reached week 32 of pregnancy, call this if-branch.
+				if($conception_stamp<=(time()-(3600*24*7*32))){
+
+					## If the client hasn't "reached" week 45 of pregnancy yet, call this if-branch.
+					if($conception_stamp>=(time()-(3600*24*7*45))){
+
+						/*
+						## Check if a delivery has been recorded for the client. 
+						## If not, display a link for recording the delivery, 
+						## otherwise check if the client has delivered during this visit. 
+						## In that case, print a link for editing the delivery data.
+						*/
+						if($object->delivery_date=='0000-00-00'){
+							echo"
+								<td>
+									<a href=\"delivery.php?maternity_ID=$maternity_ID\">Delivery</a>
+								</td>
+								";
+						}else{
+							$query3="SELECT * FROM visit,delivery,protocol WHERE visit.visit_ID=$visit_ID AND visit.visit_ID=protocol.visit_ID AND delivery.protocol_ID=protocol.protocol_ID AND delivery.maternity_ID=$maternity_ID";
+							$result3=mysqli_query($link,$query3);
+							$object3=mysqli_fetch_object($result3);
+							if(! empty($object3)){
 								echo"
 									<td>
-										<a href=\"delivery.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID&maternity_ID=$object->maternity_ID\">Delivery</a>
-									</td>
-									";
-							}else{
-								echo"
-									<td>
-										<a href=\"delivery.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID&maternity_ID=$object->maternity_ID&edit=on\">edit Delivery</a>
+										<a href=\"delivery.php?protocol_ID=$object3->protocol_ID&maternity_ID=$maternity_ID\">edit Delivery</a>
 									</td>
 									";
 							}
 						}
-							
-						echo"
-							<td>
-								<a href=\"maternity_patients.php?PNC=$row->protocol_ID\">
-									<input type='checkbox'";
-									if((new Protocol($row->protocol_ID))->getPNC()==1){
-										echo "checked='checked'";
-									}
-									echo" readonly> PNC</a>
-							</td>
-						";
 					}
-					echo"
-						<td>
-							<a href=\"complete_pregnancy.php?patient_ID=$row->patient_ID&maternity_ID=$object->maternity_ID\">Pregnancy Overview</a>
-						</td>
-					";
+						/*???
+								echo"
+										<td>
+											<a href=\"maternity_patients.php?PNC=$row->visit_ID\">
+												<input type='checkbox'";
+												if((new Protocol($row->protocol_ID))->getPNC()==1){
+													echo "checked='checked'";
+												}
+												echo" readonly> PNC</a>
+										</td>
+									";
+							*/
+					
 				}
+
+				## Print a link to the client's pregnancy overview
+				echo"
+					<td>
+						<a href=\"complete_pregnancy.php?maternity_ID=$maternity_ID\">Pregnancy Overview</a>
+					</td>
+				";
+			}
+			
+			## In case the client hasn't been registered in maternity yet, print a link for registering her. 
+			else{
+				echo"
+					<td>
+						<a href=\"new_maternity_client.php?patient_ID=$patient_ID\">new client</a>
+					</td>
+				";
+			}
 		}
 		
 		/*
