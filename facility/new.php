@@ -81,6 +81,15 @@
         $query = "INSERT INTO `insurance`(`visit_ID`,`CCC`,`expired`) VALUES ('$row->visit_ID','$row->CCC','$row->Expired')";
         mysqli_query($link,$query);
     }
-    */
+    
 
+    $query="SELECT * FROM delivery,protocol WHERE delivery.maternity_ID=protocol.delivery";
+    $result=mysqli_query($link,$query);
+
+    while($row=mysqli_fetch_object($result)){
+        $query = "UPDATE delivery SET protocol_ID=$row->protocol_ID WHERE maternity_ID=$row->maternity_ID";
+        mysqli_query($link,$query);
+    }
+
+    */
 ?>

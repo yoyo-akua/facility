@@ -579,7 +579,12 @@ ALTER TABLE `lab` ADD `lab_list_ID` INT NOT NULL AFTER `lab_ID`;
 ALTER TABLE lab_list ADD visit_ID INT NOT NULL AFTER lab_number;
 ALTER TABLE lab CHANGE protocol_ID protocol_ID_ordered INT(11) NOT NULL;
 ALTER TABLE `lab` ADD `protocol_ID_results` INT NOT NULL AFTER `protocol_ID_ordered`; 
-
+ALTER TABLE `delivery` ADD `protocol_ID` INT NOT NULL AFTER `maternity_ID`; 
+ALTER TABLE `anc` ADD `protocol_ID` INT NOT NULL AFTER `ANC_ID`; 
+UPDATE anc,protocol SET anc.protocol_ID=protocol.protocol_ID WHERE anc.ANC_ID=protocol.ANC_ID
+ALTER TABLE `maternity` ADD `delivery_date` DATE NOT NULL AFTER `conception_date`;
+UPDATE maternity SET delivery_date=ADDDATE(conception_date, INTERVAL + 40 WEEK) WHERE conception_date < ADDDATE(CURRENT_DATE, INTERVAL - 43 WEEK) ;
+UPDATE maternity,protocol,delivery SET delivery_date=DATE(protocol.timestamp) WHERE maternity.maternity_ID=delivery.maternity_ID AND delivery.protocol_ID=protocol.protocol_ID;
 
 new.php
 
@@ -602,3 +607,10 @@ ALTER TABLE `protocol`
   DROP `completed`;
 ALTER TABLE `lab_list`
   DROP `protocol_ID`;
+ALTER TABLE `protocol`
+  DROP `delivery`;
+ALTER TABLE `protocol`
+  DROP `ANC_ID`;
+ALTER TABLE `protocol`
+  DROP `labdone`,
+  DROP `lab_number`;
