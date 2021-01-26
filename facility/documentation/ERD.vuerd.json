@@ -2,8 +2,8 @@
   "canvas": {
     "width": 9000,
     "height": 9000,
-    "scrollTop": 2403,
-    "scrollLeft": 4048,
+    "scrollTop": 4370,
+    "scrollLeft": 3970,
     "show": {
       "tableComment": true,
       "columnComment": true,
@@ -1113,7 +1113,7 @@
           }
         ],
         "ui": {
-          "active": true,
+          "active": false,
           "left": 4117,
           "top": 2577,
           "zIndex": 1406,
@@ -3707,10 +3707,10 @@
           }
         ],
         "ui": {
-          "active": false,
+          "active": true,
           "left": 4137,
           "top": 4613,
-          "zIndex": 1316,
+          "zIndex": 1413,
           "widthName": 64,
           "widthComment": 60
         },
