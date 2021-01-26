@@ -203,25 +203,49 @@
 		## Add all known patient's admission information and their unit to that HTML buffer.
 		*/
 		public function display_admission_data($visit_ID){
-			$html='';
+
+			## Initialise variables.
+			## 		- $thispage is used to inquire whether the user is opening a pdf file.
+			## 		- $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 			global $thispage;
 			global $link;
 
+			## Initialise variable $html which is used to buffer the text which is to be displayed. 
+			$html='';
+
+			## Call all vital signs entries saved for this visit of this patient. 
 			$query="SELECT * FROM vital_signs,protocol WHERE vital_signs.protocol_ID=protocol.protocol_ID AND protocol.visit_ID='$visit_ID'";
 			$result=mysqli_query($link,$query);
-			while($row=mysqli_fetch_object($result)){
-				$protocol_ID=$row->protocol_ID;
-				$vitals=new self($protocol_ID);
 
+			## This loop is run once for each vital signs entry saved for this visit. 
+			while($row=mysqli_fetch_object($result)){
+				
+				## Inquire the protocol ID linked to this vital signs entry.
+				$protocol_ID=$row->protocol_ID;
+
+				## Initialise new objects of vital signs and protocol using the protocol ID.
+				$vitals=new self($protocol_ID);
 				$protocol=new Protocol($protocol_ID);
 			
+				## Save the time of the protocol entry linked to this vital signs entry in $time.
 				$time=date('d/m/Y H:i',strtotime($protocol->getTimestamp()));
 
-				$html.="<u><h4>$time</h4></u><br>";
+				## Buffer $time as a headline in $html. 
+				$html="<u><h4>$time</h4></u><br>";
+
+				## If the blood pressure has been entered, call this if-branch.
 				if(! empty($vitals->getBP())){
+
+					## In case this function is called within a pdf file, skip this if-branch. 
 					if(!strstr($thispage,'pdf')){
 					
+						## Call the function last_BPs() to inquire the patient's last 5 measured blood pressures as reference values.
 						$BP_last=Vital_Signs::last_BPs($visit_ID,$protocol_ID);
+
+						/*
+						## In case previously measured blood pressures have been entered, call this if-branch. 
+						## It is used to buffer the last BP values as a tooltip, which is displayed when hovering over the current BP value. 
+						*/
 						if(!empty($BP_last)){
 							$html.="<b>Blood Pressure:</b>
 								<div class='tooltip' style='line-height:normal'>
@@ -230,26 +254,42 @@
 											$BP_last
 										</span>
 								</div><br>";
-						}else{
+						}
+						
+						## If no previous BPs have been recorded, just buffer the current one in $html. 
+						else{
 							$html.="<b>Blood Pressure:</b> ".$vitals->getBP()." mmHg<br>";
 						}
-					}else{
+					}
+					
+					## If the function is called within a pdf file, just buffer the current blood pressure in $html. 
+					else{
 						$html.="<b>Blood Pressure:</b> ".$vitals->getBP()." mmHg<br>";
 					}
 				}
+
+				## In case it is set, buffer the pulse in $html.
 				if(! empty($vitals->getpulse())){
 					$html.="<b>Pulse:</b> ".$vitals->getpulse()." bpm<br>";
 				}
+
+				## In case it is set, buffer the weight in $html.
 				if($vitals->getweight()!=0.0){
 					$html.="<b>Weight:</b> ".$vitals->getweight()." kg<br>";
 				}
+
+				## In case it is set, buffer the temperature in $html.
 				if($vitals->gettemperature()!=0.0){
 					$html.="<b>Temperature:</b> ".$vitals->gettemperature().' °C<br>';
 				}
+
+				## In case it is set, buffer the MUAC in $html. 
 				if($vitals->getMUAC()!=0.0){
 					$html.="<b>MUAC:</b> ".$vitals->getMUAC()." cm<br>";
 				}	
 			}
+
+			## In case any vital signs have been buffered in $html, return this variable, otherwise return "false".
 			if (! empty($html)){
 				return $html.'<br>';
 			}else{

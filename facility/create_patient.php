@@ -46,19 +46,16 @@
 		## As well as an empty blood group.
 		*/
 		$nom = "0";
-		$exp = "0";
 		$blood_group="";
 		
 		/*
-		## NHIS of mother, expired status and blood group are optional data.
+		## NHIS of mother and blood group are optional data.
 		## Override default values, if a parameter is defined by user.
 		*/
 		if(! empty($_GET['NHISofMother'])){
 			$nom = "1";
 		}
-		if(! empty($_GET['Expired'])){ 
-			$exp = "1";
-		}
+		
 		if(! empty($_GET['blood_group'])){
 			$blood_group=$_GET['blood_group'];
 		}
@@ -86,11 +83,7 @@
 			$new_p="1";
 		}
 		
-		if(! empty($_GET['CCC'])){
-			$CCC=$_GET['CCC'];
-		}else{
-			$CCC="";
-		}
+		
 		
 		## If there was an OPD number entered, update it in the database, so that the next one can be proposed correctly.
 		if(! empty ($_GET['OPD'])){
@@ -111,7 +104,20 @@
 
 			protocol::new_Protocol($visit_ID,'admission');
 
-			if(! empty($_GET['CCC']) OR ! empty($_GET['Expired'])){
+			if(!empty($_GET['NHIS'])){
+
+				if(! empty($_GET['CCC'])){
+					$CCC=$_GET['CCC'];
+				}else{
+					$CCC="";
+				}
+
+				if(! empty($_GET['Expired'])){
+					$exp=1;
+				}else{
+					$exp=0;
+				}
+
 				$insurance=Insurance::new_Insurance($visit_ID,$CCC,$exp);
 			}
 		
