@@ -3564,7 +3564,7 @@
         "id": "6ce40066-fa39-62b5-598a-c5e2a717e639"
       },
       {
-        "name": "complaintss",
+        "name": "complaints",
         "comment": "",
         "columns": [
           {
@@ -3710,8 +3710,8 @@
           "active": true,
           "left": 4137,
           "top": 4613,
-          "zIndex": 1410,
-          "widthName": 71,
+          "zIndex": 1413,
+          "widthName": 64,
           "widthComment": 60
         },
         "id": "06f7e716-9529-4d6c-9795-1452af725d3f"
