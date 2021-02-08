@@ -76,8 +76,6 @@
 				}
 				
 				## Is needed to remember IDs of protocol and patient during the authorisation process.
-				## TODO Flo: löschen
-				#$hidden_array=array('protocol_ID'=>$protocol_ID,'patient_ID'=>$patient_ID);
 				$hidden_array=array('visit_ID'=>$visit_ID,'patient_ID'=>$patient_ID);
 				Settings::popupPassword($thispage,$text,$hidden_array);
 				exit();
@@ -168,9 +166,7 @@
 	/*
 	## Printing checkbox to enable or disable protection of patient's diagnosis
 	## Check checkbox if patient's diagnosis is protected.
-	*/
-
-		
+	*/	
 	echo "<br>
 			<a href='patient_visit.php?visit_ID=$visit_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
 				<input type='checkbox'";
@@ -185,7 +181,7 @@
 
 
 	/*
-	## Initialising more variales.
+	## Initialising more variables.
 	## Variable $primgiven defines, whether exactly one disease is tagged as primary disease.
 	## Variable $stop prevents entries in database, if multiple primary diagnoses are selected.
 	*/
@@ -248,16 +244,6 @@
 			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
 		}
 
-
-		## Delete all previously entered diagnoses from the database.
-		## TODO Flo: hiermit soll erreicht werden, dass eine Diagnose, die schon mal aufgestellt wurde,
-		## und nun nicht nochmal diagnostiziert wurde, auch wieder aus der DB gelöscht wird
-		## Abhaken einer Checkbox soll hiermit auch im System rückgängig gemacht werden
-		## Idee: später bei Protokollierung unterscheiden in initiale Diagnose gestellt 
-		## und Diagnosen hinzugefügt (alle weiteren, die nicht initial sind)
-		## Muss erst entsprechend umgebaut werden, solange bleibt die Funktion auskommentiert 
-		##Diagnosis_IDs::clean($protocol_ID);
-
 		/*
 		## Get data from database.
 		## Get all diseases, which are known within the system.
@@ -293,9 +279,6 @@
 				## Within this if-branch it is also checked whether the diagnosis was also selected as provisional diagnosis and if so, stored as such in database.
 				*/
 				if(! $primgiven OR $importance!==1){
-				
-					##ToDo Flo: wieder löschen
-					#echo "new Diagnosis Zweig" & $protocol_ID;
 					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
 					$protocol->setStaff_ID($_SESSION['staff_ID']);
 					if($importance==1){
@@ -326,14 +309,7 @@
 		## If the attendant is known, his or her name is documented in database
 		*/
 		if ($stop==false){
-			
-			## ToDo Flo: wieder löschen
-			#echo "stop-Zweig" & $protocol_ID;
 			$protocol->setStaff_ID($_SESSION['staff_ID']);
-
-			## TODO Flo: Hier wird erst der neue Protokoll-Eintrag erstellt
-			## Alles was vorher verwendet wird, ist noch auf dem alten Code-Stand
-			#$protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
 		}
 	}
 
@@ -470,7 +446,6 @@
 		## Variable $html contains all primary and secondary diseases, which were diagnosed for the patient.
 		## Print also information about attendant and pregnancy, if known.
 		*/
-		$html=$visit->display_diagnoses('both',$visit_ID);
 		if(!empty(Diagnosis_IDs::getDiagnosis_IDs($visit_ID)) OR Referral::checkReferral($visit_ID)){
 			echo "
 					<details open>
@@ -495,6 +470,7 @@
 				$referral=new Referral(Referral::checkReferral($visit_ID));
 				echo "Patient has been <h4>referred</h4> to <b>".$referral->getDestination()."</b> because of ".$referral->getReason()."<br>";
 			}
+			$html=$visit->display_diagnoses('both',$visit_ID);
 			echo $html;
 		}
 
@@ -748,11 +724,9 @@
 		## $lastClass indicates when a new class of diagnoses is started in the list, so that a new headline and table can be printed.
 		## Variable $first is used to prevent the diagnosis-part of the page from being closed too early.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
-
 		*/
 		$lastClass=0;
 		$first=true;
-
 		$query="SELECT * FROM diagnoses WHERE Diagnosis_ID not like '0' $searchpara ORDER BY DiagnosisClass,Diagnosis_ID";
 		$result=mysqli_query($link,$query);
 		while($row=mysqli_fetch_object($result)){
@@ -1028,8 +1002,6 @@
 		
 		## If there haven't been prescribed any drugs so far, print link to prescribe drugs.
 		if(empty($disp_drug_IDs)){
-			#TODO Flo: löschen
-			# echo "<a href='prescribe_drugs.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>prescribe drugs</div></a>";
 			echo "<a href='prescribe_drugs.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>prescribe drugs</div></a>";
 		}
 		
@@ -1041,8 +1013,6 @@
 		## If pregnancy is between week 32 and 45 (and no delivery records are available), a button to add a delivery is printed.
 		*/
 		if($sex=='female' AND $age_exact>=10 AND $age_exact<=50 AND empty($ANC_ID) AND in_array('Maternity',$DEPARTMENTS)){
-			#TODO Flo: löschen
-			#echo "<a href='anc.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>add ANC</div></a>";
 			echo "<a href='anc.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>add ANC</div></a>";
 			$query="SELECT * FROM maternity WHERE patient_ID=$patient_ID ORDER BY maternity_ID DESC";
 			$result=mysqli_query($link,$query);
@@ -1054,8 +1024,6 @@
 					$result=mysqli_query($link,$query);
 					$object=mysqli_fetch_object($result);
 					if(empty($object)){
-						#TODO Flo: löschen
-						#echo "<a href='delivery.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&maternity_ID=$maternity_ID'><div class ='box'>add Delivery</div></a>";
 						echo "<a href='delivery.php?patient_ID=$patient_ID&visit_ID=$visit_ID&maternity_ID=$maternity_ID'><div class ='box'>add Delivery</div></a>";
 					}
 				}
@@ -1084,8 +1052,6 @@
 
 	## If you are in "display-mode" or just submitted the diagnosis, there is a link printed to exit the "display-mode" and edit diagnoses again.
 	if(! empty($_GET['show']) OR ! empty($_POST['submit'])){
-		#ToDO FLo: löschen
-		#echo"<a href='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&edit=on'><div class ='box'>edit results</div></a></div>";
 		echo"<a href='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID&edit=on'><div class ='box'>edit results</div></a></div>";
 	}
 

@@ -21,11 +21,14 @@
 		
 		/*
 		## Getter function.
-		## Returns an array of the patient's diagnosis IDs of that visit, of which the function is called.
+		## Returns an array of the patient's diagnosis IDs of that visit, 
+		## of which the function is called.
+		## Thereby only the patient's newest diagnoses (which belong to the newest protocol entry),
+		## are observed.
 		*/
-		public function getDiagnosis_IDs($visit_ID){
+		public static function getDiagnosis_IDs($visit_ID){
 			global $link;
-			$query = "SELECT d.diagnosis_ID FROM diagnosis_ids d, protocol p WHERE d.protocol_ID = p.protocol_ID AND p.visit_ID = $visit_ID";
+			$query = "SELECT diagnosis_ID FROM diagnosis_ids WHERE protocol_ID = (SELECT protocol_ID FROM protocol WHERE visit_ID = $visit_ID ORDER BY protocol_ID DESC LIMIT 1)";
 			$result=mysqli_query($link,$query);
 			
 			$diagnoses=array();
@@ -39,10 +42,12 @@
 		/*
 		## Getter function.
 		## Returns whether a specific diagnosis is primary or secondary.
+		## Only the diagnosis of the newest protocol entry, 
+		## which belongs to the current patient's visit, is observed.
 		*/
 		public function getImportance($visit_ID,$diagnosis_ID){
 			global $link;
-			$query = "SELECT d.importance FROM diagnosis_ids d, protocol p WHERE d.protocol_ID = p.protocol_ID AND p.visit_ID = $visit_ID AND d.diagnosis_ID=$diagnosis_ID";
+			$query = "SELECT importance FROM diagnosis_ids WHERE protocol_ID = (SELECT protocol_ID FROM protocol WHERE  visit_ID = $visit_ID ORDER BY protocol_ID DESC LIMIT 1) AND diagnosis_ID=$diagnosis_ID";
 			$result=mysqli_query($link,$query);
 			
 			$result=mysqli_fetch_object($result);
@@ -69,11 +74,10 @@
 		}
 		
 		## Deletes all diagnosis entries of a specific patient's visit
-		public function clean($protocol_ID){
+		public static function clean($protocol_ID){
 			global $link;
 			$query = "DELETE FROM diagnosis_ids WHERE protocol_ID=$protocol_ID";
 			mysqli_query($link,$query);
-		}
-			
+		}	
 	}
 ?>
