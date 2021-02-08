@@ -5,20 +5,7 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## ToDo Flo: Hier beginnt der Schlamassel
-	## Die Seite muss über die visit_ID aufgerufen werden
-	## In der Seite muss erstmal alles von protocol_ID auf die visit_ID umgestellt werden
-	## Erst danach kann die Protokollierung sinnvoll implementiert werden
-	## Protokollierung übrigens mit $protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
-	
-	#TODO löschen
-	#$protocol_ID=$_GET['protocol_ID'];
-	#$protocol= new Protocol($protocol_ID);
-
 	## Initialise new object of visit by a certain visit ID, with which the page is called.
-	#TODO löschen
-	#$visit_ID=$protocol->getVisit_ID();
 	$visit_ID=$_GET['visit_ID'];
 	$visit= new Visit($visit_ID);
 
@@ -119,9 +106,6 @@
 	## Inquire whether the patient has come to the facility before, if so initialise variable $ID_last with the ID of the previous visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	## TODO löschen
-	#$querylast="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp<='$date' ORDER BY protocol.timestamp DESC LIMIT 0,1";
-	#var_dump($date);
 	$querylast="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkout_time<='$date' ORDER BY checkout_time DESC LIMIT 0,1";
 	$resultlast=mysqli_query($link,$querylast);
 	if(mysqli_num_rows($resultlast)!==0){
@@ -134,8 +118,6 @@
 	## Inquire whether the patient has come to the facility later on, if so initialise variable $ID_next with the ID of the next visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	##TODO löschen
-	#$querynext="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp>='$date' ORDER BY protocol.timestamp ASC LIMIT 0,1";
 	$querynext="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkin_time>='$date' ORDER BY checkin_time ASC LIMIT 0,1";
 	$resultnext=mysqli_query($link,$querynext);
 	if(mysqli_num_rows($resultnext)!==0){
@@ -420,6 +402,11 @@
 			
 			## Add any remarks from the consultant to the diagnosis.
 			## TODO Flo: muss noch umgebaut werden
+			## ToDo Flo: HIER HABE ICH AUFGEHÖRT
+			## es muss in die Diagnosis_IDs.php eine neue Funktion
+			## aufgenommen werden für get und set remarks
+			## Diese Funktion muss dann hier zum Schreiben
+			## Und weiter unten zum Lesen aufgerufen werden
 			## bleibt solange auskommentiert
 			/*
 			if(! empty($_POST['remarks'])){
@@ -766,6 +753,7 @@
 					<textarea name="remarks" maxlength="1000" style="min-width:500px">';
 					#TODO Flo: muss noch umgebaut werden auf visit_ID
 					#bleibt solange auskommentiert
+					# ToDo Flo: Datenbankmigration noch in new.php dokumentieren
 					/*
 					if(! empty($protocol->getRemarks())){
 						echo $protocol->getRemarks();
