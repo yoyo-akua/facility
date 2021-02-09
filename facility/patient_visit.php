@@ -408,13 +408,13 @@
 			## Diese Funktion muss dann hier zum Schreiben
 			## Und weiter unten zum Lesen aufgerufen werden
 			## bleibt solange auskommentiert
-			/*
 			if(! empty($_POST['remarks'])){
-				$protocol->setRemarks($_POST['remarks']);
-			}else{
-				$protocol->setRemarks('');
+				#$protocol->setRemarks($_POST['remarks']);
+				Diagnosis_IDs::setRemarks($protocol_ID, $_POST['remarks']);
+			#}else{
+			#	$protocol->setRemarks('');
 			}
-			*/
+			
 
 			## Add notice to database after the patient's treatment was tagged as completed.
 			if(! empty($_POST['completed'])){
@@ -744,30 +744,24 @@
 		
 		/*
 		## Print also a checkbox to tag a patient's treatment as completed
-		## and close the input form for diagnoses.
+		## Furthermore print remarks of patient's diagnoses, if exist and
+		## finally close the input form for diagnoses.
 		*/
 		echo'		
 						</table>
 					</details>
 					Remarks / further specification of diagnosis:<br>
 					<textarea name="remarks" maxlength="1000" style="min-width:500px">';
-					#TODO Flo: muss noch umgebaut werden auf visit_ID
-					#bleibt solange auskommentiert
-					# ToDo Flo: Datenbankmigration noch in new.php dokumentieren
-					/*
-					if(! empty($protocol->getRemarks())){
-						echo $protocol->getRemarks();
+					$remarks = Diagnosis_IDs::getRemarks($visit_ID);
+					if(! empty($remarks)){
+						echo $remarks;
 					}
-					*/
 					echo'</textarea><br>
 					<input type="checkbox" name="completed" ';
 					if($visit->getCheckout_time()!=='0000-00-00 00:00:00'){
 						echo "checked='checked'";
 					}
 					echo"> <b>treatment in clinic completed</b>
-
-					
-
 				</form>
 				";
 	}
