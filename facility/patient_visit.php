@@ -835,7 +835,7 @@
 	## This if-branch is called, if patient attended postnatal care.
 	## In this case there is just a short note displayed.
 	*/
-	##TODO Flo: muss erst noch umgebaut werden
+	##TODO Flo: muss erst noch durch Liebste umgebaut werden
 	## Bleibt solange noch auskommentiert
 	/* 
 	if($protocol->getPNC()==1){
@@ -855,6 +855,8 @@
 	## In this case, information about procedure and charge are printed.
 	*/
 	##TODO Flo: muss erst noch umgebaut werden
+	## Allerdings bislang unklar, wie es genau aussehen soll
+	## Infos aus Ghana noch benötigt
 	## Bleibt solange noch auskommentiert
 	/* 
 	$surgery=$protocol->getsurgery();
@@ -896,11 +898,8 @@
 		
 
 		## In case a file has been attached which contains lab information, display a link to this file. 
-		## TODO Flo Muss erst noch umgebaut werden
-		## Bleibt solange auskommentiert
-		/*
-		if(Uploads::getUploadArray($protocol_ID)){
-			$upload_array=Uploads::getUploadArray($protocol_ID);
+		$upload_array=Uploads::getUploadArray($visit_ID);
+		if($upload_array){
 			foreach($upload_array AS $ID){
 				$upload=new Uploads($ID);
 				if(! empty($upload->getFilename())){
@@ -918,12 +917,10 @@
 							</span>
 						</div>
 						';
-					}
-					
+					}	
 				}
 			}
 		}
-		*/
 		
 		if(empty($_GET['show'])){
 			echo"

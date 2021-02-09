@@ -10,7 +10,6 @@
 		private $surgery;					  ## Contains the name of surgery, which where performed on patient at visit's date.	
 		private $PNC;						   ## Defines, if the patient did PNC at the patient at the visit's date.		
 		private $charge;					   ## Defines how much the patient was charged either in lab or for a minor OP.
-		private $remarks;					  ## Contains remarks of the consultant on the patient's diagnosis.
 		private $delivery;						## Saves the patient's maternity ID, if she delivered.
 
 		/*
@@ -31,7 +30,6 @@
 				$this->surgery = $row->surgery;
 				$this->PNC = $row->PNC;
 				$this->charge = $row->charge;
-				$this->remarks = $row->remarks;
 				$this->delivery = $row->delivery;
 			}
 			$this->protocol_ID = $protocol_ID;
@@ -127,16 +125,7 @@
 		*/
 		public function getCharge(){
 			return $this->charge;
-		}				
-		
-		
-		/*
-		## Getter function.
-		## Returns any remarks that the consultant made on the patient's diagnosis.
-		*/
-		public function getRemarks(){
-			return $this->remarks;
-		}		
+		}						
 		
 		/*
 		## Getter function.
@@ -222,19 +211,6 @@
 			$query = "UPDATE protocol SET charge='$var' WHERE protocol_ID = $this->protocol_ID";
 			mysqli_query($link,$query);
 			return $this->charge = $var;
-		}	
-
-		/*
-		## Setter function.
-		## Updates remarks of the consultant that were made on the patient's diagnosis.
-		## Returns the updated information.
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
-		*/		
-		public function setRemarks($var){
-			global $link;
-			$query = "UPDATE protocol SET remarks='$var' WHERE protocol_ID = $this->protocol_ID";
-			mysqli_query($link,$query);
-			return $this->remarks = $var;
 		}		
 		
 		/*
