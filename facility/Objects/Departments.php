@@ -15,7 +15,12 @@
             return $own_department;
         }
 
-        public function getDepartmentId($name){
+        /*
+        ## Getter function
+        ## Returns the ID of a certain department.
+        ## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+        */
+        public static function getDepartmentId($name){
             global $link;
             $query="SELECT Department_ID FROM departments WHERE Department='$name'";
             $object=mysqli_query($link,$query);
