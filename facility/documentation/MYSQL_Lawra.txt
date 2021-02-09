@@ -583,3 +583,5 @@ ALTER TABLE `protocol`
 ALTER TABLE `protocol`
   DROP `labdone`,
   DROP `lab_number`;
+ALTER TABLE `protocol`
+  DROP `remarks`;
