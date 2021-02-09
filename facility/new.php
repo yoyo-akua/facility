@@ -91,5 +91,15 @@
         mysqli_query($link,$query);
     }
 
+    
+
+    $query="SELECT protocol_id, remarks FROM protocol WHERE remarks NOT LIKE ''";
+    $result=mysqli_query($link,$query);
+
+    while($row=mysqli_fetch_object($result)){
+        $query = "INSERT INTO `diagnosis_ids`(`protocol_ID`,`remarks`) VALUES ('$row->protocol_id','$row->remarks')";
+        mysqli_query($link,$query);
+    }
+
     */
 ?>
