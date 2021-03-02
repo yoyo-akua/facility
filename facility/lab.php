@@ -530,7 +530,9 @@
 						<br>
 								
 								<div class="tooltip">
-									<button type="submit" name="submit" value="submit"><i id="submitlab" class="far fa-check-circle fa-4x"></i></button>
+									<button type="submit" name="submit" value="submit">
+										<i id="submitlab" class="far fa-check-circle fa-4x"></i>
+									</button>
 									<span class="tooltiptext">
 										submit
 									</span>

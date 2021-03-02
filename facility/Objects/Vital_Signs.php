@@ -231,7 +231,8 @@
 				$time=date('d/m/Y H:i',strtotime($protocol->getTimestamp()));
 
 				## Buffer $time as a headline in $html. 
-				$html="<u><h4>$time</h4></u><br>";
+				$html="<h5>$time</h5><br>
+						<div style='margin-left:20px;'>";
 
 				## If the blood pressure has been entered, call this if-branch.
 				if(! empty($vitals->getBP())){
@@ -287,6 +288,8 @@
 				if($vitals->getMUAC()!=0.0){
 					$html.="<b>MUAC:</b> ".$vitals->getMUAC()." cm<br>";
 				}	
+
+				$html.='</div>';
 			}
 
 			## In case any vital signs have been buffered in $html, return this variable, otherwise return "false".

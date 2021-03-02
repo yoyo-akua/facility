@@ -207,6 +207,7 @@
 		echo"
 			<div class='inputform'>
 			<form action='anc.php' method='get'>
+				<h2>General Pregnancy Data</h2>
 				<table class='invisible'>
 					<tr>
 						<td>".
@@ -232,113 +233,20 @@
 							</div>
 						</td>
 					<tr>
-				</table>";
-				
-				## Initialise variable $visitnumber. Use the last vistnumber to calculate it.
-				if(!empty($_GET['ANC_ID'])){
-					$visitnumber=$lastvisitnumber;
-				}else{
-					$visitnumber=$lastvisitnumber+1;
-				}
-
-				/*
-				## Display the number of visit as plain text.
-				## Print an editing symbol after that,
-				## if this is clicked, there appears an input field instead of the plain text
-				## which enables the user to edit the value. 
-				## This functionality is described in the javascript function edit_value.
-				*/
-				echo"
-				<div>
-					<label>Number of Visit:</label><br>
-					
-					<div style='display:none' id='number_div'>
-						<input type='number' id='number_input' name='visitnumber' min='1'>
-					</div>
-
-					<font  id='number_text'>
-						$visitnumber
-					</font>
-
-					<button type='button' id='edit_number' onclick='edit_value(\"number\",\"$visitnumber\")' class='grey'>
-						<i class='fas fa-pencil-alt'></i>
-					</button>
-
-				</div>";
-
-				## Calculate the gestational age and save it in $weeks and $anddays.
-				$days=(strtotime($visit->getCheckin_time())-(strtotime($maternity->getconception_date())))/(24*3600);
-				$weeks=floor($days/7);
-				$anddays=floor($days-($weeks*7));
-
-				/*
-				## Display the gestational age as plain text.
-				## Print an editing symbol after the number of weeks and after the number of days,
-				## if this is clicked, there appears an input field instead of the plain text
-				## which enables the user to edit the value. 
-				## This functionality is described in the javascript function edit_value.
-				*/
-				echo"
-					<div>
-						<label>Gestational Age:</label><br>
-						
-						<div style='display:none' id='weeks_div'>
-							<input type='number'  id='weeks_input' class='smalltext' name='pregnancyweeks' min='0'> weeks and
-						</div>
-	
-						<font  id='weeks_text'>
-							$weeks weeks and
-						</font>
-
-						<button type='button' id='edit_weeks' onclick='edit_value(\"weeks\",\"$weeks\")' class='grey'>
-							<i class='fas fa-pencil-alt'></i>
-						</button>
-
-
-						<div style='display:none' id='days_div'>
-							<input type='number' id='days_input' class='smalltext' name='pregnancydays' min='0'> days
-						</div>
-	
-						<font  id='days_text'>
-							$anddays days
-						</font>
-
-						<button type='button' id='edit_days' onclick='edit_value(\"days\",\"$anddays\")' class='grey'>
-							<i class='fas fa-pencil-alt'></i>
-						</button>
-	
-					</div>";
-
-				## Calculate the estimated delivery date on the basis of the conception date saved in the database.
-				$EDD=date("Y-m-d",((strtotime($maternity->getconception_date()))+(40*7*24*3600)));
-				$EDDstring=date("d/m/y",strtotime($EDD));
-
-				/*
-				## Display the estimated delivery date as plain text.
-				## Print an editing symbol after that,
-				## if this is clicked, there appears an input field instead of the plain text
-				## which enables the user to edit the value. 
-				## This functionality is described in the javascript function edit_value.
-				*/
-				echo"
-					<div>
-						<label>Estimated Delivery Date:</label><br>
-						
-						<div style='display:none' id='EDD_div'>
-							<input type='date' id='EDD_input' name='EDD'>
-						</div>
-	
-						<font  id='EDD_text'>
-							$EDDstring
-						</font>
-	
-						<button type='button' id='edit_EDD' onclick='edit_value(\"EDD\",\"$EDD\")' class='grey'>
-							<i class='fas fa-pencil-alt'></i>
-						</button>
-	
-					</div>";
-
-
+					</table>
+					<h2>ANC Data</h2>
+					<table class='invisible' id='anc_table'>
+						<tr>
+							<td>
+								<h3>Vital Signs</h3>
+							</td>
+							<td colspan='3'>
+								<h3>ANC specifics</h3>
+							</td>
+						</tr>
+						<tr>
+							<td>
+							";
 				## Inquire whether vitals have been taken for this visit, if so, save the protocol ID of this database entry in $vitals_ID.
 				$vitals_ID=Vital_Signs::get_last_vitals($visit_ID);
 
@@ -408,8 +316,121 @@
 		
 						</div>";
 				}
+							
+							
+				
+						## Initialise variable $visitnumber. Use the last vistnumber to calculate it.
+						if(!empty($_GET['ANC_ID'])){
+							$visitnumber=$lastvisitnumber;
+						}else{
+							$visitnumber=$lastvisitnumber+1;
+						}
+		
+						/*
+						## Display the number of visit as plain text.
+						## Print an editing symbol after that,
+						## if this is clicked, there appears an input field instead of the plain text
+						## which enables the user to edit the value. 
+						## This functionality is described in the javascript function edit_value.
+						*/
+						echo"
+						</td>
+						<td>
+						<div>
+							<label>Number of Visit:</label><br>
+							
+							<div style='display:none' id='number_div'>
+								<input type='number' id='number_input' name='visitnumber' min='1' value='$visitnumber'>
+							</div>
+		
+							<font  id='number_text'>
+								$visitnumber
+							</font>
+		
+							<button type='button' id='edit_number' onclick='edit_value(\"number\",\"$visitnumber\")' class='grey'>
+								<i class='fas fa-pencil-alt'></i>
+							</button>
+		
+						</div>";
+		
+						## Calculate the gestational age and save it in $weeks and $anddays.
+						$days=(strtotime($visit->getCheckin_time())-(strtotime($maternity->getconception_date())))/(24*3600);
+						$weeks=floor($days/7);
+						$anddays=floor($days-($weeks*7));
+		
+						/*
+						## Display the gestational age as plain text.
+						## Print an editing symbol after the number of weeks and after the number of days,
+						## if this is clicked, there appears an input field instead of the plain text
+						## which enables the user to edit the value. 
+						## This functionality is described in the javascript function edit_value.
+						*/
+						echo"
+							<div>
+								<label>Gestational Age:</label><br>
+								
+								<div style='display:none' id='weeks_div'>
+									<input type='number'  id='weeks_input' class='smalltext' name='pregnancyweeks' min='0'> weeks and
+								</div>
+			
+								<font  id='weeks_text'>
+									$weeks weeks and
+								</font>
+		
+								<button type='button' id='edit_weeks' onclick='edit_value(\"weeks\",\"$weeks\")' class='grey'>
+									<i class='fas fa-pencil-alt'></i>
+								</button>
+		
+		
+								<div style='display:none' id='days_div'>
+									<input type='number' id='days_input' class='smalltext' name='pregnancydays' min='0'> days
+								</div>
+			
+								<font  id='days_text'>
+									$anddays days
+								</font>
+		
+								<button type='button' id='edit_days' onclick='edit_value(\"days\",\"$anddays\")' class='grey'>
+									<i class='fas fa-pencil-alt'></i>
+								</button>
+			
+							</div>";
+		
+						## Calculate the estimated delivery date on the basis of the conception date saved in the database.
+						$EDD=date("Y-m-d",((strtotime($maternity->getconception_date()))+(40*7*24*3600)));
+						$EDDstring=date("d/m/y",strtotime($EDD));
+		
+						/*
+						## Display the estimated delivery date as plain text.
+						## Print an editing symbol after that,
+						## if this is clicked, there appears an input field instead of the plain text
+						## which enables the user to edit the value. 
+						## This functionality is described in the javascript function edit_value.
+						*/
+						echo"
+							<div>
+								<label>Estimated Delivery Date:</label><br>
+								
+								<div style='display:none' id='EDD_div'>
+									<input type='date' id='EDD_input' name='EDD'>
+								</div>
+			
+								<font  id='EDD_text'>
+									$EDDstring
+								</font>
+			
+								<button type='button' id='edit_EDD' onclick='edit_value(\"EDD\",\"$EDD\")' class='grey'>
+									<i class='fas fa-pencil-alt'></i>
+								</button>
+			
+							</div>";
+
+
+				
 				
 				echo"
+				</td>
+				<td>
 				<div><label>Sulfadoxine Pyrimethamine:</label><br>
 				<select name='SP'>
 					<option value=''";if((empty($_GET['ANC_ID']) AND $lastSP==5) OR (! empty($_GET['ANC_ID']) AND $lastSP==0)){echo'selected';}echo"> </option>
@@ -436,6 +457,9 @@
 				<div><label>Fetal Heartrate:</label><br>
 				<input type='number' name='fetal_heart'";if(! empty($_GET['ANC_ID'])){echo "value=".$lastANC->getFetal_heart();}echo"> bpm</div>
 
+				</td>
+				<td>
+
 				<div><input type='checkbox' name='ITN'";if($ITN==1){echo'checked="checked"';}echo"> <label>ITN</label> given</div>
 
 				<div><label>Remarks:</label><br>
@@ -459,6 +483,7 @@
 						submit
 					</span>
 				</div>	
+				</td></tr></table>
 			</form>
 			</div>
 			";

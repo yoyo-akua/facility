@@ -216,29 +216,29 @@
 			
 			## Save HTML commands to print the client's data later in HTML buffer.
 			$html="
-					<h4>Serial Number:</h4> 
+					<h5>Serial Number:</h5> 
 					$serial_number<br>
 						
-					<h4>Registration Number:</h4> 
+					<h5>Registration Number:</h5> 
 					$reg_number<br>
 			
-					<h4>Occupation:</h4> 
+					<h5>Occupation:</h5> 
 					$occupation<br>
 			
-					<h4>Telephone Number:</h4>
+					<h5>Telephone Number:</h5>
 					$telephone<br>
 
-					<h4>Parity:</h4>
+					<h5>Parity:</h5>
 					$parity<br>
 
-					<h4>Height of Mother:</h4>
+					<h5>Height of Mother:</h5>
 					$height cm<br>";
 
-					if($specification!=='without EDD'){
-						echo"				
-						<h4>Estimated Delivery Date:</h4>
+					#if($specification!=='without EDD'){
+						$html.="				
+						<h5>Estimated Delivery Date:</h5>
 						$EDD<br>";
-					}
+					#}
 					
 							
 			if($this->ITN==1){

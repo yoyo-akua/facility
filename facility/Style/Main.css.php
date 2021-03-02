@@ -72,7 +72,7 @@ ul li {
 	 position: relative;
 	 float: left;
 	 border:none;
-	 z-index:1;
+	 z-index:10;
 }
 li ul {
 	display: none;
@@ -89,7 +89,7 @@ ul li a {
 	white-space: nowrap;
 	color: black;
 	width:100%;
-	z-index:1;
+	z-index:10;
 }
 
 ul li a:hover {background: <?php echo $main; ?>;}
@@ -529,18 +529,16 @@ h3{
 	color:<?php echo $h1; ?>;
 }
 h4{
-	color:<?php echo $main; ?>;
+	color:<?php echo $tile; ?>;
 	margin:0px;
 	font-weight:bold;
 	padding:0px;
 	line-height:1.5;
 	display:inline;
-	font-size:17px;	
 }
 h5{
 	color:<?php echo $main; ?>;
 	margin:0px;
-	margin-left:20px;
 	font-weight:normal;
 	padding:0px;
 	line-height:1.5;
@@ -616,6 +614,14 @@ input[type="number"]{
 	text-align:left;
 	padding-left:0px;
 	padding-right:15px;
+}
+#anc_table{
+	width:100%;
+	margin-bottom:50px;
+}
+#anc_table tr td{
+	vertical-align:top;
+	width:25%;
 }
 .inlinedetails >details{
 	display:inline;

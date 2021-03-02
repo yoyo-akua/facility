@@ -224,8 +224,7 @@
 			$fetal_heart=$this->fetal_heart;
 			
 			$protocol=new Protocol($protocol_ID);
-			$visit_ID=$protocol->getVisit_ID();
-			$visitdate=(new Visit($visit_ID))->getCheckin_time();
+			$visitdate=$protocol->getTimestamp();
 			
 			$maternity=new Maternity($this->maternity_ID);
 			
@@ -237,13 +236,14 @@
 			## Print client's ANC visit information, if they are known.
 			## Add date to HTML buffer, if $date is set.
 			*/
-			$html="<h3>$visitnumber. visit</h3>";
+			$html="<h3>Visit #$visitnumber";
 			
 			
 			if($date=='date on'){
 				$visitdate=date("d.m.Y",strtotime($visitdate));
-				$html.="<h4>$visitdate</h4><br>";
+				$html.=" - $visitdate";
 			}
+			$html.="</h3>";
 			
 			$html.="<h4>Gestational Age:</h4> $weeks weeks and $anddays days<br>";
 			

@@ -24,11 +24,10 @@
 	## followed by the client's general pregnancy data (like EDD,parity,...), which are called with $maternity->display_maternity().
 	*/
 	echo"
-			<h1><u>Pregnancy Overview</u><br>
-			$name</h1>
+			<h1>Pregnancy Overview</h1><h2 style='text-align:center'>of $name</h2>
 			<div class='inputform'>
-			<h2>general data</h2>
-			". $patient->display_general(time()).
+			<h2>General Data</h2>
+			". $patient->display_general(time()).'<br>'.
 			$maternity->display_maternity('complete')."
 			<h2>ANC</h2>";
 
@@ -53,17 +52,26 @@
 		## Get protocol-ID for this particular ANC visit.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 		*/
-		$query2="SELECT protocol_ID FROM protocol WHERE ANC_ID=$ANC_ID";
+		$query2="SELECT * FROM protocol,anc WHERE anc.protocol_ID=protocol.protocol_ID AND anc.ANC_ID=$ANC_ID";
 		$result2=mysqli_query($link,$query2);
 		$object2=mysqli_fetch_object($result2);
 		
-		## Initialising object of protocol by protocol-ID.
+		## Initialising object of visit by visit-ID.
+		$visit_ID=$object2->visit_ID;
+		$visit=new Visit($visit_ID);
+
+		## Initialise variable $protocol_ID.
 		$protocol_ID=$object2->protocol_ID;
-		$protocol=new Protocol($protocol_ID);
 		
 		## Print this particular visit's vital signs and ANC data.
-		echo $ANC->display_ANC($protocol_ID,'date on').'
-			<h3>Vital Signs</h3><br>'.(Vital_Signs::display_admission_data($visit_ID)).'<br>';
+		echo $ANC->display_ANC($protocol_ID,'date on');
+
+		$vitals=Vital_Signs::display_admission_data($visit_ID);
+		if($vitals){
+			echo '<br><h4>Vital Signs</h4><div style="margin-left:10px">'.$vitals.'</div>';
+		}else{
+			echo '<br>';
+		}
 		
 		/*
 		## Check, if the patient has been referred for lab investigations.
@@ -75,7 +83,7 @@
 		}
 		
 		## Print link to results of that day's visit.
-		echo "<br><a href='patient_visit.php?show=on&patient_ID=$patient_ID&protocol_ID=$protocol_ID'>show complete visit summary</a>";
+		echo "<a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
 	}
 
 	echo"<br>";
@@ -85,7 +93,7 @@
 	## Get the protocol-ID for the delivery's ANC visit if it exists.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$query="SELECT protocol_ID FROM protocol WHERE delivery like '$maternity_ID'";
+	$query="SELECT visit_ID FROM visit,maternity,delivery WHERE maternity.maternity_ID like '$maternity_ID' AND maternity.patient_ID=visit.patient_ID AND maternity.maternity_ID=delivery.maternity_ID";
 	$result=mysqli_query($link,$query);
 	$object=mysqli_fetch_object($result);
 
@@ -113,7 +121,14 @@
 	echo"
 			</div>
 			<div class='tableright'>
-			<a href='complete_pregnancy_pdf.php?maternity_ID=$maternity_ID'>create pdf</a>
+				<a href='complete_pregnancy_pdf.php?maternity_ID=$maternity_ID' id='linkbutton'>
+					<div class='tooltip'>
+						<i id='submitbutton' class='fas fa-file-download fa-2x'></i>
+						<span class='tooltiptext'>
+							create pdf
+						</span>
+					</div>
+				</a>
 			</div>
 			";
 
