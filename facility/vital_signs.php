@@ -110,7 +110,7 @@
 								</span>
 						</div>";
 					}else{
-						echo "<input type='text' name='BP' class='smalltext'> mmHg";
+						echo "<input type='text' name='BP' class='smalltext' pattern='[0-9]{2,}[//]{1}[0-9]{2,}'> mmHg";
 					}
 					echo"			
 					</td>
@@ -118,7 +118,7 @@
 						<input type='number' name='pulse' min='0' max='200'> bpm
 					</td>
 					<td>
-						<input type='number' name='weight' step='0.1' min='0' max='300'> kg
+						<input type='number' name='weight' step='0.1' min='0' max='500'> kg
 					</td>
 					<td>
 						<input type='number' name='temperature' min='30' max='45' step='0.1'>&#176C

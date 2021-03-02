@@ -339,13 +339,26 @@
 			}
 		}
 		
-		/*
-		## This function is used to determine whether a patient's vital signs have already been entered.
-		## The sent parameter $protocol_ID is used as a link to the patient's visit's entry.
-		*/
-		public static function already_set($protocol_ID){
+	
+		public static function get_last_vitals($visit_ID){
 			global $link;
-			$query="SELECT * FROM vital_signs WHERE protocol_ID=$protocol_ID";
+			$query="SELECT p.protocol_ID FROM vital_signs v,protocol p WHERE p.protocol_ID=v.protocol_ID AND p.visit_ID=$visit_ID ORDER BY p.protocol_ID DESC LIMIT 1";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			
+			if(! empty($object)){
+				$protocol_ID=$object->protocol_ID;
+			}else{
+				$protocol_ID=false;
+			}
+			
+			return $protocol_ID;
+		}
+
+		## Check whether the vital signs for a specific patient's specific visit (identified by $visit_ID) have been entered.
+		public static function already_set($visit_ID){
+			global $link;
+			$query="SELECT * FROM vital_signs,protocol WHERE protocol.protocol_ID=vital_signs.protocol_ID AND protocol.visit_ID=$visit_ID";
 			$result=mysqli_query($link,$query);
 			
 			if(mysqli_num_rows($result)==0){
@@ -356,6 +369,7 @@
 			
 			return $set;
 		}
+
 		/*	
 		## This function is used to inquire whether the patient has come to the facility before, 
 		## if so initialise variable $BP_last with the BP of the 5 previous visits.

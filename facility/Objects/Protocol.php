@@ -6,12 +6,10 @@
 		private $timestamp;					  ## Time of this protocol entry.
 		private $staff_ID;					 ## ID of clinic staff, who perform the diagose.
 		private $event;						## Verbal description of event linked to the protocol entry.
-		private $ANC_ID;					## ID of Patient's ANC at the visit's date.
 		private $surgery;					  ## Contains the name of surgery, which where performed on patient at visit's date.	
 		private $PNC;						   ## Defines, if the patient did PNC at the patient at the visit's date.		
 		private $charge;					   ## Defines how much the patient was charged either in lab or for a minor OP.
 		private $remarks;					  ## Contains remarks of the consultant on the patient's diagnosis.
-		private $delivery;						## Saves the patient's maternity ID, if she delivered.
 
 		/*
 		## This function is called, if a new protocol object is needed for further actions.
@@ -27,12 +25,10 @@
 				$this->timestamp = $row->timestamp;
 				$this->staff_ID = $row->staff_ID;
 				$this->event = $row->event;
-				$this->ANC_ID = $row->ANC_ID;
 				$this->surgery = $row->surgery;
 				$this->PNC = $row->PNC;
 				$this->charge = $row->charge;
 				$this->remarks = $row->remarks;
-				$this->delivery = $row->delivery;
 			}
 			$this->protocol_ID = $protocol_ID;
 		}
@@ -89,15 +85,6 @@
 
 		/*
 		## Getter function.
-		## Returns the patient's ANC ID of that visit, on which the function is called.
-		## This ID is used to connect the patient's ANC data with the patient's visit in the facility.
-		*/
-		public function getANC_ID(){
-			return $this->ANC_ID;
-		}
-
-		/*
-		## Getter function.
 		## Returns the time of the protocol entry, on which the function is called.
 		## This ID is used to connect the patient's ANC data with the patient's visit in the facility.
 		*/
@@ -137,14 +124,6 @@
 		public function getRemarks(){
 			return $this->remarks;
 		}		
-		
-		/*
-		## Getter function.
-		## Returns the maternity ID of a client, that has come for delivery.
-		*/
-		public function getDelivery(){
-			return $this->delivery;
-		}	
 
 		/*
 		## Setter function.
@@ -170,19 +149,6 @@
 			$query = "UPDATE protocol SET staff_ID='$var' WHERE protocol_ID = $this->protocol_ID";
 			mysqli_query($link,$query);
 			return $this->staff_ID = $var;
-		}
-
-		/*
-		## Setter function.
-		## Updates the patient's ANC ID of that visit, on which the function is called, in database.
-		## Returns the updated information.
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
-		*/			
-		public function setANC_ID($var){
-			global $link;
-			$query = "UPDATE protocol SET ANC_ID='$var' WHERE protocol_ID = $this->protocol_ID";
-			mysqli_query($link,$query);
-			return $this->ANC_ID = $var;
 		}
 
 		/*
@@ -237,19 +203,6 @@
 			return $this->remarks = $var;
 		}		
 		
-		/*
-		## Setter function.
-		## Updates the client's maternity ID, if she has come for delivery.
-		## Returns the updated information.
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
-		*/		
-		public function setDelivery($var){
-			global $link;
-			$query = "UPDATE protocol SET delivery='$var' WHERE protocol_ID = $this->protocol_ID";
-			mysqli_query($link,$query);
-			return $this->delivery = $var;
-		}				
-
 		/*
 		## Display the patient's surgery information at the date of the visit, on which this function is called.
 		## Get the name of the procedure which is saved in $this->surgery 

@@ -123,7 +123,7 @@ i<?php
 		$ANC=new ANC($ANC_ID);
 		$maternity=new Maternity($ANC->getmaternity_ID());
 		$html.="<h2>ANC</h2>".
-					$maternity->display_maternity().
+					$maternity->display_maternity('complete').
 					$ANC->display_ANC($protocol_ID,'date off');
 	}
 	

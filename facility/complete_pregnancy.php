@@ -29,7 +29,7 @@
 			<div class='inputform'>
 			<h2>general data</h2>
 			". $patient->display_general(time()).
-			$maternity->display_maternity()."
+			$maternity->display_maternity('complete')."
 			<h2>ANC</h2>";
 
 

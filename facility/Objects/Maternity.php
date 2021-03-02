@@ -198,7 +198,7 @@
 		## This function buffers the HTML commands, which are used to print the client's pregnancy data later.
 		## The HTML commands are buffered in variable $html, which is returned at the end of this function.
 		*/
-		public function display_maternity(){
+		public function display_maternity($specification){
 			
 			## Initialise client's data.
 			$occupation=$this->occupation;
@@ -232,11 +232,14 @@
 					$parity<br>
 
 					<h4>Height of Mother:</h4>
-					$height cm<br>
-						
-					<h4>Estimated Delivery Date:</h4>
-					$EDD<br>
-			";
+					$height cm<br>";
+
+					if($specification!=='without EDD'){
+						echo"				
+						<h4>Estimated Delivery Date:</h4>
+						$EDD<br>";
+					}
+					
 							
 			if($this->ITN==1){
 				$html.="ITN has been given<br>";

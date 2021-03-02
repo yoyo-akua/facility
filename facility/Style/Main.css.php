@@ -217,6 +217,16 @@ div.columnleft{
 #submitconsult:hover{
 	color: <?php echo $h1; ?>;
 }
+#submitanc{
+	color: <?php echo $main; ?>;
+	bottom: 5%;
+	left: 25%;
+	z-index:2;
+	text-shadow: 2px 2px rgb(240,240,240);
+}
+#submitanc:hover{
+	color: <?php echo $h1; ?>;
+}
 
 #submitbutton{
 	color: <?php echo $main; ?>;
@@ -481,6 +491,12 @@ a{
 a:hover{
 	color:<?php echo $h1; ?>;
 }
+.grey{
+	color:#424242;
+}
+.grey:hover{
+	color:grey;
+}
 td.labtable{
 	border:none;
 	padding: 10px;
@@ -591,6 +607,15 @@ input[type="image"]:hover{
 }
 input[type="number"]{
 	width:80px;
+}
+.invisible{
+	margin:0px;
+}
+.invisible tr td{
+	border:none;
+	text-align:left;
+	padding-left:0px;
+	padding-right:15px;
 }
 .inlinedetails >details{
 	display:inline;

@@ -835,7 +835,7 @@
 					</summary>
 				";
 		echo
-					$maternity->display_maternity().
+					$maternity->display_maternity('complete').
 					$ANC->display_ANC($protocol_ID,'date off')."
 					<a href=\"complete_pregnancy.php?maternity_ID=$maternity_ID\"><div class ='box'>Pregnancy Overview</div></a>
 				";

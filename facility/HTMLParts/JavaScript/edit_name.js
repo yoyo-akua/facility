@@ -1,7 +1,7 @@
 /*
 ## This function is called when the user is editing the name of a diagnosis, drug or test. 
 ## It changes the display style of certain elements: 
-##  - the edit button is supposed to disappearm, while a save button comes in its place.
+##  - the edit button is supposed to disappear, while a save button comes in its place.
 ##  - also an input field with the name is inserted which enables the user to edit it. 
 ## The components mentioned above are already within the html code calling upon this function, 
 ## it only changes which parts are visible.

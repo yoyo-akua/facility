@@ -37,7 +37,7 @@
 	$html = 
 				Settings::pdf_header($style,$patient_data)
 				.'<h1>Pregnancy Overview</h1>'.
-				$maternity->display_maternity()."
+				$maternity->display_maternity('complete')."
 				<h2>ANC</h2>
 				";
 

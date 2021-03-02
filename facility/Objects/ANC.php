@@ -3,6 +3,7 @@
 
 		## Define all parameters an ANC object has. Each ANC object represents a client's ANC visit.
 		private $ANC_ID;		## ID of client's ANC visit.
+		private $protocol_ID;		## ID of corresponding protocol entry.
 		private $maternity_ID;		## ID of corresponding client's pregnancy entry.
 		private $FHt;			## Client's fundal height.
 		private $fetal_heart;		## Pulse of client's fetus.
@@ -22,6 +23,7 @@
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
 				$this->maternity_ID = $row->maternity_ID;
+				$this->protocol_ID = $row->protocol_ID;
 				$this->FHt = $row->FHt;
 				$this->fetal_heart = $row->fetal_heart;
 				$this->SP = $row->SP;
@@ -39,9 +41,9 @@
 		## Save this data also in a new created client's ANC visit object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_ANC($maternity_ID,$FHt,$fetal_heart,$SP,$TT,$remarks,$visitnumber){
+		public static function new_ANC($maternity_ID,$protocol_ID,$FHt,$fetal_heart,$SP,$TT,$remarks,$visitnumber){
 			global $link;
-			$query = "INSERT INTO `anc`(`maternity_ID`,`FHt`,`fetal_heart`,`SP`,`TT`,`remarks`,`visitnumber`) VALUES ('$maternity_ID','$FHt','$fetal_heart','$SP','$TT','$remarks','$visitnumber')";
+			$query = "INSERT INTO `anc`(`maternity_ID`,`protocol_ID`,`FHt`,`fetal_heart`,`SP`,`TT`,`remarks`,`visitnumber`) VALUES ('$maternity_ID','$protocol_ID','$FHt','$fetal_heart','$SP','$TT','$remarks','$visitnumber')";
 			mysqli_query($link,$query);
 		
 			$ANC_ID = mysqli_insert_id($link);
@@ -55,6 +57,13 @@
 		*/
 		public function getSP(){
 			return $this->SP;
+		}
+/*
+		## Getter function.
+		## Returns the protocol ID of that ANC visit, on which the function is called.
+		*/
+		public function getProtocol_ID(){
+			return $this->protocol_ID;
 		}
 
 		/*

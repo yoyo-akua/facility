@@ -140,13 +140,13 @@
 				if(! empty($object3)){
 					echo"
 						<td>
-							<a href=\"anc.php?ANC_ID=$object3->ANC_ID&maternity_ID=$maternity_ID\">edit ANC</a>
+							<a href=\"anc.php?ANC_ID=$object3->ANC_ID&maternity_ID=$maternity_ID&visit_ID=$visit_ID\">edit ANC</a>
 						</td>
 					";
 				}else{
 					echo"
 						<td>
-							<a href=\"anc.php?maternity_ID=$maternity_ID\">ANC</a>
+							<a href=\"anc.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\">ANC</a>
 						</td>
 					";
 				}
@@ -169,7 +169,7 @@
 						if($object->delivery_date=='0000-00-00'){
 							echo"
 								<td>
-									<a href=\"delivery.php?maternity_ID=$maternity_ID\">Delivery</a>
+									<a href=\"delivery.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\">Delivery</a>
 								</td>
 								";
 						}else{
@@ -179,7 +179,7 @@
 							if(! empty($object3)){
 								echo"
 									<td>
-										<a href=\"delivery.php?protocol_ID=$object3->protocol_ID&maternity_ID=$maternity_ID\">edit Delivery</a>
+										<a href=\"delivery.php?protocol_ID=$object3->protocol_ID&maternity_ID=$maternity_ID&visit_ID=$visit_ID\">edit Delivery</a>
 									</td>
 									";
 							}
@@ -212,7 +212,7 @@
 			else{
 				echo"
 					<td>
-						<a href=\"new_maternity_client.php?patient_ID=$patient_ID\">new client</a>
+						<a href=\"new_maternity_client.php?patient_ID=$patient_ID&visit_ID=$visit_ID\">new client</a>
 					</td>
 				";
 			}
