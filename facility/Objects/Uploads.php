@@ -33,7 +33,7 @@
 		*/
 		public static function new_Uploads($protocol_ID,$filename,$department){
 			global $link;
-			$query = "INSERT INTO `uploads`(`protocol_ID`,`filename`,`department`) VALUES ('$protocol_ID','$filename','$department')";
+			$query = "INSERT INTO `uploads`(`protocol_ID`,`filename`,`department_ID`) VALUES ('$protocol_ID','$filename','$department')";
 			mysqli_query($link,$query);
 			
 			$protocol_ID = mysqli_insert_id($link);
@@ -45,6 +45,7 @@
 		/*
 		## Getter function.
 		## Returns the upload file's name, on which the function is called.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
 		public function getFilename(){
 			return $this->filename;
@@ -53,6 +54,7 @@
 		/*
 		## Getter function.
 		## Returns the department in which the file has been uploaded, of which the function is called.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
 		public function getDepartment_ID(){
 			return $this->department_ID;
@@ -61,14 +63,20 @@
 		/*
 		## Getter function.
 		## Returns the department in which the file has been uploaded, of which the function is called.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
 		public function getProtocol_ID(){
 			return $this->protocol_ID;
 		}
 
-		public function getUploadArray($protocol_ID){
+		/*
+		## Getter function.
+		## Returns all uploads (via an ID) regarding to a certain patient's visit.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public static function getUploadArray($visit_ID){
 			global $link;
-			$query = "SELECT * FROM uploads WHERE protocol_ID = $protocol_ID";
+			$query = "SELECT u.upload_ID FROM uploads u, protocol p WHERE u.protocol_ID = p.protocol_id AND p.visit_ID=$visit_ID";
 			$result = mysqli_query($link,$query);
 			$IDs=array();
 			while($row = mysqli_fetch_object($result)){

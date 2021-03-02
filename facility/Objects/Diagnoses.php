@@ -97,7 +97,7 @@
 		## Check, if that disease is defined as primary or secondary disease and activate the correspondent checkbox.
 		## Print the disease's name in the third column.
 		*/
-		public function diagnoses_tablerow($visit_ID,$Diagnosis_ID){
+		public static function diagnoses_tablerow($visit_ID,$Diagnosis_ID){
 			$Diagnosis_Name=(new Diagnoses($Diagnosis_ID))->getDiagnosisname();
 			echo"
 					<tr>

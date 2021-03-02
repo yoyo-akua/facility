@@ -31,10 +31,10 @@
 
 			## The protocoled event differs depending on whether the tests are completed or not.
 			If (! empty($_POST['labdone'])){
-				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
+				$Protocol_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests completed");
 			}
 			else{
-				$Protocol_ID_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
+				$Protocol_results=Protocol::new_Protocol($visit_ID, "test results submitted - tests incomplete");
 			}
 		}	
 
@@ -126,7 +126,7 @@
 			## But do this only for those parameters to which a result is submitted.
 			*/
 			if(! empty($_POST["parameter_$parameter_ID"])){
-				$lab->setProtocol_ID_results($Protocol_ID_results->getProtocol_ID());
+				$lab->setProtocol_ID_results($Protocol_results->getProtocol_ID());
 			}
 
 			## If the test was performed in a different facility, indicate that in the lab list
@@ -183,9 +183,9 @@
 				*/
 				if(move_uploaded_file($_FILES["file"]["tmp_name"], $targetFilePath)){
 					$message = "The file ".$newfilename. " has been uploaded.";
-					$protocol_ID = Protocol::new_Protocol($visit_ID, "file ".$newfilename. " uploaded.");
+					$protocol = Protocol::new_Protocol($visit_ID, "file ".$newfilename. " uploaded.");
 					$department = Departments::getDepartmentID("Laboratory");
-					Uploads::new_Uploads($protocol_ID,$newfilename,$department);
+					Uploads::new_Uploads($protocol->getProtocol_ID(),$newfilename,$department);
 				}else{
 					$message = "Sorry, there was an error uploading your file.";
 				}

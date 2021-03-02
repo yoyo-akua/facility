@@ -5,20 +5,7 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## ToDo Flo: Hier beginnt der Schlamassel
-	## Die Seite muss über die visit_ID aufgerufen werden
-	## In der Seite muss erstmal alles von protocol_ID auf die visit_ID umgestellt werden
-	## Erst danach kann die Protokollierung sinnvoll implementiert werden
-	## Protokollierung übrigens mit $protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
-	
-	#TODO löschen
-	#$protocol_ID=$_GET['protocol_ID'];
-	#$protocol= new Protocol($protocol_ID);
-
 	## Initialise new object of visit by a certain visit ID, with which the page is called.
-	#TODO löschen
-	#$visit_ID=$protocol->getVisit_ID();
 	$visit_ID=$_GET['visit_ID'];
 	$visit= new Visit($visit_ID);
 
@@ -76,8 +63,6 @@
 				}
 				
 				## Is needed to remember IDs of protocol and patient during the authorisation process.
-				## TODO Flo: löschen
-				#$hidden_array=array('protocol_ID'=>$protocol_ID,'patient_ID'=>$patient_ID);
 				$hidden_array=array('visit_ID'=>$visit_ID,'patient_ID'=>$patient_ID);
 				Settings::popupPassword($thispage,$text,$hidden_array);
 				exit();
@@ -121,9 +106,6 @@
 	## Inquire whether the patient has come to the facility before, if so initialise variable $ID_last with the ID of the previous visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	## TODO löschen
-	#$querylast="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp<='$date' ORDER BY protocol.timestamp DESC LIMIT 0,1";
-	#var_dump($date);
 	$querylast="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkout_time<='$date' ORDER BY checkout_time DESC LIMIT 0,1";
 	$resultlast=mysqli_query($link,$querylast);
 	if(mysqli_num_rows($resultlast)!==0){
@@ -136,8 +118,6 @@
 	## Inquire whether the patient has come to the facility later on, if so initialise variable $ID_next with the ID of the next visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	##TODO löschen
-	#$querynext="SELECT protocol_ID FROM protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND visit.patient_ID=$patient_ID AND protocol_ID!=$protocol_ID AND protocol.timestamp>='$date' ORDER BY protocol.timestamp ASC LIMIT 0,1";
 	$querynext="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkin_time>='$date' ORDER BY checkin_time ASC LIMIT 0,1";
 	$resultnext=mysqli_query($link,$querynext);
 	if(mysqli_num_rows($resultnext)!==0){
@@ -168,9 +148,7 @@
 	/*
 	## Printing checkbox to enable or disable protection of patient's diagnosis
 	## Check checkbox if patient's diagnosis is protected.
-	*/
-
-		
+	*/	
 	echo "<br>
 			<a href='patient_visit.php?visit_ID=$visit_ID&patient_ID=$patient_ID&protect=on' style='float:left'>
 				<input type='checkbox'";
@@ -185,7 +163,7 @@
 
 
 	/*
-	## Initialising more variales.
+	## Initialising more variables.
 	## Variable $primgiven defines, whether exactly one disease is tagged as primary disease.
 	## Variable $stop prevents entries in database, if multiple primary diagnoses are selected.
 	*/
@@ -248,16 +226,6 @@
 			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
 		}
 
-
-		## Delete all previously entered diagnoses from the database.
-		## TODO Flo: hiermit soll erreicht werden, dass eine Diagnose, die schon mal aufgestellt wurde,
-		## und nun nicht nochmal diagnostiziert wurde, auch wieder aus der DB gelöscht wird
-		## Abhaken einer Checkbox soll hiermit auch im System rückgängig gemacht werden
-		## Idee: später bei Protokollierung unterscheiden in initiale Diagnose gestellt 
-		## und Diagnosen hinzugefügt (alle weiteren, die nicht initial sind)
-		## Muss erst entsprechend umgebaut werden, solange bleibt die Funktion auskommentiert 
-		##Diagnosis_IDs::clean($protocol_ID);
-
 		/*
 		## Get data from database.
 		## Get all diseases, which are known within the system.
@@ -293,9 +261,6 @@
 				## Within this if-branch it is also checked whether the diagnosis was also selected as provisional diagnosis and if so, stored as such in database.
 				*/
 				if(! $primgiven OR $importance!==1){
-				
-					##ToDo Flo: wieder löschen
-					#echo "new Diagnosis Zweig" & $protocol_ID;
 					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
 					$protocol->setStaff_ID($_SESSION['staff_ID']);
 					if($importance==1){
@@ -326,14 +291,7 @@
 		## If the attendant is known, his or her name is documented in database
 		*/
 		if ($stop==false){
-			
-			## ToDo Flo: wieder löschen
-			#echo "stop-Zweig" & $protocol_ID;
 			$protocol->setStaff_ID($_SESSION['staff_ID']);
-
-			## TODO Flo: Hier wird erst der neue Protokoll-Eintrag erstellt
-			## Alles was vorher verwendet wird, ist noch auf dem alten Code-Stand
-			#$protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
 		}
 	}
 
@@ -444,14 +402,19 @@
 			
 			## Add any remarks from the consultant to the diagnosis.
 			## TODO Flo: muss noch umgebaut werden
+			## ToDo Flo: HIER HABE ICH AUFGEHÖRT
+			## es muss in die Diagnosis_IDs.php eine neue Funktion
+			## aufgenommen werden für get und set remarks
+			## Diese Funktion muss dann hier zum Schreiben
+			## Und weiter unten zum Lesen aufgerufen werden
 			## bleibt solange auskommentiert
-			/*
 			if(! empty($_POST['remarks'])){
-				$protocol->setRemarks($_POST['remarks']);
-			}else{
-				$protocol->setRemarks('');
+				#$protocol->setRemarks($_POST['remarks']);
+				Diagnosis_IDs::setRemarks($protocol_ID, $_POST['remarks']);
+			#}else{
+			#	$protocol->setRemarks('');
 			}
-			*/
+			
 
 			## Add notice to database after the patient's treatment was tagged as completed.
 			if(! empty($_POST['completed'])){
@@ -470,7 +433,6 @@
 		## Variable $html contains all primary and secondary diseases, which were diagnosed for the patient.
 		## Print also information about attendant and pregnancy, if known.
 		*/
-		$html=$visit->display_diagnoses('both',$visit_ID);
 		if(!empty(Diagnosis_IDs::getDiagnosis_IDs($visit_ID)) OR Referral::checkReferral($visit_ID)){
 			echo "
 					<details open>
@@ -495,6 +457,7 @@
 				$referral=new Referral(Referral::checkReferral($visit_ID));
 				echo "Patient has been <h4>referred</h4> to <b>".$referral->getDestination()."</b> because of ".$referral->getReason()."<br>";
 			}
+			$html=$visit->display_diagnoses('both',$visit_ID);
 			echo $html;
 		}
 
@@ -748,11 +711,9 @@
 		## $lastClass indicates when a new class of diagnoses is started in the list, so that a new headline and table can be printed.
 		## Variable $first is used to prevent the diagnosis-part of the page from being closed too early.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
-
 		*/
 		$lastClass=0;
 		$first=true;
-
 		$query="SELECT * FROM diagnoses WHERE Diagnosis_ID not like '0' $searchpara ORDER BY DiagnosisClass,Diagnosis_ID";
 		$result=mysqli_query($link,$query);
 		while($row=mysqli_fetch_object($result)){
@@ -783,29 +744,24 @@
 		
 		/*
 		## Print also a checkbox to tag a patient's treatment as completed
-		## and close the input form for diagnoses.
+		## Furthermore print remarks of patient's diagnoses, if exist and
+		## finally close the input form for diagnoses.
 		*/
 		echo'		
 						</table>
 					</details>
 					Remarks / further specification of diagnosis:<br>
 					<textarea name="remarks" maxlength="1000" style="min-width:500px">';
-					#TODO Flo: muss noch umgebaut werden auf visit_ID
-					#bleibt solange auskommentiert
-					/*
-					if(! empty($protocol->getRemarks())){
-						echo $protocol->getRemarks();
+					$remarks = Diagnosis_IDs::getRemarks($visit_ID);
+					if(! empty($remarks)){
+						echo $remarks;
 					}
-					*/
 					echo'</textarea><br>
 					<input type="checkbox" name="completed" ';
 					if($visit->getCheckout_time()!=='0000-00-00 00:00:00'){
 						echo "checked='checked'";
 					}
 					echo"> <b>treatment in clinic completed</b>
-
-					
-
 				</form>
 				";
 	}
@@ -879,7 +835,7 @@
 	## This if-branch is called, if patient attended postnatal care.
 	## In this case there is just a short note displayed.
 	*/
-	##TODO Flo: muss erst noch umgebaut werden
+	##TODO Flo: muss erst noch durch Liebste umgebaut werden
 	## Bleibt solange noch auskommentiert
 	/* 
 	if($protocol->getPNC()==1){
@@ -899,6 +855,8 @@
 	## In this case, information about procedure and charge are printed.
 	*/
 	##TODO Flo: muss erst noch umgebaut werden
+	## Allerdings bislang unklar, wie es genau aussehen soll
+	## Infos aus Ghana noch benötigt
 	## Bleibt solange noch auskommentiert
 	/* 
 	$surgery=$protocol->getsurgery();
@@ -940,11 +898,8 @@
 		
 
 		## In case a file has been attached which contains lab information, display a link to this file. 
-		## TODO Flo Muss erst noch umgebaut werden
-		## Bleibt solange auskommentiert
-		/*
-		if(Uploads::getUploadArray($protocol_ID)){
-			$upload_array=Uploads::getUploadArray($protocol_ID);
+		$upload_array=Uploads::getUploadArray($visit_ID);
+		if($upload_array){
 			foreach($upload_array AS $ID){
 				$upload=new Uploads($ID);
 				if(! empty($upload->getFilename())){
@@ -962,12 +917,10 @@
 							</span>
 						</div>
 						';
-					}
-					
+					}	
 				}
 			}
 		}
-		*/
 		
 		if(empty($_GET['show'])){
 			echo"
@@ -1028,8 +981,6 @@
 		
 		## If there haven't been prescribed any drugs so far, print link to prescribe drugs.
 		if(empty($disp_drug_IDs)){
-			#TODO Flo: löschen
-			# echo "<a href='prescribe_drugs.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>prescribe drugs</div></a>";
 			echo "<a href='prescribe_drugs.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>prescribe drugs</div></a>";
 		}
 		
@@ -1041,8 +992,6 @@
 		## If pregnancy is between week 32 and 45 (and no delivery records are available), a button to add a delivery is printed.
 		*/
 		if($sex=='female' AND $age_exact>=10 AND $age_exact<=50 AND empty($ANC_ID) AND in_array('Maternity',$DEPARTMENTS)){
-			#TODO Flo: löschen
-			#echo "<a href='anc.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>add ANC</div></a>";
 			echo "<a href='anc.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>add ANC</div></a>";
 			$query="SELECT * FROM maternity WHERE patient_ID=$patient_ID ORDER BY maternity_ID DESC";
 			$result=mysqli_query($link,$query);
@@ -1054,8 +1003,6 @@
 					$result=mysqli_query($link,$query);
 					$object=mysqli_fetch_object($result);
 					if(empty($object)){
-						#TODO Flo: löschen
-						#echo "<a href='delivery.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&maternity_ID=$maternity_ID'><div class ='box'>add Delivery</div></a>";
 						echo "<a href='delivery.php?patient_ID=$patient_ID&visit_ID=$visit_ID&maternity_ID=$maternity_ID'><div class ='box'>add Delivery</div></a>";
 					}
 				}
@@ -1084,8 +1031,6 @@
 
 	## If you are in "display-mode" or just submitted the diagnosis, there is a link printed to exit the "display-mode" and edit diagnoses again.
 	if(! empty($_GET['show']) OR ! empty($_POST['submit'])){
-		#ToDO FLo: löschen
-		#echo"<a href='patient_visit.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&edit=on'><div class ='box'>edit results</div></a></div>";
 		echo"<a href='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID&edit=on'><div class ='box'>edit results</div></a></div>";
 	}
 
