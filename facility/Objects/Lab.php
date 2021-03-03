@@ -183,7 +183,7 @@
 					## add a notice to the HTML buffer. 
 					*/
 					if($test_name!==$last_test){
-						$html.="<h4>$test_name</h4><br>";
+						$html.="<h5>$test_name</h5><div style='margin-left:20px;'>";
 						if($other_facility==1){
 							$html.="&nbsp&nbsp&nbsp&nbsp&nbsp<text style='color:grey'>This test was performed in a different Lab.</text><br>";
 						}
@@ -195,11 +195,11 @@
 					## If tooltips are enabled, add further the value a parameter has, when the patient is healthy, 
 					## as tooltip to the HTML buffer.  
 					*/					
-					$html.="<h5>$parameter_name ";
+					$html.="<b>$parameter_name ";
 					if(! empty($parameter_name)){
 						$html.=":";
 					}
-					$html.= "</h5> ";
+					$html.= "</b> ";
 									if($tooltips=='tooltips on'){
 										$html.="<div class='tooltip'>";
 									}
@@ -214,7 +214,7 @@
 									if($tooltips=='tooltips on'){
 										$html.="</div>";
 									}
-								 $html.=" ".$unit."<br>";
+								 $html.=" ".$unit."</div>";
 				}
 				
 			}

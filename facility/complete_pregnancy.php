@@ -69,8 +69,6 @@
 		$vitals=Vital_Signs::display_admission_data($visit_ID);
 		if($vitals){
 			echo '<br><h4>Vital Signs</h4><div style="margin-left:10px">'.$vitals.'</div>';
-		}else{
-			echo '<br>';
 		}
 		
 		/*
@@ -78,12 +76,12 @@
 		## If so, print the test results.
 		*/
 		if(! empty($visit->getLab_number())){
-			echo"<br><h4><u>Test results</u></h4><br>".
-					Lab::display_results($visit->getLab_number(),'tooltips on');
+			echo"<h4>Test results</h4><div style='margin-left:10px'>".
+					Lab::display_results($visit->getLab_number(),'tooltips on').'</div>';
 		}
 		
 		## Print link to results of that day's visit.
-		echo "<a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
+		echo "<br><a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
 	}
 
 	echo"<br>";
@@ -93,7 +91,7 @@
 	## Get the protocol-ID for the delivery's ANC visit if it exists.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$query="SELECT visit_ID FROM visit,maternity,delivery WHERE maternity.maternity_ID like '$maternity_ID' AND maternity.patient_ID=visit.patient_ID AND maternity.maternity_ID=delivery.maternity_ID";
+	$query="SELECT * FROM protocol,delivery WHERE delivery.maternity_ID like '$maternity_ID' AND protocol.protocol_ID=delivery.protocol_ID";
 	$result=mysqli_query($link,$query);
 	$object=mysqli_fetch_object($result);
 
@@ -104,12 +102,8 @@
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
 
-		## Initialising object of visit by visit ID.		
-		$visit_ID=$protocol->getVisit_ID();
-		$visit=new Visit($visit_ID);
-
 		## Initialising variable with date of delivery.
-		$date=date("d/m/y",(strtotime($visit->getCheckin_time())));
+		$date=date("d/m/y",(strtotime($protocol->getTimestamp())));
 		
 		## Print the delivery's records and a link to results of that day's visit.
 		echo"<h2>$date - Delivery</h2>".

@@ -4,7 +4,7 @@
 	## Contains also HTML/CSS structure, which styles the graphical user interface in the browser.
 	*/
 	include("HTMLParts/HTML_HEAD.php");
-	
+
 	/*
 	## Variable, which represents the search parameters a current search is based on.
 	## Initialising this variable.
@@ -20,7 +20,12 @@
 		$visit_ID=$_POST['visit_ID'];
 		$protocol=protocol::new_Protocol($visit_ID,'vital signs taken');
 		$protocol_ID=$protocol->getProtocol_ID();
-		$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_POST['BP'],$_POST['weight'],$_POST['pulse'],$_POST['temperature'],$_POST['MUAC']);
+		if(! empty($_POST['MUAC'])){
+			$MUAC=$_POST['MUAC'];
+		}else{
+			$MUAC='';
+		}
+		$vital_signs=Vital_Signs::new_Vital_Signs($protocol_ID,$_POST['BP'],$_POST['weight'],$_POST['pulse'],$_POST['temperature'],$MUAC );
 	}
 
 	
@@ -132,6 +137,7 @@
 						echo"
 					<td>
 						<input type='hidden' name='visit_ID' value='".$row->visit_ID."'>
+						<input type='hidden' name='token' value='$uniqueID'>
 						<input type='submit' name='submit' value='submit'>
 					</td>
 				</form>

@@ -16,7 +16,9 @@
 	
 
 	## Variable $style contains any styling attributes that should apply for certain elements in the pdf file.
-	$style='h1{text-align:center}';
+	$style='
+			h1{text-align:center}
+			';
 
 	## Initialising variable with client's name.
 	$name=$patient->getName();
@@ -61,27 +63,26 @@
 		## Get protocol-ID for this particular ANC visit.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 		*/
-		$query2="SELECT protocol_ID FROM protocol WHERE ANC_ID=$ANC_ID";
+		$query2="SELECT * FROM protocol,anc WHERE anc.protocol_ID=protocol.protocol_ID AND anc.ANC_ID=$ANC_ID";
 		$result2=mysqli_query($link,$query2);
-		$object=mysqli_fetch_object($result2);
+		$object2=mysqli_fetch_object($result2);
 
-		## Initialising object of protocol by protocol-ID.		
-		$protocol_ID=$object->protocol_ID;
-		$protocol=new Protocol($protocol_ID);
+		## Initialising object of visit by visit-ID.
+		$visit_ID=$object2->visit_ID;
+		$visit=new Visit($visit_ID);
 
-		## Initialising object of visit by visit ID.		
-		$visit_ID=$protocol->getVisit_ID();
-		$visit=new Visit($visit_ID);		
+		## Initialise variable $protocol_ID.
+		$protocol_ID=$object2->protocol_ID;		
 
 		## Add this particular visit's vital signs and ANC data to $html.		
-		$html.=$ANC->display_ANC($protocol_ID,'date on').'<br>
-				<h3>Vital Signs</h3><br>'.(Vital_Signs::display_admission_data($visit_ID)).'<br>';
+		$html.=$ANC->display_ANC($protocol_ID,'date on').'
+				<br><h4><u>Vital Signs</u></h4><br>'.(Vital_Signs::display_admission_data($visit_ID));
 
 		
 		## Function visit::() is called to check, if the patient has been referred for lab investigations, if so if-branch is opened.
 		if($visit->getLab_number()){
 			## Add the table head for the following table to $html.
-			$html.="<h4>Lab Tests</h4><br>".Lab::result_tablehead();
+			$html.="<h4><u>Lab Tests</u></h4><br>".Lab::result_tablehead();
 			$last_test='';
 
 			/*
@@ -89,7 +90,7 @@
 			## Get all the tests, that were performed on the patient and their results entered.
 			## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 			*/			
-			$query="SELECT * FROM lab WHERE protocol_ID=$protocol_ID AND test_results not like ''";
+			$query="SELECT * FROM lab,protocol WHERE visit_ID=$visit_ID AND protocol.protocol_ID=lab.protocol_ID_ordered AND test_results not like ''";
 			$result=mysqli_query($link,$query);
 			
 			## The following loop will be run once for each of the output tests from the database query.
@@ -127,7 +128,7 @@
 	## Get the protocol-ID for the delivery's ANC visit, if it exists.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/		
-	$query="SELECT protocol_ID FROM protocol WHERE delivery like '$maternity_ID'";
+	$query="SELECT * FROM protocol,delivery WHERE delivery.maternity_ID like '$maternity_ID' AND protocol.protocol_ID=delivery.protocol_ID";
 	$result=mysqli_query($link,$query);
 	$object=mysqli_fetch_object($result);
 
@@ -138,12 +139,8 @@
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
 
-		## Initialising object of visit by visit ID.		
-		$visit_ID=$protocol->getVisit_ID();
-		$visit=new Visit($visit_ID);
-
 		## Initialising variable with date of delivery.
-		$date=date("d.m.Y",(strtotime($visit->getCheckin_time())));
+		$date=date("d.m.Y",(strtotime($protocol->getTimestamp())));
 		
 		## Add the delivery's records to $html.
 		$html.='<h2>'.$date.' - Delivery</h2>'.

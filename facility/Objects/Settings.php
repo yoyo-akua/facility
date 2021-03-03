@@ -153,6 +153,9 @@
 
 			$html=str_replace('<h4>','<b>',$html);
 			$html=str_replace('</h4>','</b>',$html);
+			
+			$html=str_replace('<h5>','<b>',$html);
+			$html=str_replace('</h5>','</b>',$html);
 
 			$html=str_replace('<span class="tooltiptext">','<font style="color:lightgrey">(',$html);
 			$html=str_replace('</span>',')</font>',$html);

@@ -11,7 +11,8 @@
     
     ## Initialise global variable which can be used to create a token within an input form.
 	global $uniqueID;
-	$uniqueID=microtime(true);
+	$uniqueID=number_format(microtime(true),4);
+
 
 	## Create global variable $today with today's date in American time format which is used for database queries.
 	global $today;
