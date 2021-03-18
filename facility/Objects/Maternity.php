@@ -23,8 +23,8 @@
 			$result = mysqli_query($link,$query);
 			while($row = mysqli_fetch_object($result)){
 				$this->patient_ID = $row->patient_ID;
-				
 				$this->conception_date = $row->conception_date;
+				$this->delivery_date = $row->delivery_date;
 				$this->parity = $row->parity;
 				$this->ITN = $row->ITN;
 				$this->occupation = $row->occupation;
@@ -73,6 +73,14 @@
 		*/
 		public function getconception_date(){
 			return $this->conception_date;
+		}
+
+		/*
+		## Getter function.
+		## Returns the delivery date of a client corresponding to that pregnancy, on which the function is called.
+		*/
+		public function getDelivery_date(){
+			return $this->delivery_date;
 		}
 
 		/*
@@ -127,6 +135,19 @@
 			$query = "UPDATE maternity SET ITN='$var' WHERE maternity_ID = $this->maternity_ID";
 			mysqli_query($link,$query);
 			return $this->ITN = $var;
+		}
+
+		/*
+		## Setter function.
+		## Updates the delivery date of a client corresponding to that pregnancy, on which the function is called, in database.
+		## Returns the updated information.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public function setDelivery_date($var){
+			global $link;
+			$query = "UPDATE maternity SET delivery_date='$var' WHERE maternity_ID = $this->maternity_ID";
+			mysqli_query($link,$query);
+			return $this->delivery_date = $var;	
 		}
 
 		/*
@@ -234,11 +255,11 @@
 					<h5>Height of Mother:</h5>
 					$height cm<br>";
 
-					#if($specification!=='without EDD'){
+					if($specification!=='without EDD'){
 						$html.="				
 						<h5>Estimated Delivery Date:</h5>
 						$EDD<br>";
-					#}
+					}
 					
 							
 			if($this->ITN==1){

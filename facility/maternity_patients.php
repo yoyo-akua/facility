@@ -128,6 +128,7 @@
 
 				## Initialise variable $maternity ID, containing the ID of the maternity register entry.
 				$maternity_ID=$object->maternity_ID;
+				$maternity= new maternity($maternity_ID);
 
 				/*
 				## Check in the database, whether the client has already come for ANC during this visit to the facility. 
@@ -143,7 +144,7 @@
 							<a href=\"anc.php?ANC_ID=$object3->ANC_ID&maternity_ID=$maternity_ID&visit_ID=$visit_ID\">edit ANC</a>
 						</td>
 					";
-				}else{
+				}else if($maternity->getDelivery_date()=='0000-00-00'){
 					echo"
 						<td>
 							<a href=\"anc.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\">ANC</a>
@@ -166,23 +167,18 @@
 						## otherwise check if the client has delivered during this visit. 
 						## In that case, print a link for editing the delivery data.
 						*/
-						if($object->delivery_date=='0000-00-00'){
+						if($maternity->getDelivery_date()=='0000-00-00'){
 							echo"
 								<td>
 									<a href=\"delivery.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\">Delivery</a>
 								</td>
 								";
 						}else{
-							$query3="SELECT * FROM visit,delivery,protocol WHERE visit.visit_ID=$visit_ID AND visit.visit_ID=protocol.visit_ID AND delivery.protocol_ID=protocol.protocol_ID AND delivery.maternity_ID=$maternity_ID";
-							$result3=mysqli_query($link,$query3);
-							$object3=mysqli_fetch_object($result3);
-							if(! empty($object3)){
-								echo"
-									<td>
-										<a href=\"delivery.php?protocol_ID=$object3->protocol_ID&maternity_ID=$maternity_ID&visit_ID=$visit_ID\">edit Delivery</a>
-									</td>
-									";
-							}
+							echo"
+								<td>
+									<a href=\"delivery.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID&edit=on\">edit Delivery</a>
+								</td>
+								";
 						}
 					}
 						/*???

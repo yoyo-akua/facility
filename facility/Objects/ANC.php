@@ -236,14 +236,14 @@
 			## Print client's ANC visit information, if they are known.
 			## Add date to HTML buffer, if $date is set.
 			*/
-			$html="<h3>Visit #$visitnumber";
+			$html="<details><summary><h3 style='display:inline'>Visit #$visitnumber";
 			
 			
 			if($date=='date on'){
 				$visitdate=date("d.m.Y",strtotime($visitdate));
 				$html.=" - $visitdate";
 			}
-			$html.="</h3>";
+			$html.="</summary></h3>";
 			
 			$html.="<h4>Gestational Age:</h4> $weeks weeks and $anddays days<br>";
 			

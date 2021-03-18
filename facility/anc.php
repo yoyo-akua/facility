@@ -213,7 +213,7 @@
 						<td>".
 							$maternity->display_maternity('without EDD');
 					echo"</td>
-						<td style='font-size:155px;color:lightgrey;font-weight: 100'>
+						<td style='font-size:140px;color:lightgrey;font-weight: 100'>
 							}	
 						</td>
 						<td>
@@ -247,75 +247,8 @@
 						<tr>
 							<td>
 							";
-				## Inquire whether vitals have been taken for this visit, if so, save the protocol ID of this database entry in $vitals_ID.
-				$vitals_ID=Vital_Signs::get_last_vitals($visit_ID);
-
-				## In case vitals have been taken for this visit, call this if-branch.
-				if($vitals_ID){
-
-					## Initialise new Vital Signs object using the protocol ID saved in $vitals_ID.
-					$vital_signs=new Vital_Signs($vitals_ID);
-					
-					## For each vitals parameter (blood pressure, weight, pulse and temperature) create an array, containing
-					##		- the name of the parameter
-					##		- the previously saved values
-					##		- the unit of the parameter
-					##		- the type of the variable and further specifications.
-					$BP=array('BP',$vital_signs->getBP(),'mmHg',"type='text' pattern='[0-9]{2,}[//]{1}[0-9]{2,}'");
-					$Weight=array('Weight',$vital_signs->getweight(),'kg',"type='number' step='0.1' min='0' max='500'");
-					$Pulse=array('Pulse',$vital_signs->getpulse(),'bpm',"type='number' min='0' max='200'");
-					$Temperature=array('Temperature',$vital_signs->gettemperature(),'&#176C',"type='number' min='30' max='45' step='0.1'");
-				}
-				
-				## In case the vitals haven't been taken before, create the same arrays as listed above, but without the previously saved values.
-				else{
-					$BP=array('BP','','mmHg',"type='text' pattern='[0-9]{2,}[//]{1}[0-9]{2,}'");
-					$Weight=array('Weight','','kg',"type='number' step='0.1' min='0' max='500'");
-					$Pulse=array('Pulse','','bpm',"type='number' min='0' max='200'");
-					$Temperature=array('Temperature','','&#176C',"type='number' min='30' max='45' step='0.1'");
-				}
-
-				## Create an array containing all vital signs parameter arrays created above.
-				$vital_parameters=array($BP,$Weight,$Pulse,$Temperature);
-				
-
-				/*
-				## Run this loop once for each of the vital signs parameters. 
-				## Use the information saved in the arrays to display the vital signs parameter as plain text.
-				## Print an editing symbol after that,
-				## if this is clicked, there appears an input field instead of the plain text
-				## which enables the user to edit the value. 
-				## This functionality is described in the javascript function edit_value.
-				*/
-				foreach($vital_parameters AS $para){
-					$title=$para[0];
-					$value=$para[1];
-					$unit=$para[2];
-					$specifications=$para[3];
-
-					echo"
-						<div>
-							<label>$title:</label><br>
-							
-							<div style='display:none' id='".$title."_div'>
-								<input $specifications id='".$title."_input' class='smalltext' name='$title'> $unit
-							</div>
-		
-							<font  id='".$title."_text'>";
-								if(! empty($value)){
-									echo"$value $unit";
-								}else{
-									echo"not entered";
-								}
-								echo"
-							</font>
-		
-							<button type='button' id='edit_".$title."' onclick='edit_value(\"$title\",\"$value\")' class='grey'>
-								<i class='fas fa-pencil-alt'></i>
-							</button>
-		
-						</div>";
-				}
+						$protocol_ID=Vital_Signs::get_last_vitals($visit_ID);
+						Vital_Signs::display_editable_Vitals($protocol_ID);
 							
 							
 				

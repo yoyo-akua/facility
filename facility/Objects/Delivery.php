@@ -7,6 +7,7 @@
 		private $del_category_ID;		## ID of corresponding delivery parameter.
 		private $result;		## Result for a partiular delivery parameter.
 		private $maternity_ID;		## Client's maternity ID.
+		private $protocol_ID;		## The delivery's protocol ID.
 
 		/*
 		## This function is called, if a new delivery entry object is needed for further actions.
@@ -21,6 +22,7 @@
 				$this->del_category_ID = $row->del_category_ID;		
 				$this->result = $row->result;		
 				$this->maternity_ID = $row->maternity_ID;
+				$this->protocol_ID = $row->protocol_ID;
 			}
 			$this->Delivery_ID = $Delivery_ID;
 		}
@@ -32,9 +34,9 @@
 		## Save this data also in a new created delivery entry object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_delivery($del_category_ID,$result,$maternity_ID){
+		public static function new_delivery($del_category_ID,$result,$maternity_ID,$protocol_ID){
 			global $link;
-			$query = "INSERT INTO `delivery`(`del_category_ID`,`result`,`maternity_ID`) VALUES ('$del_category_ID','$result','$maternity_ID')";
+			$query = "INSERT INTO `delivery`(`del_category_ID`,`result`,`maternity_ID`,`protocol_ID`) VALUES ('$del_category_ID','$result','$maternity_ID','$protocol_ID')";
 			mysqli_query($link,$query);
 
 			$Delivery_ID = mysqli_insert_id($link);
@@ -122,25 +124,13 @@
 		##		- $maternity_ID contains the ID of the client's maternity which is necessary to retrieve the client's general pregnancy data. 
 		## This function returns the HTML buffer $html.
 		*/	
-		public function display_delivery($maternity_ID,$protocol_ID){
+		public function display_delivery($maternity_ID,$visit_ID){
 			
 			## Initialise objects of maternity (client's general pregnancy data) and protocol (that particular OPD visit's data).
 			$maternity=new Maternity($maternity_ID);
-			$protocol=new Protocol($protocol_ID);
 
-			## Initialise objects with client's vital signs.
-			$vital_signs=new Vital_Signs($protocol_ID);
-			
-			$BP=$vital_signs->getBP();
-			$weight=$vital_signs->getweight();
-			$pulse=$vital_signs->getpulse();
-
-			## Buffer client's vital signs in HTML buffer for printing later.
-			$html="
-					<h4>Blood Pressure:</h4> $BP mmHg<br>
-					<h4>Weight:</h4> $weight kg<br>
-					<h4>Pulse:</h4> $pulse bpm<br><br>
-					";
+			## Display the client's vital signs.
+			$html='<details><summary><h4><u>Vital Signs</u></h4></summary><div style="margin-left:10px">'.Vital_Signs::display_admission_data($visit_ID).'</div></details>';
 			
 			/*
 			## Initialise variable $lastcategory which is needed to determine whenever a new category/parameter of delivery entries begins,
@@ -155,7 +145,7 @@
 			## Save all data from database in $result.
 			*/
 			global $link;
-			$query="SELECT * FROM delivery WHERE maternity_ID=$maternity_ID";
+			$query="SELECT * FROM delivery WHERE maternity_ID=$maternity_ID ORDER BY del_category_ID";
 			$result=mysqli_query($link,$query);
 			
 			## This loop will be run once for each of the output delivery register entries from the database query.
@@ -166,7 +156,8 @@
 				## and Delivery Category (general information on a certain delivery parameter).
 				*/
 				$Delivery=new Delivery($row->delivery_ID);
-				$Del_Cat=new Delivery_Categories($Delivery->getDel_category_ID());
+				$Cat_ID=$Delivery->getDel_category_ID();
+				$Del_Cat=new Delivery_Categories($Cat_ID);
 
 				## Initialise variables with the category's name and its (theoretically) possible outcomes.
 				$category=$Del_Cat->getcategory_name();
@@ -189,9 +180,24 @@
 				## The time information, which is saved in database, is transformed into British format 
 				*/
 				}else if(strstr('datetime',$outcomes)){
-					$results=date("d/m/Y H:i",strtotime($outcomes));
+					$results=date("d/m/Y H:i",strtotime($results));
 				}
 				
+				if($Cat_ID==1){
+					$html.= '<details><summary><h3 style="display:inline">Stage 1-3</h3></summary>';
+				}
+				if($Cat_ID==7){
+					$html.= '</details><details><summary><h3 style="display:inline">State of the Newborn</h3></summary>';
+				}
+				if($Cat_ID==18){
+					$html.= '</details><details><summary><h3 style="display:inline">Newborn Care</h3></summary>';
+				}
+				if($Cat_ID==21){
+					$html.= '</details><details><summary><h3 style="display:inline">Stage 4</h3></summary>';
+				}
+				if($Cat_ID==26){
+					$html.= '</details><details><summary><h3 style="display:inline">Discharge</h3></summary>';
+				}
 				/*
 				## Buffer the name of the parameter, if not the same as in last run of the loop, in $html.
 				## Also buffer the parameter's result and unit.
@@ -206,6 +212,7 @@
 				}
 			}
 			
+			$html.="</details>";
 			## Return the HTML buffer.
 			return $html;
 		}
@@ -308,18 +315,21 @@
 				## Initialise variables with the date and the time of the previous entry, if the user is editing the delivery entry.
 				## Otherwise initialise them with the current time.
 				*/
+				$maxdate=$date=date("Y-m-d",time());
+				$maxtime=$time=date("H:i",time());
+
 				if($edit){
 					$date=date("Y-m-d",strtotime($results));
-					$time=date("H:i",(strtotime($results)-strtotime($date)));
+					$time=date("H:i",(strtotime($results)-strtotime($date)-3600));
 				}else{
-					$date=date("Y-m-d",time());
-					$time=date("H:i",time());
+					$date=$maxdate;
+					$time=$maxtime;
 				}
 				
 				## Print the input fields for date and time and prefill them.	
 				echo"
-						<input type='date' name='$name' value='$date' max='$date'>
-						<input type='time' name='time_$name' value='$time' max='$time'></div>
+						<input type='date' name='$name' value='$date' max='$maxdate'>
+						<input type='time' name='time_$name' value='$time' max='$maxtime'></div>
 						";
 			}
 			

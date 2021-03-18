@@ -138,13 +138,14 @@
 		## Initialising object of protocol by protocol-ID.
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
+		$visit_ID=$protocol->getVisit_ID();
 
 		## Initialising variable with date of delivery.
 		$date=date("d.m.Y",(strtotime($protocol->getTimestamp())));
 		
 		## Add the delivery's records to $html.
 		$html.='<h2>'.$date.' - Delivery</h2>'.
-					Delivery::display_Delivery($maternity_ID,$protocol_ID);
+					Delivery::display_Delivery($maternity_ID,$visit_ID);
 	}
 
 	## Initialise variables for the name of the pdf and it's page format.

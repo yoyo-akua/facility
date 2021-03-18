@@ -16,7 +16,6 @@
 	## Initialise variable with client's name.
 	$name=$patient->getName();
 
-	## TODO links anpassen
 	## If the user wants to edit the pregnancy data or create a new pregnancy entry, initialise object with previous maternity data.
 	if(! empty($_GET['edit']) OR ! empty($_GET['new_ANC'])){
 		$last_maternity_ID=$_GET['maternity_ID'];
@@ -49,6 +48,8 @@
 			$last_maternity->setReg_number($_GET['reg_number']);
 			$maternity_ID=$last_maternity_ID;
 			$maternity=$last_maternity;
+
+			echo '<script>history.go(-2)</script>';
 		}
 		
 		/*
@@ -61,20 +62,18 @@
 			$patient->setTelephone($_GET['telephone']);
 			$patient->setHeight($_GET['height']);
 			$maternity_ID=$maternity->getmaternity_ID();
+
 			if(! empty ($_GET['serial_number']) AND $_GET['serial_number']==Settings::new_number('Maternity','serial_number') AND empty($_GET['edit'])){
 				Settings::set_new_number('Maternity',Settings::new_number('Maternity','serial_number'),'serial_number');
 			}
 			if(! empty ($_GET['reg_number']) AND $_GET['reg_number']==Settings::new_number('Maternity','reg_number') AND empty($_GET['edit'])){
 				Settings::set_new_number('Maternity',Settings::new_number('Maternity','reg_number'),'reg_number');
 			}
-			if(empty($_GET['edit'])){
-				Protocol::new_Protocol($visit_ID,'registered as maternity client');
-				$message='Maternity client created';
-				Settings::messagebox($message);
-				echo'<script>window.location.href="anc.php?maternity_ID='.$maternity_ID.'&visit_ID='.$visit_ID.'"</script>';
-			}else{
-				echo '<script>history.go(-2)</script>';
-			}
+
+			Protocol::new_Protocol($visit_ID,'registered as maternity client');
+			$message='Maternity client created';
+			Settings::messagebox($message);
+			echo'<script>window.location.href="anc.php?maternity_ID='.$maternity_ID.'&visit_ID='.$visit_ID.'"</script>';
 		}
 	}
 	
@@ -171,8 +170,13 @@
 					echo"> cm</div>";
 				
 		
-					if(! empty($_GET['edit'])){
-						echo"<input type='hidden' name='edit' value='".$_GET['edit']."'>";
+					if(! empty($_GET['edit']) OR ! empty($_GET['new_ANC'])){
+						echo "<input type='hidden' name='maternity_ID' value='$last_maternity_ID'>";
+						if(! empty($_GET['edit'])){
+							echo"<input type='hidden' name='edit' value='on'>";
+						}else if(! empty($_GET['new_ANC'])){
+							echo"<input type='hidden' name='new_ANC' value='on'>";
+						}
 					}
 					echo"
 					<input type='hidden' name='visit_ID' value='$visit_ID'>
@@ -180,7 +184,9 @@
 					<input type='hidden' name='token' value='$uniqueID'>
 					<div><input type='submit' name='create' value='submit'></div>
 					</div>
+					</form>
 					";
+					
 	}
 
 

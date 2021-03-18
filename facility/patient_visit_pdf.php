@@ -130,10 +130,11 @@ i<?php
 	/*
 	## This if-branch is called if the client delivered on that day. 
 	## If so, the function Delivery::display_Delivery() is used add the records about the delivery to $html.
+	## ??? TODO $protocol->getDelivery gibt es nicht mehr!
 	*/
 	if($protocol->getDelivery()!=0){
 		$maternity_ID=$protocol->getDelivery();
-		$html.="<h2>Delivery</h2>".Delivery::display_Delivery($maternity_ID,$protocol_ID);
+		$html.="<h2>Delivery</h2>".Delivery::display_Delivery($maternity_ID,$visit_ID);
 	}
 
 	## Check if client came for PNC, if so, add that information to $html.

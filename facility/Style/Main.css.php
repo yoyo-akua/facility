@@ -497,6 +497,18 @@ a:hover{
 .grey:hover{
 	color:grey;
 }
+.greyed{
+	color:lightgrey;
+}
+.greyed:hover{
+	color:<?php echo $h1; ?>;
+}
+.greened{
+	color:<?php echo $main; ?>;
+}
+.greened:hover{
+	color:lightgrey;
+}
 td.labtable{
 	border:none;
 	padding: 10px;
@@ -623,6 +635,14 @@ input[type="number"]{
 	vertical-align:top;
 	width:25%;
 }
+#delivery_table{
+	width:90%;
+}
+#delivery_table tr td{
+	vertical-align:top;
+	width:20%;
+}
+
 .inlinedetails >details{
 	display:inline;
 }

@@ -209,6 +209,15 @@
 			return $result;
 		}
 
+		/*
+		## This function is called to delezte a certain protocol entry defined by $protocol_ID.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public static function delete_Protocol($protocol_ID){
+			global $link;
+			$query = "DELETE FROM `protocol` WHERE protocol_ID=$protocol_ID";
+			mysqli_query($link,$query);
+		}
 	}
 
 ?>

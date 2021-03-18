@@ -26,9 +26,14 @@
 	echo"
 			<h1>Pregnancy Overview</h1><h2 style='text-align:center'>of $name</h2>
 			<div class='inputform'>
+			<table class='invisible' id='anc_table'>
+			<tr>
+			<td>
 			<h2>General Data</h2>
 			". $patient->display_general(time()).'<br>'.
 			$maternity->display_maternity('complete')."
+			</td>
+			<td>
 			<h2>ANC</h2>";
 
 
@@ -68,7 +73,7 @@
 
 		$vitals=Vital_Signs::display_admission_data($visit_ID);
 		if($vitals){
-			echo '<br><h4>Vital Signs</h4><div style="margin-left:10px">'.$vitals.'</div>';
+			echo '<br><details style="margin-left:0px"><summary><h4>Vital Signs</h4></summary><div style="margin-left:10px">'.$vitals.'</div></details>';
 		}
 		
 		/*
@@ -76,15 +81,16 @@
 		## If so, print the test results.
 		*/
 		if(! empty($visit->getLab_number())){
-			echo"<h4>Test results</h4><div style='margin-left:10px'>".
-					Lab::display_results($visit->getLab_number(),'tooltips on').'</div>';
+			echo"<br><details style='margin-left:0px'><summary><h4>Test results</h4></summary><div style='margin-left:10px'>".
+					Lab::display_results($visit->getLab_number(),'tooltips on').'</div></details>';
 		}
 		
 		## Print link to results of that day's visit.
-		echo "<br><a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
+		echo "<br><a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>
+			</details>";
 	}
 
-	echo"<br>";
+	echo"</td><td>";
 
 	/*
 	## Get data from database.
@@ -101,14 +107,17 @@
 		## Initialising object of protocol by protocol-ID.
 		$protocol_ID=$object->protocol_ID;
 		$protocol=new Protocol($protocol_ID);
+		$visit_ID=$protocol->getVisit_ID();
+
 
 		## Initialising variable with date of delivery.
 		$date=date("d/m/y",(strtotime($protocol->getTimestamp())));
 		
 		## Print the delivery's records and a link to results of that day's visit.
 		echo"<h2>$date - Delivery</h2>".
-				Delivery::display_delivery($maternity_ID,$protocol_ID).
-				"<br><a href='patient_visit.php?show=on&patient_ID=$patient_ID&protocol_ID=$protocol_ID'>show complete visit summary</a>";
+				Delivery::display_delivery($maternity_ID,$visit_ID).
+				"<br><br>
+				<a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
 	}
 	
 	## Print link for creating a pdf file with the pregnancy overview.

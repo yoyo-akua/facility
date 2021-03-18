@@ -586,6 +586,27 @@ ALTER TABLE `maternity` ADD `delivery_date` DATE NOT NULL AFTER `conception_date
 UPDATE maternity SET delivery_date=ADDDATE(conception_date, INTERVAL + 40 WEEK) WHERE conception_date < ADDDATE(CURRENT_DATE, INTERVAL - 43 WEEK) ;
 UPDATE maternity,protocol,delivery SET delivery_date=DATE(protocol.timestamp) WHERE maternity.maternity_ID=delivery.maternity_ID AND delivery.protocol_ID=protocol.protocol_ID;
 ALTER TABLE `diagnosis_ids` ADD `remarks` VARCHAR(1000) NOT NULL AFTER `importance`;
+INSERT INTO `delivery_categories` (`del_category_ID`, `category_name`, `outcomes`) VALUES (NULL, 'Condition of Baby', 'text'), (NULL, 'Temperature of Baby', '');
+UPDATE `delivery_categories` SET `category_name` = 'Condition of Mother' WHERE `delivery_categories`.`del_category_ID` = 30;
+UPDATE `delivery_categories` SET `category_name` = 'Temperature of Mother' WHERE `delivery_categories`.`del_category_ID` = 26;
+UPDATE `delivery_categories` SET `category_name` = 'BP of Mother' WHERE `delivery_categories`.`del_category_ID` = 27;
+UPDATE `delivery_categories` SET `category_name` = 'Pulse of Mother' WHERE `delivery_categories`.`del_category_ID` = 28;
+UPDATE `delivery_categories` SET `del_category_ID` = '40' WHERE `delivery_categories`.`del_category_ID` = 29; 
+UPDATE `delivery_categories` SET `del_category_ID` = '29' WHERE `delivery_categories`.`del_category_ID` = 33; 
+UPDATE `delivery_categories` SET `outcomes` = 'number(°C)' WHERE `delivery_categories`.`del_category_ID` = '29'; 
+UPDATE `delivery_categories` SET `del_category_ID` = '33' WHERE `delivery_categories`.`del_category_ID` = 31; 
+UPDATE `delivery_categories` SET `del_category_ID` = '31' WHERE `delivery_categories`.`del_category_ID` = 32; 
+UPDATE `delivery_categories` SET `del_category_ID` = '32' WHERE `delivery_categories`.`del_category_ID` = 40; 
+UPDATE `delivery_categories` SET `del_category_ID` = '100' WHERE `delivery_categories`.`del_category_ID` = 17; 
+UPDATE `delivery_categories` SET `del_category_ID` = '17' WHERE `delivery_categories`.`del_category_ID` = 19; 
+UPDATE `delivery_categories` SET `del_category_ID` = '19' WHERE `delivery_categories`.`del_category_ID` = 100; 
+UPDATE delivery SET del_category_ID=100 WHERE del_category_ID=17;
+UPDATE delivery SET del_category_ID=17 WHERE del_category_ID=19; 
+UPDATE delivery SET del_category_ID=19 WHERE del_category_ID=100;
+UPDATE `delivery` SET `del_category_ID` = '40' WHERE `del_category_ID` = 29; 
+UPDATE `delivery` SET `del_category_ID` = '33' WHERE `del_category_ID` = 31; 
+UPDATE `delivery` SET `del_category_ID` = '32' WHERE `del_category_ID` = 40; 
+
 
 new.php
 
