@@ -958,7 +958,7 @@
 					<summary>
 						<h2>Prescribed Drugs</h2>
 					</summary>
-				".Disp_Drugs::display_prescribed_drugs($visit_ID,'print');
+				".Disp_Drugs::display_prescribed_drugs($visit_ID,'print','both');
 		
 		if(empty($_GET['show'])){
 			echo"
