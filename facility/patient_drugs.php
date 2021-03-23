@@ -5,12 +5,12 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol= new Protocol($protocol_ID);
+	## Initialise new object of visit by a certain visit-ID, with which the page is called.
+	$visit_ID=$_GET['visit_ID'];
+	$visit= new Visit($visit_ID);
 
-	## Initialise new object of patient by a certain patient-ID, with which the page is called
-	$patient_ID=$_GET['patient_ID'];
+	## Initialise new object of patient by a certain patient-ID, with the ID saved in $visit.
+	$patient_ID=$visit->getPatient_ID();
 	$patient=new Patient($patient_ID);
 
 	/*
@@ -18,7 +18,7 @@
 	## Get all the dispensary's drug register entries for the patient.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
-	$query="SELECT * FROM disp_drugs WHERE protocol_ID='$protocol_ID'";
+	$query="SELECT * FROM disp_drugs d, protocol p WHERE d.prescription_protocol_ID=p.protocol_ID AND p.visit_ID=$visit_ID";
 	$drug_result=mysqli_query($link,$query);
 
 	## If the user submitted any changes by clicking one of the submit buttons (labeled with treatment completed and treatment not completed), call this if-branch.
@@ -30,7 +30,13 @@
 		}else{
 			$visit->setCheckout_time('0000-00-00 00:00:00');
 		}
-		
+
+		## If the user didn't postpone all issues, create a new protocol entry for the issues of the drugs.
+		if(array_search('issued',$_POST) OR array_search('non_issued',$_POST)){
+			$given_protocol=protocol::new_Protocol($visit_ID,'drugs issued');
+			$given_protocol_ID=$given_protocol->getProtocol_ID();
+		}
+
 		## This loop is run once for each prescribed drug of the patient.
 		while($row=mysqli_fetch_object($drug_result)){
 	
@@ -48,7 +54,7 @@
 			$radio=$_POST["radio_$ID"];
 			
 			## If the user changed the status of the drug from "write to buy" to "issue", call this if-branch.
-			if($radio=='issued' AND $Counts==''){
+			if($radio=='issued'){
 				
 				/*
 				## Get physical stock at hand in the dispensary and store and save in variables.
@@ -87,11 +93,13 @@
 				
 				## Update the information (stock at hand and issued.status) in the dispensary.
 				$Disp_Drug->setCounts($Counts);
+				$Disp_Drug->setgiven_protocol_ID($given_protocol_ID);
 			}
 			
 			## If the user changed the status of the drug from "issue" to "write to buy", update the information in the dispensary.
-			else if($radio=='non_issued' AND $Counts!==''){
+			else if($radio=='non_issued'){
 				$Disp_Drug->setCounts('');
+				$Disp_Drug->setgiven_protocol_ID($given_protocol_ID);
 			}
 		}
 
@@ -110,7 +118,7 @@
 		echo"
 				<h1>prescribed drugs on $Name</h1>
 				<div class='inputform'>
-				<form method='post' action='patient_drugs.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID'>
+				<form method='post' action='patient_drugs.php?visit_ID=$visit_ID'>
 					<table>
 						<tr>
 							<th style=border-left:none>
@@ -120,6 +128,9 @@
 							</th>
 							<th>
 								Write to buy
+							</th>
+							<th>
+								Postpone Issuing
 							</th>
 						</tr>
 				";
@@ -184,21 +195,68 @@
 							}
 							echo"
 						</td>
-						<td>
-							<input type='radio' name='radio_$ID' value='issued'";
-							if($Counts!=='' OR $amount<=$available){
-								echo"checked='checked'";
+						<td>";
+							if(!empty($Disp_Drug->getgiven_protocol_ID())){
+								echo"
+								<input type='radio' name='radio_$ID' id='option_1_$ID' style='display:none'";
+								if($Counts!=='' OR $amount<=$available){
+									echo"checked='checked'";
+								}
+								echo">
+								<input type='radio' id='readonly_1_$ID'";
+								if($Counts!=='' OR $amount<=$available){
+									echo"checked='checked'";
+								}
+								echo"
+								readonly>";
+							}else{
+								echo"
+								<input type='radio' name='radio_$ID' value='issued'";
+								if($Counts!=='' OR $amount<=$available){
+									echo"checked='checked'";
+								}
+								echo"
+								>";
 							}
 							echo"
-							>
+						</td>
+						<td>";
+							if(! empty($Disp_Drug->getgiven_protocol_ID())){
+								echo"
+								<input type='radio' name='radio_$ID' id='option_2_$ID' style='display:none'";
+								if($amount>$available){
+									echo"checked='checked'";
+								}
+								echo">
+								<input type='radio' id='readonly_2_$ID'";
+								if($amount>$available){
+									echo"checked='checked'";
+								}
+								echo"
+								readonly>";
+							}else{
+								echo"
+								<input type='radio' name='radio_$ID' value='non_issued'";
+								if($amount>$available){
+									echo"checked='checked'";
+								}
+								echo"
+								>";
+							}
+							
+							echo"
+							
 						</td>
 						<td>
-							<input type='radio' name='radio_$ID' value='non_issued'";
-							if($amount>$available){
-								echo"checked='checked'";
+							<input type='radio' name='radio_$ID' value='postponed'>
+						</td>
+						<td>";
+							if(!empty($Disp_Drug->getgiven_protocol_ID())){
+								echo"<button type='button' id='edit_".$ID."' onclick='edit_radio(\"$ID\",\"2\")' class='grey'>
+										<i class='fas fa-pencil-alt'></i>
+									</button>";
 							}
 							echo"
-							>
 						</td>
 					</tr>
 					";
@@ -213,7 +271,7 @@
 					<input type='submit' name='not_completed' value='treatment not completed'>
 				</form>
 				<br>
-				<a href='prescribe_drugs.php?protocol_ID=$protocol_ID&patient_ID=$patient_ID'><div class ='box'>edit patient's prescriptions</div></a>
+				<a href='prescribe_drugs.php?visit_ID=$visit_ID'><div class ='box'>edit patient's prescriptions</div></a>
 				<a href='disp_patients.php'><div class ='box'>patients in dispensary</div></a>
 				";	
 	}

@@ -13,7 +13,8 @@
 		private $CountDate;		## Date of the Dispensary register entry. 
 		private $Counts;		## The amount of a certain drug in Dispensary corresponding to a certain Dispensary register entry.
 		private $dosage_recommendation; ## Some particular dosage recommendations of a certain Dispensary register entry.
-		private $protocol_ID;		## ID of the patient's visit.
+		private $prescription_protocol_ID;		## ID of the protocol entry linked to the prescription.
+		private $given_protocol_ID;				## ID of the protocol entry linked to the handing out of the drug.
 		
 		
 		/*
@@ -32,7 +33,8 @@
 				$this->CountDate = $row->CountDate;
 				$this->Counts = $row->Counts;	
 				$this->dosage_recommendation =$row->dosage_recommendation;
-				$this->protocol_ID = $row->protocol_ID;	
+				$this->prescription_protocol_ID = $row->prescription_protocol_ID;	
+				$this->given_protocol_ID = $row->given_protocol_ID;
 			}
 			$this->Disp_Drugs_ID = $Disp_Drugs_ID;
 		}
@@ -45,9 +47,9 @@
 		## Save this data also in a new created drug object and return this object for further actions.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_Disp_Drugs($Drug_ID,$Store_Drugs_ID,$Prescribed,$Counts,$dosage_recommendation,$protocol_ID){
+		public static function new_Disp_Drugs($Drug_ID,$Store_Drugs_ID,$Prescribed,$Counts,$dosage_recommendation,$prescription_protocol_ID){
 			global $link;
-			$query = "INSERT INTO `disp_drugs`(`Drug_ID`,`Store_Drugs_ID`,`Prescribed`,`Counts`,`dosage_recommendation`,`protocol_ID`) VALUES ('$Drug_ID','$Store_Drugs_ID','$Prescribed','$Counts','$dosage_recommendation','$protocol_ID')";
+			$query = "INSERT INTO `disp_drugs`(`Drug_ID`,`Store_Drugs_ID`,`Prescribed`,`Counts`,`dosage_recommendation`,`prescription_protocol_ID`) VALUES ('$Drug_ID','$Store_Drugs_ID','$Prescribed','$Counts','$dosage_recommendation','$prescription_protocol_ID')";
 			mysqli_query($link,$query);
 			
 			$Disp_Drugs_ID = mysqli_insert_id($link);
@@ -115,10 +117,18 @@
 		## Getter function.
 		## Returns protocol ID of the patient's visit which corresponds to the drug register entry, on which the function is called.
 		*/
-		public function getprotocol_ID(){
-			return $this->protocol_ID;
+		public function getprescription_protocol_ID(){
+			return $this->prescription_protocol_ID;
 		}
-
+		
+		/*
+		## Getter function.
+		## Returns protocol ID of the patient's visit which corresponds to the drug register entry, on which the function is called.
+		*/
+		public function getgiven_protocol_ID(){
+			return $this->given_protocol_ID;
+		}
+		
 		/*
 		## Setter function.
 		## Updates the ID of that Dispensary register entry, on which the function is called, in database.
@@ -182,6 +192,19 @@
 			$query = "UPDATE disp_drugs SET dosage_recommendation='$var' WHERE Disp_Drugs_ID = $this->Disp_Drugs_ID";
 			mysqli_query($link,$query);
 			return $this->dosage_recommendation = $var;
+		}
+
+		/*
+		## Setter function.
+		## Updates dosage recommendation of that Dispensary register entry, on which the function is called, in database.
+		## Returns the updated information. 
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public function setgiven_protocol_ID($var){
+			global $link;
+			$query = "UPDATE disp_drugs SET given_protocol_ID='$var' WHERE Disp_Drugs_ID = $this->Disp_Drugs_ID";
+			mysqli_query($link,$query);
+			return $this->given_protocol_ID = $var;
 		}
 
 		/*
@@ -392,7 +415,7 @@
 		##		- $function is responsible to display a delete icon behind each prescribed drug, if it is not set in read only modus.
 		## The HTML buffer $html is returned.
 		*/
-		public function display_disp_drugs($protocol_ID,$function){
+		public function display_prescribed_drugs($visit_ID,$function,$circumference){
 
 			/*
 			## Initialising some variables, which are needed within this function.
@@ -413,9 +436,16 @@
 			## Get data from database.
 			## Get all the dispensary's drug register entries for the patient.
 			*/
-			$query="SELECT * FROM disp_drugs WHERE protocol_ID='$protocol_ID'";
-			$drug_result=mysqli_query($link,$query);
 			
+			if($circumference=='both'){
+				$query="SELECT * FROM disp_drugs d, protocol p WHERE p.protocol_ID=d.prescription_protocol_ID AND p.visit_ID=$visit_ID";
+			}else if($circumference=='issued'){
+				$query="SELECT * FROM disp_drugs d, protocol p WHERE p.protocol_ID=d.given_protocol_ID AND p.visit_ID=$visit_ID";
+			}else if($circumference=='prescribed'){
+				$query="SELECT * FROM disp_drugs d, protocol p WHERE p.protocol_ID=d.prescription_protocol_ID AND d.given_protocol_ID=0 AND p.visit_ID=$visit_ID";
+			}
+
+			$drug_result=mysqli_query($link,$query);
 			## This loop is run once for each prescribed drug of the patient.
 			while($row=mysqli_fetch_object($drug_result)){
 
@@ -520,11 +550,11 @@
 		## The function retrieves from the database, whether there is any drug protocol entry with this protocol ID
 		## and returns "true" if there are any, otherwise "false".
 		*/
-		public function drugs_prescribed($protocol_ID){
+		public function drugs_prescribed($visit_ID){
 			
 			global $link;
 			
-			$query="SELECT * FROM disp_drugs WHERE protocol_ID='$protocol_ID'";
+			$query="SELECT * FROM disp_drugs d, protocol p WHERE d.prescription_protocol_ID=p.protocol_ID AND p.visit_ID='$visit_ID'";
 			$result=mysqli_query($link,$query);
 
 			if(mysqli_num_rows($result)!==0){
@@ -534,6 +564,22 @@
 			}
 			
 			return $prescribed;
+		}
+
+		public function drugs_issued($visit_ID){
+			
+			global $link;
+			
+			$query="SELECT * FROM disp_drugs d, protocol p WHERE d.given_protocol_ID=p.protocol_ID AND p.visit_ID='$visit_ID'";
+			$result=mysqli_query($link,$query);
+
+			if(mysqli_num_rows($result)!==0){
+				$issued=true;
+			}else{
+				$issued=false;
+			}
+			
+			return $issued;
 		}
 
 		/*

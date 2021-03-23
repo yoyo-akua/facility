@@ -210,7 +210,7 @@ i<?php
 	$drugs_prescribed=Disp_Drugs::drugs_prescribed($protocol_ID);
 
 	if(! empty($drugs_prescribed)){
-		$drugs="<h2>Prescribed Drugs</h2>".Disp_Drugs::display_disp_drugs($protocol_ID,'print');
+		$drugs="<h2>Prescribed Drugs</h2>".Disp_Drugs::display_prescribed_drugs($visit_ID,'print');
 		$drugs=str_replace('<u>','',$drugs);
 		$drugs=str_replace('</u>','',$drugs);
 		$html.=$drugs;

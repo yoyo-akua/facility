@@ -109,7 +109,7 @@
 			}
 			echo"
 				<td>
-					<a href=\"prescribe_drugs.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">Dispensary</a>
+					<a href=\"prescribe_drugs.php?visit_ID=$row->visit_ID\">Dispensary</a>
 				</td>
 				";
 			

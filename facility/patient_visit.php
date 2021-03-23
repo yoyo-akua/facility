@@ -949,10 +949,8 @@
 	## If not in "display-mode" (indicated by $_GET['show']), print a link for adding more drugs.
 	*/
 
-	##ToDo: Muss erst noch umgebaut werden
-	## Bleibt solange noch auskommentiert
-	/*
-	$drugs_prescribed=Disp_Drugs::drugs_prescribed($protocol_ID);
+	
+	$drugs_prescribed=Disp_Drugs::drugs_prescribed($visit_ID);
 
 	if(! empty($drugs_prescribed)){
 		echo"
@@ -960,11 +958,11 @@
 					<summary>
 						<h2>Prescribed Drugs</h2>
 					</summary>
-				".Disp_Drugs::display_disp_drugs($protocol_ID,'print');
+				".Disp_Drugs::display_prescribed_drugs($visit_ID,'print');
 		
 		if(empty($_GET['show'])){
 			echo"
-					<a href=\"prescribe_drugs.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID\"><div class =\"box\">add prescriptions</div></a>
+					<a href=\"prescribe_drugs.php?visit_ID=$visit_ID\"><div class =\"box\">add prescriptions</div></a>
 					";
 		}
 		echo "</details>";
@@ -973,7 +971,6 @@
 			</div>
 			<div class='fullscreen'>
 			";
-	*/
 
 	## This if branch is called if you are not in "display-mode".
 	if(empty($_GET['show'])){

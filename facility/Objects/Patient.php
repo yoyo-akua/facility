@@ -547,7 +547,7 @@
 			## Prints optional, depending on which columns are requested and only if existing the prescribed drugs of a patient.
 			if($columns['drugs']=='on'){
 				if(Disp_Drugs::drugs_prescribed($visit_ID)){
-					$html=Disp_Drugs::display_disp_drugs($visit_ID,'print');
+					$html=Disp_Drugs::display_prescribed_drugs($visit_ID,'print');
 					echo"<td style=text-align:left>$html</td>";
 				}else{
 					echo '<td></td>';

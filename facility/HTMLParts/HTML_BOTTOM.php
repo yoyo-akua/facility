@@ -17,5 +17,6 @@
 		<script src="HTMLParts/JavaScript/upload_name.js"></script>
 		<script src="HTMLParts/JavaScript/unfold.js"></script>
 		<script src="HTMLParts/JavaScript/edit_value.js"></script>
+		<script src="HTMLParts/JavaScript/edit_radio.js"></script>
 	</body>
 </html>

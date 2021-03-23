@@ -5,13 +5,13 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## Initialise new object of patient by a certain patient-ID, with which the page is called.
-	$patient_ID=$_GET['patient_ID'];
-	$patient=new Patient($patient_ID);
+	## Initialise new object of visit by a certain visit-ID, with which the page is called.
+	$visit_ID=$_GET['visit_ID'];
+	$visit= new Visit($visit_ID);
 
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called.
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol= new Protocol($protocol_ID);
+	## Initialise new object of patient by a certain patient-ID, which is saved in $visit.
+	$patient_ID=$visit->getPatient_ID();
+	$patient=new Patient($patient_ID);
 
 	## Initialise variable with patient's name.
 	$patientname=$patient->getName();
@@ -30,6 +30,12 @@
 	## This if-branch is called after the user submitted his selection of drugs.
 	if(! empty($_GET['submit'])){
 		
+		## In case any drugs have been prescribed, create a new protocol entry. 
+		if(strstr($thispage,'amount')){
+			$protocol=Protocol::new_Protocol($visit_ID,'drugs prescribed');
+			$protocol_ID=$protocol->getProtocol_ID();
+		}
+
 		/*
 		## Get data from database.
 		## Get list of all drugs.
@@ -119,14 +125,14 @@
 		## Print a headline and the prescribed drugs for the patient.
 		echo "<h1>Selected for $patientname</h1>";
 		
-		if(Disp_Drugs::drugs_prescribed($protocol_ID)){
-			echo Disp_Drugs::display_disp_drugs($protocol_ID,'delete');
+		if(Disp_Drugs::drugs_prescribed($visit_ID)){
+			echo Disp_Drugs::display_prescribed_drugs($visit_ID,'delete','both');
 		}
 		
 		## Print links to the list of current patients and for adding more prescriptions for this patient.
 		echo'
 				<a href="current_patients.php"><div class ="box">current patients</div></a>
-				<a href="prescribe_drugs.php?patient_ID='.$patient_ID.'&protocol_ID='.$protocol_ID.'"><div class ="box">prescribe more drugs</div></a>
+				<a href="prescribe_drugs.php?visit_ID='.$visit_ID.'"><div class ="box">prescribe more drugs</div></a>
 				';
 	}
 
@@ -135,9 +141,25 @@
 		
 		## Print a headline and, if existing, previous presriptions.
 		echo "<h1>Select Drugs for $patientname</h1>";
-		if(Disp_Drugs::drugs_prescribed($protocol_ID)) {
-			echo "<h2>previously prescribed drugs</h2>".
-			Disp_Drugs::display_disp_drugs($protocol_ID,'delete');
+		if(Disp_Drugs::drugs_prescribed($visit_ID)) {
+
+			$query1="SELECT * FROM disp_drugs d, protocol p WHERE p.protocol_ID=d.prescription_protocol_ID AND p.visit_ID=$visit_ID";
+			$query2="SELECT * FROM disp_drugs d, protocol p WHERE p.protocol_ID=d.given_protocol_ID AND p.visit_ID=$visit_ID";
+			
+			echo "<table class='invisible' id='anc_table'>
+					<tr>
+						<td>
+							<h2 style='margin-left:0px'>previously prescribed drugs</h2>".
+							Disp_Drugs::display_prescribed_drugs($visit_ID,'delete','both')."
+						</td>
+						<td>
+							<h2 style='margin-left:0px'>already issued drugs</h2>".
+							Disp_Drugs::display_prescribed_drugs($visit_ID,'print','issued').'
+						</td>
+					</tr>
+				</table>	
+				<br><br>';
+
 		}
 			
 		## Print the table head and the beginning of the form.
@@ -270,8 +292,7 @@
 			<div class='tableright'>
 				<input type='text' name='search' id='autocomplete' placeholder='search' class='autocomplete'>
 				<button type='submit' name='submitsearch'><i class='fas fa-search smallsearch'></i></button><br><br>
-				<input type='hidden' name='protocol_ID' value='$protocol_ID'>
-				<input type='hidden' name='patient_ID' value='$patient_ID'>
+				<input type='hidden' name='visit_ID' value='$visit_ID'>
 				<input type='hidden' name='token' value='$uniqueID'>
 				<input type='submit' name='submit' value='submit'>
 			</form>

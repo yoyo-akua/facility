@@ -29,7 +29,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM protocol,patient,disp_drugs,visit WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID and disp_drugs.protocol_ID=protocol.protocol_ID AND onlylab=0 and checkout_time like '0000-00-00 00:00:00' AND checkin_time>(DATE_SUB('$today',INTERVAL 14 DAY)) $searchpara GROUP BY protocol.protocol_ID";
+	$query="SELECT * FROM protocol p,disp_drugs d,visit v WHERE p.visit_ID=v.visit_ID and d.prescription_protocol_ID=p.protocol_ID AND onlylab=0 and checkout_time like '0000-00-00 00:00:00' AND checkin_time>(DATE_SUB('$today',INTERVAL 100 DAY)) $searchpara GROUP BY v.visit_ID";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -112,7 +112,7 @@
 							".$patient->getLocality()."
 						</td>
 						<td>
-							<a href=\"patient_drugs.php?patient_ID=$row->patient_ID&protocol_ID=$row->protocol_ID\">dispense</a>
+							<a href=\"patient_drugs.php?visit_ID=$row->visit_ID\">dispense</a>
 						</td>
 					</tr>
 					";				

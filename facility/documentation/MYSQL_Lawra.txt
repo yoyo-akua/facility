@@ -575,7 +575,9 @@ UPDATE delivery SET del_category_ID=19 WHERE del_category_ID=100;
 UPDATE `delivery` SET `del_category_ID` = '40' WHERE `del_category_ID` = 29; 
 UPDATE `delivery` SET `del_category_ID` = '33' WHERE `del_category_ID` = 31; 
 UPDATE `delivery` SET `del_category_ID` = '32' WHERE `del_category_ID` = 40; 
-
+ALTER TABLE `disp_drugs` CHANGE `protocol_ID` `prescription_protocol_ID` INT(11) NOT NULL; 
+ALTER TABLE `disp_drugs` ADD `given_protocol_ID` INT NOT NULL AFTER `prescription_protocol_ID`;
+UPDATE disp_drugs SET given_protocol_ID=prescription_protocol_ID;
 
 new.php
 
