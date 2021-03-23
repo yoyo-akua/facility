@@ -358,5 +358,23 @@
 				echo"</select></div>";
 			}
 		}
+
+		/*
+		## This function is used whether a client has delivered throughout a visit to the facility. 
+		## The sent parameter $visit_ID is used to identify the visit at the facility. 
+		## The function returns the delivery ID of the delivery if there was one, otherwise it returns "false". 
+		*/
+		public static function check_delivery($visit_ID){
+			global $link; 
+			$query="SELECT * FROM delivery d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			if(! empty($object)){
+				$maternity_ID=$object->maternity_ID;
+			}else{
+				$maternity_ID=false;
+			}
+			return $maternity_ID;
+		}
 	}
 ?>

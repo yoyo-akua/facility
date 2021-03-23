@@ -1,19 +1,14 @@
-i<?php
+<?php
 	## Contains global variables and functions which are needed within this page.
 	include("setup.php");
 	
-	
-	## Initialise new object of patient by a certain patient-ID, with which the page is called
-	$patient_ID=$_GET['patient_ID'];
-	$patient=new Patient($patient_ID);
+	## Initialise new object of visit by a certain visit ID, with which the page is called.	
+	$visit_ID=$_GET['visit_ID'];
+	$visit=new Visit($visit_ID);
 
-	## Initialise new object of protocol by a certain protocol-ID, with which the page is called
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol= new Protocol($protocol_ID);
-
-	## Initialise new object of visit by a certain visit ID, with which the page is called
-	$visit_ID=$protocol->getVisit_ID();
-	$visit= new Visit($visit_ID);
+	## Initialise new object of patient by a certain patient-ID, which is stored in $visit.
+	$patient_ID=$visit->getPatient_ID();
+	$patient= new Patient($patient_ID);
 
 
 	## This if-branch is called, if a patient's diagnosis is protected ($visit->getprotect()==1) and the password hasn't been saved before.
@@ -95,23 +90,28 @@ i<?php
 	## Check if any complaints for the patient have been stated on that visit.
 	## If so, display them, using the function display_Complaints().
 	*/
-	$complaints=Complaints::display_Complaints($protocol_ID);
+	$complaints=Complaints::display_Complaints($visit_ID);
 	if(! empty($complaints)){
 		$html.= "<h2>Complaints</h2> $complaints";
 	}
 
 	## Check if patient was diagnosed, if so add the attending medical officer and the list of primary and secondary diagnoses to $html.
-	if(! empty(Diagnosis_IDs::getDiagnosis_IDs($protocol_ID))){
-		$staff=new Staff($protocol->getStaff_ID());
+	if(! empty(Diagnosis_IDs::getDiagnosis_IDs($visit_ID))){
+		$query="SELECT staff_ID FROM protocol p, diagnosis_ids d WHERE p.visit_ID=$visit_ID AND p.protocol_ID=d.protocol_ID";
+		$result=mysqli_query($link,$query);
+		$object=mysqli_fetch_object($result);
+
+		$staff_ID=$object->staff_ID;
+		$staff=new Staff($staff_ID);
 		$staff_name=$staff->getName();
 		$html.='
 				<h2>Diagnoses</h2>
 				<b>Attendant:</b> '.$staff_name.'<br>
-				'.$protocol->display_diagnoses('both');	
+				'.$visit->display_diagnoses('both');	
 	}
 
 	## Initialising variable $ANC_ID, which indicates, if the client has come for ANC, for delivery or neither of them.
-	$ANC_ID=$protocol->getANC_ID();
+	$ANC_ID=ANC::check_ANC($visit_ID);
 	
 	/*
 	## If the client has come for ANC ($ANC_ID not empty) and not delivery,
@@ -132,21 +132,26 @@ i<?php
 	## If so, the function Delivery::display_Delivery() is used add the records about the delivery to $html.
 	## ??? TODO $protocol->getDelivery gibt es nicht mehr!
 	*/
-	if($protocol->getDelivery()!=0){
-		$maternity_ID=$protocol->getDelivery();
+	if(Delivery::check_delivery($visit_ID)){
+		$maternity_ID=Delivery::check_delivery($visit_ID);
 		$html.="<h2>Delivery</h2>".Delivery::display_Delivery($maternity_ID,$visit_ID,'without vitals');
 	}
+
+	/*
+	## TODO anpassen, wenn die Funktionalitäten da sind. 
 
 	## Check if client came for PNC, if so, add that information to $html.
 	if($protocol->getPNC()==1){
 		$html.="<h2>PNC</h2>Client attended Postnatal Care";
 	}
+	
 
 	## Check if patient came for surgery, if so, the function Protocol::display_surgery() is used to add the particulars of the procedure to $html.
 	$surgery=$protocol->getsurgery();
 	if(! empty($surgery)){
 		$html.="<h2>Surgery</h2>".$protocol->display_surgery();
 	}
+	*/
 
 	## Check, if the patient has been referred for lab investigations, if so if-branch is opened.
 	if($visit->getLab_number()){
@@ -210,7 +215,7 @@ i<?php
 	$drugs_prescribed=Disp_Drugs::drugs_prescribed($protocol_ID);
 
 	if(! empty($drugs_prescribed)){
-		$drugs="<h2>Prescribed Drugs</h2>".Disp_Drugs::display_prescribed_drugs($visit_ID,'print');
+		$drugs="<h2>Prescribed Drugs</h2>".Disp_Drugs::display_prescribed_drugs($visit_ID,'print','both');
 		$drugs=str_replace('<u>','',$drugs);
 		$drugs=str_replace('</u>','',$drugs);
 		$html.=$drugs;

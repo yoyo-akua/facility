@@ -502,7 +502,7 @@
 							$complaints=new Complaints($visit_ID);
 							echo "
 								<tr>
-									<form action='patient_visit.php?patient_ID=$patient_ID&visit_ID=$visit_ID' method='post' autocomplete='off'>
+									<form action='patient_visit.php?visit_ID=$visit_ID' method='post' autocomplete='off'>
 										<td style='border-left:none'>
 											<input type='checkbox' name='coughing' value='1'";
 											if($complaints->getCoughing()==1){
@@ -815,10 +815,9 @@
 	
 
 	## If the client came for delivery, print the delivery record and a link for editing it.
-	$query="SELECT * FROM delivery d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID";
-	$result=mysqli_query($link,$query);
+	$delivery_ID=Delivery::check_delivery($visit_ID);
 
-	if(mysqli_num_rows($result)!==0){
+	if($delivery_ID){
 
 		$object=mysqli_fetch_object($result);
 		$maternity_ID=$object->maternity_ID;

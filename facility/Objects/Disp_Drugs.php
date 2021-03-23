@@ -411,8 +411,9 @@
 		## This function buffers HTML commands to display a list of all prescribed drugs of a certain patient.
 		## The drug's name, the amount as well as the unit of issue and the dosage recommendation is shown.
 		## The variables, which are sent when calling this function, have the following meaning:
-		##		- $protocol_ID links to the entire protocol entry of the patient,
-		##		- $function is responsible to display a delete icon behind each prescribed drug, if it is not set in read only modus.
+		##		- $visit_ID links to the visit entry of the patient,
+		##		- $function is responsible to display a delete icon behind each prescribed drug, if it is not set in read only modus
+		##		- $circumference describes whether only drugs which have already been issued are supposed to be displayed or only drugs which haven't been issued yet or both.
 		## The HTML buffer $html is returned.
 		*/
 		public function display_prescribed_drugs($visit_ID,$function,$circumference){
@@ -446,6 +447,8 @@
 			}
 
 			$drug_result=mysqli_query($link,$query);
+
+			
 			## This loop is run once for each prescribed drug of the patient.
 			while($row=mysqli_fetch_object($drug_result)){
 
