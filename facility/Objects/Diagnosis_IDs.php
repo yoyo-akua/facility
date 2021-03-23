@@ -108,7 +108,7 @@
 		*/
 		public static function getRemarks($visit_ID){
 			global $link;
-			$query = "SELECT remarks FROM diagnosis_ids WHERE remarks NOT LIKE '' AND protocol_ID = (SELECT protocol_ID FROM protocol WHERE visit_ID=$visit_ID ORDER BY protocol_ID DESC LIMIT 1)";
+			$query = "SELECT remarks FROM diagnosis_ids WHERE remarks NOT LIKE '' AND protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID=$visit_ID)";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
 			

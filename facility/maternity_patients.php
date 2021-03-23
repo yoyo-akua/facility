@@ -208,7 +208,7 @@
 			else{
 				echo"
 					<td>
-						<a href=\"new_maternity_client.php?patient_ID=$patient_ID&visit_ID=$visit_ID\">new client</a>
+						<a href=\"new_maternity_client.php?visit_ID=$visit_ID\">new client</a>
 					</td>
 				";
 			}

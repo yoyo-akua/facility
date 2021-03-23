@@ -69,7 +69,7 @@
 		$protocol_ID=$object2->protocol_ID;
 		
 		## Print this particular visit's vital signs and ANC data.
-		echo $ANC->display_ANC($protocol_ID,'date on');
+		echo $ANC->display_ANC('date on');
 
 		$vitals=Vital_Signs::display_admission_data($visit_ID);
 		if($vitals){
@@ -115,7 +115,7 @@
 		
 		## Print the delivery's records and a link to results of that day's visit.
 		echo"<h2>$date - Delivery</h2>".
-				Delivery::display_delivery($maternity_ID,$visit_ID).
+				Delivery::display_delivery($maternity_ID,$visit_ID,'').
 				"<br><br>
 				<a href='patient_visit.php?show=on&visit_ID=$visit_ID'><i class='fas fa-external-link-alt'></i> complete visit summary</a>";
 	}

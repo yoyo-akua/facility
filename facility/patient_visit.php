@@ -775,13 +775,15 @@
 	}
 	echo "</details>";
 
-
+	## The following content is displayed n the right side of the page.
+	echo"
+	</div>
+	<div class='columnright'>
+	";
 	## If client has come for ANC, print a summary of her pregnancy's data and this particular ANC visit.
-	## TODO Flo: wird gerade umgebaut durch Liebste
-	## bleibt solange auskommentiert
-	/*
-	$ANC_ID=$protocol->getANC_ID();
-	if(! empty($ANC_ID)){
+
+	$ANC_ID=ANC::check_ANC($visit_ID);
+	if($ANC_ID){
 		$ANC=new ANC($ANC_ID);
 		$maternity_ID=$ANC->getmaternity_ID();
 		$maternity=new Maternity($maternity_ID);
@@ -792,7 +794,7 @@
 				";
 		echo
 					$maternity->display_maternity('complete').
-					$ANC->display_ANC($protocol_ID,'date off')."
+					$ANC->display_ANC('date off')."</details>
 					<a href=\"complete_pregnancy.php?maternity_ID=$maternity_ID\"><div class ='box'>Pregnancy Overview</div></a>
 				";
 		
@@ -801,35 +803,36 @@
 		## this branch prints a link, that can be used to edit the ANC visit, 
 		## and one that leads to the list of patients in maternity.
 		*/
-		/*
+		
 		if(empty($_GET['show'])){
 			echo"
-					<a href=\"anc.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&edit=$ANC_ID\"><div class ='box'>edit ANC</div></a>
-					<a href='maternity_patients.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID'><div class ='box'>patients in maternity</div></a>
+					<a href=\"anc.php?ANC_ID=$ANC_ID&maternity_ID=$maternity_ID&visit_ID=$visit_ID\"><div class ='box'>edit ANC</div></a>
+					<a href='maternity_patients.php'><div class ='box'>patients in maternity</div></a><br><br>
 					";
 		}
 		echo"</details>";
 	}
-	*/
+	
 
 	## If the client came for delivery, print the delivery record and a link for editing it.
-	## TODO Flo: wird gerade umgebaut durch Liebste
-	## bleibt solange auskommentiert
-	/*
-	if($protocol->getDelivery()!=0){
-		$maternity_ID=$protocol->getDelivery();
+	$query="SELECT * FROM delivery d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID";
+	$result=mysqli_query($link,$query);
+
+	if(mysqli_num_rows($result)!==0){
+
+		$object=mysqli_fetch_object($result);
+		$maternity_ID=$object->maternity_ID;
 		echo"
 				<details>
 					<summary>
 						<h2>Delivery</h2>
 					</summary>
-					".Delivery::display_delivery($maternity_ID,$protocol_ID);
+					".Delivery::display_delivery($maternity_ID,$visit_ID,'without vitals');
 		if(empty($_GET['show'])){
-			echo "<a href=\"delivery.php?patient_ID=$patient_ID&protocol_ID=$protocol_ID&maternity_ID=$maternity_ID&edit=on\"><div class ='box'>edit Delivery</div></a>";
+			echo "<a href=\"delivery.php?visit_ID=$visit_ID&maternity_ID=$maternity_ID&edit=on\"><div class ='box'>edit Delivery</div></a>";
 		}
 		echo "</details>";
 	}
-	*/
 
 	/*
 	## This if-branch is called, if patient attended postnatal care.
@@ -873,11 +876,7 @@
 	}
 	*/
 
-	## The following content is displayed n the right side of the page.
-	echo"
-			</div>
-			<div class='columnright'>
-			";
+	
 
 	/*
 	## Check, if the patient has been referred for lab investigations.
@@ -992,7 +991,23 @@
 		## If pregnancy is between week 32 and 45 (and no delivery records are available), a button to add a delivery is printed.
 		*/
 		if($sex=='female' AND $age_exact>=10 AND $age_exact<=50 AND empty($ANC_ID) AND in_array('Maternity',$DEPARTMENTS)){
-			echo "<a href='anc.php?patient_ID=$patient_ID&visit_ID=$visit_ID'><div class ='box'>add ANC</div></a>";
+			
+			
+			/*
+			## Get client's pregnancy data from database.
+			## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
+			## If client has visited maternity in this facility, call the if-branch.
+			*/
+			$query="SELECT * FROM maternity WHERE patient_ID=$patient_ID ORDER BY maternity_ID DESC LIMIT 1";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			if(! empty($object)){
+				$maternity_ID=$object->maternity_ID;
+				echo "<a href=\"anc.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\"><div class ='box'>add ANC</div></a>";
+			}else{
+				echo "<a href=\"new_maternity_client.php?visit_ID=$visit_ID\"><div class ='box'>add ANC</div></a>";
+			}
+
 			$query="SELECT * FROM maternity WHERE patient_ID=$patient_ID ORDER BY maternity_ID DESC";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
@@ -1003,7 +1018,8 @@
 					$result=mysqli_query($link,$query);
 					$object=mysqli_fetch_object($result);
 					if(empty($object)){
-						echo "<a href='delivery.php?patient_ID=$patient_ID&visit_ID=$visit_ID&maternity_ID=$maternity_ID'><div class ='box'>add Delivery</div></a>";
+						echo "<a href=\"delivery.php?maternity_ID=$maternity_ID&visit_ID=$visit_ID\"><div class ='box'>add Delivery</div></a>";
+
 					}
 				}
 			}

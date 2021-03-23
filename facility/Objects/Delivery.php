@@ -124,14 +124,18 @@
 		##		- $maternity_ID contains the ID of the client's maternity which is necessary to retrieve the client's general pregnancy data. 
 		## This function returns the HTML buffer $html.
 		*/	
-		public function display_delivery($maternity_ID,$visit_ID){
+		public function display_delivery($maternity_ID,$visit_ID,$function){
 			
 			## Initialise objects of maternity (client's general pregnancy data) and protocol (that particular OPD visit's data).
 			$maternity=new Maternity($maternity_ID);
 
-			## Display the client's vital signs.
-			$html='<details><summary><h4><u>Vital Signs</u></h4></summary><div style="margin-left:10px">'.Vital_Signs::display_admission_data($visit_ID).'</div></details>';
-			
+			$html='';
+
+			if($function!=='without vitals'){
+				## Display the client's vital signs.
+				$html.='<details><summary><h4><u>Vital Signs</u></h4></summary><div style="margin-left:10px">'.Vital_Signs::display_admission_data($visit_ID).'</div></details>';
+			}
+
 			/*
 			## Initialise variable $lastcategory which is needed to determine whenever a new category/parameter of delivery entries begins,
 			## and print the corresponding headline.

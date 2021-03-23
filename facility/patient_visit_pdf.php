@@ -124,7 +124,7 @@ i<?php
 		$maternity=new Maternity($ANC->getmaternity_ID());
 		$html.="<h2>ANC</h2>".
 					$maternity->display_maternity('complete').
-					$ANC->display_ANC($protocol_ID,'date off');
+					$ANC->display_ANC('date off');
 	}
 	
 	/*
@@ -134,7 +134,7 @@ i<?php
 	*/
 	if($protocol->getDelivery()!=0){
 		$maternity_ID=$protocol->getDelivery();
-		$html.="<h2>Delivery</h2>".Delivery::display_Delivery($maternity_ID,$visit_ID);
+		$html.="<h2>Delivery</h2>".Delivery::display_Delivery($maternity_ID,$visit_ID,'without vitals');
 	}
 
 	## Check if client came for PNC, if so, add that information to $html.

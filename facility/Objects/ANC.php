@@ -210,7 +210,7 @@
 		##		- $date contains the information, whether the ANC visit's date is going to be displayed or not. 
 		## This function returns the HTML buffer $html.
 		*/	
-		public function display_ANC($protocol_ID,$date){
+		public function display_ANC($date){
 			
 			/*
 			## Initialise variables, which are needed within this function.
@@ -222,6 +222,8 @@
 			$TT=$this->TT;
 			$FHt=$this->FHt;
 			$fetal_heart=$this->fetal_heart;
+
+			$protocol_ID=$this->protocol_ID;
 			
 			$protocol=new Protocol($protocol_ID);
 			$visitdate=$protocol->getTimestamp();
@@ -272,6 +274,26 @@
 			}
 			return $html;
 		}
+
+		/*
+		## This function is used whether a client has visited ANC throughout a visit to the facility. 
+		## The sent parameter $visit_ID is used to identify the visit at the facility. 
+		## The function returns the ANC ID of the ANC if there was one, otherwise it returns "false". 
+		*/
+		public static function check_ANC($visit_ID){
+			global $link; 
+			$query="SELECT ANC_ID FROM anc a, protocol p WHERE p.protocol_ID=a.protocol_ID AND visit_ID=$visit_ID";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			if(! empty($object)){
+				$ANC_ID=$object->ANC_ID;
+			}else{
+				$ANC_ID=false;
+			}
+			return $ANC_ID;
+		}
 	}
+
+	
 
 ?>

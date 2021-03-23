@@ -585,7 +585,7 @@
 					}
 					else{
 						$ANC=new ANC($ANC_ID);
-						$ANC=$ANC->display_ANC($protocol_ID,'date off');
+						$ANC=$ANC->display_ANC('date off');
 					}
 				}
 				else{

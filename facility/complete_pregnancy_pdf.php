@@ -75,7 +75,7 @@
 		$protocol_ID=$object2->protocol_ID;		
 
 		## Add this particular visit's vital signs and ANC data to $html.		
-		$html.=$ANC->display_ANC($protocol_ID,'date on').'
+		$html.=$ANC->display_ANC('date on').'
 				<br><h4><u>Vital Signs</u></h4><br>'.(Vital_Signs::display_admission_data($visit_ID));
 
 		
@@ -145,7 +145,7 @@
 		
 		## Add the delivery's records to $html.
 		$html.='<h2>'.$date.' - Delivery</h2>'.
-					Delivery::display_Delivery($maternity_ID,$visit_ID);
+					Delivery::display_Delivery($maternity_ID,$visit_ID,'');
 	}
 
 	## Initialise variables for the name of the pdf and it's page format.
