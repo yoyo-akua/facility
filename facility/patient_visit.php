@@ -815,12 +815,9 @@
 	
 
 	## If the client came for delivery, print the delivery record and a link for editing it.
-	$delivery_ID=Delivery::check_delivery($visit_ID);
+	$maternity_ID=Delivery::check_delivery($visit_ID);
 
-	if($delivery_ID){
-
-		$object=mysqli_fetch_object($result);
-		$maternity_ID=$object->maternity_ID;
+	if($maternity_ID){
 		echo"
 				<details>
 					<summary>

@@ -114,6 +114,8 @@
 	## depending on the selection "yes" or "no" this parameter is added to search parameters the current search is based on and 
 	## buffered in $parameter to display the user all chosen search parameters later.
 	*/
+	/*
+	TODO: Integrieren in neue Datenbank
 	if(! empty($_POST['enteredfilter'])){
 		$var = $_POST['enteredradio'];
 		$searchpara .= " AND entered=$var";
@@ -123,7 +125,7 @@
 			$parameter.="- are not entered in NHIS Calim It<br>";
 		}
 	}
-
+	*/
 	/*
 	## If the user is searching only patients that have (not) been in the facility this year (and checking the checkbox),
 	## depending on the selection "old" or "new" this parameter is added to search parameters the current search is based on and 
@@ -156,7 +158,7 @@
 	## depending on the selection "male" or "female" this parameter is added to search parameters the current search is based on and 
 	## buffered in $parameter to display the user all chosen search parameters later.
 	*/
-	if(! empty($_POST['Sexfilter'])){
+	if(! empty($_POST['Sexfilter']) AND ! empty($_POST['Sex'])){
 		$var = $_POST['Sex'];
 		$searchpara .= " AND Sex like '$var'";
 		$parameter.="- are $var<br>";
@@ -209,7 +211,7 @@
 	*/
 	if(! empty($_POST['noconsulting'])){
 		$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID GROUP BY protocol.protocol_ID";
-		$searchpara.=" AND (protocol.protocol_ID NOT IN ($subquery) AND referral='' AND remarks='')";
+		$searchpara.=" AND (protocol.protocol_ID NOT IN ($subquery))";
 		$parameter.="- were not consulted<br>";
 	}
 
@@ -277,7 +279,7 @@
 				$radio=$_POST["radio_$Diagnosis_ID"];
 				$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND diagnosis_id='$Diagnosis_ID' AND importance='$radio'";
 				$searchpara.=" AND protocol_ID IN ($subquery)";
-				$parameter.="- was diagnosed with $Diagnosisname";
+				$parameter.="- were diagnosed with $Diagnosisname";
 				
 				if($radio==1){
 					$parameter.="(primary)";
@@ -298,7 +300,7 @@
 			else{
 				$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND diagnosis_id='$Diagnosis_ID'";
 				$searchpara.=" AND protocol_ID IN ($subquery)";
-				$parameter.="- was diagnosed with $Diagnosisname<br>";
+				$parameter.="- were diagnosed with $Diagnosisname<br>";
 			}
 		}
 	}
@@ -325,7 +327,7 @@
 				$searchpara .= " AND charge not like '0.00'";
 			}else{
 				$searchpara .= " AND charge like '0.00'";
-				$parameter.="- were charged<br>";
+				$parameter.="- were not charged<br>";
 			}
 		}
 	}
@@ -338,7 +340,7 @@
 	if(! empty($_POST['Lab_IDfilter']) AND !empty($_POST['Lab_ID'])){
 		$var=$_POST['Lab_ID'];
 		$tables.=",lab_list";
-		$IDs.=" AND lab_list.protocol_ID=protocol.protocol_ID";
+		$IDs.=" AND lab_list.visit_ID=protocol.visit_ID";
 		$searchpara .= " AND lab_list.lab_number like '$var'";
 		$parameter.="- have Lab Number $var<br>";	
 	}
@@ -352,9 +354,9 @@
 	if(! empty($_POST['alllab']) OR strstr(http_build_query($_POST),'testfilter') OR ! empty($_POST['other_facility'])){
 		
 		## Completing variables to add the lab database table to the search.
-		$IDs.=" and lab.protocol_ID=protocol.protocol_ID";
+		$IDs.=" and lab.protocol_ID_ordered=protocol.protocol_ID";
 		$tables.=",lab";
-		$grouping.=", lab.protocol_ID";
+		$grouping.=", lab.protocol_ID_ordered";
 		
 		/*
 		## If the user explicitly searchs for all lab patients (including the self-paying ones),
@@ -578,6 +580,7 @@
 	}
 
 	/*
+	## TODO: anpassen, wenn PNC fertig
 	## If the user is searching for patients, that did attend PNC,
 	## the search parameter is added to the search parameters the current search is based on,
 	## and is buffered in $parameter to display the user all chosen search parameters later.
@@ -626,7 +629,7 @@
 		
 			## Completing variables to add the anc database table to the search.
 			$tables.=",anc";
-			$IDs.=" AND protocol.ANC_ID=anc.ANC_ID";
+			$IDs.=" AND protocol.protocol_ID=anc.protocol_ID";
 
 			/*
 			## If the user is searching for patients, that came for a certain (number of) visit (e.g. 1st, 2nd, 3rd),
@@ -710,13 +713,10 @@
 	##		- or delivered singles (or twins).
 	*/
 	if(! (empty($_POST['week_filter']) AND empty($_POST['week']))
-		OR ! empty($_POST['newANC'])
-		OR ! (empty($_POST['parity_filter']) AND empty($_POST['parity_from']) AND empty($_POST['parity_to'])) 
-		OR ! (empty($_POST['trimester_filter']) AND empty($_POST['trimester']))
-		OR ! (empty($_POST['EDDfilter']) AND empty($_POST['EDDfrom']) AND empty($_POST['EDDto']))
-		OR ! empty($_POST['alldeliveries']) 
-		OR ! (empty($_POST['babyweight_filter']) AND empty($_POST['babyweight_from']) AND empty($_POST['babyweight_to']))
-		OR (! empty($_POST['single_filter']))){
+	OR ! empty($_POST['newANC'])
+	OR ! (empty($_POST['parity_filter']) AND empty($_POST['parity_from']) AND empty($_POST['parity_to'])) 
+	OR ! (empty($_POST['trimester_filter']) AND empty($_POST['trimester']))
+	OR ! (empty($_POST['EDDfilter']) AND empty($_POST['EDDfrom']) AND empty($_POST['EDDto']))){
 		
 		## Completing variable to add the maternity database table to the search.
 		$tables.=",maternity";
@@ -837,7 +837,9 @@
 			OR (! empty($_POST['single_filter']))){
 			
 			## Complete variable to add the maternity database table to the search and exclude all non delivery cases.
-			$IDs.=" AND maternity.patient_ID=patient.patient_ID AND protocol.delivery not like ''";
+			$tables.=",delivery";
+			$IDs.=" AND protocol.protocol_ID=delivery.protocol_ID";
+			$parameter.="- delivered<br>";
 
 			/*
 			## If the user is searching for single (or twin) deliveries,
@@ -935,7 +937,7 @@
 	## the current search is based on and buffered in $parameter to display the user all chosen search parameters later.
 	*/		
 	if(! empty($_POST['alldrugs'])){
-		$subquery="SELECT protocol.protocol_ID FROM protocol,disp_drugs WHERE protocol.protocol_ID=disp_drugs.protocol_ID";
+		$subquery="SELECT protocol.protocol_ID FROM protocol,disp_drugs WHERE protocol.protocol_ID=disp_drugs.prescription_protocol_ID";
 		$searchpara.=" and protocol.protocol_ID IN($subquery)";
 		$parameter.="- were prescribed drugs to<br>";
 	}
@@ -946,7 +948,7 @@
 	## the current search is based on and buffered in $parameter to display the user all chosen search parameters later.
 	*/	
 	if(! empty($_POST['nodrugs'])){
-		$subquery="SELECT protocol.protocol_ID FROM protocol,disp_drugs WHERE protocol.protocol_ID=disp_drugs.protocol_ID";
+		$subquery="SELECT protocol.protocol_ID FROM protocol,disp_drugs WHERE protocol.protocol_ID=disp_drugs.prescription_protocol_ID";
 		$searchpara.=" and protocol.protocol_ID NOT IN($subquery)";
 		$parameter.="- were not prescribed drugs to<br>";
 	}
@@ -958,7 +960,7 @@
 	## the current search is based on and buffered in $parameter to display the user all chosen search parameters later.
 	*/				
 	if(! empty($_POST['facilitydrugs'])){
-		$subquery="SELECT protocol.protocol_ID FROM disp_drugs,protocol WHERE protocol.protocol_ID=disp_drugs.protocol_ID AND Counts not like ''";
+		$subquery="SELECT protocol.protocol_ID FROM disp_drugs,protocol WHERE protocol.protocol_ID=disp_drugs.prescription_protocol_ID AND Counts not like ''";
 		$searchpara.=" AND protocol.protocol_ID IN ($subquery)";
 		$parameter.="- received drugs in the dispensary<br>";
 	}
@@ -989,7 +991,7 @@
 			## the current search is based on and buffered in $parameter to display the user all chosen search parameters later.
 			*/							
 			if(! empty($_POST["drug_$Drug_ID"])){
-				$subquery="SELECT protocol.protocol_ID FROM disp_drugs,protocol WHERE protocol.protocol_ID=disp_drugs.protocol_ID AND Drug_ID='$Drug_ID'";
+				$subquery="SELECT protocol.protocol_ID FROM disp_drugs,protocol WHERE protocol.protocol_ID=disp_drugs.prescription_protocol_ID AND Drug_ID='$Drug_ID'";
 				## If the user only wants patients who really received the drug in the dispensary, add this parameter to the subordinate query.
 				if(! empty($_POST['facilitydrugs'])){
 					$subquery.=" AND Counts not like ''";
@@ -1019,10 +1021,10 @@
 	if(! empty($_POST['circumcision_filter']) AND ! empty($_POST['circumcisions'])){
 		if($_POST['circumcisions']=='circumcision'){
 			$searchpara.=" AND surgery like '%circumcision%'";
-			$parameter.="- was performed circumcision on<br>";
+			$parameter.="- were performed circumcision on<br>";
 		}else{
 			$searchpara.=" AND surgery not like '%circumcision%'";
-			$parameter.="- was performed procedure (other than circumcision) on<br>";
+			$parameter.="- were performed procedure (other than circumcision) on<br>";
 		}
 	}
 
@@ -1107,8 +1109,9 @@
 
 				<td><details>
 				<summary><div><div class="smalltile">OPD<br><i class="fas fa-id-card-alt fa-2x"></i></div></div></summary>
-				<br><a class="button" href="OPD_report.php?from='.$from.'&to='.$to.'">create report</a><br><br>
-				
+				<br><a class="button" href="OPD_report.php?from='.$from.'&to='.$to.'">create report</a><br><br>';
+				/*
+				TODO: Integrieren in neue Datenbank
 				<div><label>Entered in NHIS Claim It:</label><br>
 				<input type="checkbox" name="enteredfilter" ';
 					if(! empty($_POST['enteredfilter'])){
@@ -1126,7 +1129,8 @@
 					}
 					echo'>no
 				</div>		  
-				
+				*/
+				echo'
 				<div><label>Old/New:</label><br>
 				<input type="checkbox" name="newfilter" ';
 					if(! empty($_POST['newfilter'])){
@@ -1170,12 +1174,12 @@
 					}
 					echo'>            
 				<input type="radio" name="Sex" value="Male" ';
-					if(! empty($_POST['Sex']) AND $_POST['Sex']=='male'){
+					if(! empty($_POST['Sex']) AND $_POST['Sex']=='Male'){
 						echo "checked='checked'";
 					}
 					echo'>male
 				<input type="radio" name="Sex" value="Female" ';
-					if(! empty($_POST['Sex']) AND $_POST['Sex']=='female'){
+					if(! empty($_POST['Sex']) AND $_POST['Sex']=='Female'){
 						echo "checked='checked'";
 					}
 					echo'>female       
@@ -2215,7 +2219,9 @@
 		## Initialise objects of patient and its visit, by using the correspondent IDs.
 		$patient = new Patient($row->patient_ID);
 		$protocol = new Protocol($row->protocol_ID);
-		$visit = new Visit($row->visit_ID);
+
+		$visit_ID=$row->visit_ID;
+		$visit = new Visit($visit_ID);
 		
 		## Print the table row for the patient (visit).
 		$patient->shorttablerow($row->visit_ID,$previous,$columns);
@@ -2226,13 +2232,13 @@
 		}
 		
 		## If the patient visited ANC (or delivered), call this if-branch.
-		$ANC_ID=$protocol->getANC_ID();
-		$Delivery=$protocol->getDelivery();
-		if(! empty($ANC_ID) OR $Delivery!=0){
+		$ANC_ID=ANC::check_ANC($visit_ID);
+		$delivery=Delivery::check_delivery($visit_ID);
+		if($ANC_ID OR $delivery){
 			
 			## Inquire the ID of the correspoding pregnancy to client's visit.
-			if($Delivery!=0){
-				$maternity_ID=$Delivery;
+			if($delivery){
+				$maternity_ID=$delivery;
 			}else{
 				$maternity_ID=(new ANC($ANC_ID))->getmaternity_ID();
 			}
