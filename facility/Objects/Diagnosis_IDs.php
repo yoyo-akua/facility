@@ -119,5 +119,23 @@
 			}		
 			return $remarks;
 		}
+
+		/*
+		## This function is used whether a client has received the diagnosis of a particular disease throughout a visit to the facility. 
+		## The sent parameter $visit_ID is used to identify the visit at the facility. 
+		## The function returns a boolean with the values true or false, depending on the existnece of a previous diagnosis or not. 
+		*/
+		public function check_Diagnosis($visit_ID,$diagnosis_ID){
+			global $link; 
+			$query="SELECT * FROM diagnosis_ID d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID AND diagnosis_ID=$diagnosis_ID";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			if(! empty($object)){
+				$given=true;
+			}else{
+				$given=false;
+			}
+			return $given;
+		}
 	}
 ?>

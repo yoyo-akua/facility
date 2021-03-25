@@ -135,10 +135,9 @@
 						$result2=mysqli_query($link,$query2);
 						$object2=mysqli_fetch_object($result2);
 						$patient_name=$object2->Name;
-						$protocol_ID=$object2->protocol_ID;
-						$patient_ID=$object2->patient_ID;
+						$visit_ID=$object2->visit_ID;
 	
-						echo "<a href='patient_visit.php?show=on&protocol_ID=$protocol_ID&patient_ID=$patient_ID'>$patient_name</a>";
+						echo "<a href='patient_visit.php?show=on&visit_ID=$visit_ID'>$patient_name</a>";
 					}
 					echo"
 				</td>

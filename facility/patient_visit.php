@@ -173,9 +173,11 @@
 	## Call this if-branch in case the user is submitting the selection of diagnoses.
 	if(! empty($_POST['submit'])){
 
+		/*
 		## Create a new protocol entry to document the submitted diagnosis
 		$protocol=Protocol::new_Protocol($visit_ID, "new diagnoses entered");
 		$protocol_ID = $protocol->getProtocol_ID();
+		*/
 
 		## Initialise variables with submitted patient's complaints
 		if(! empty($_POST['coughing'])){
@@ -223,6 +225,7 @@
 		}
 		else {
 			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
+			protocol::new_Protocol($visit_ID,'complaints entered');
 		}
 
 		/*
@@ -253,13 +256,19 @@
 					$importance=3;
 				}
 				
+				## Call this function to check whether this diagnosis has been saved for the client before. 
+				$given=Diagnosis_IDs::check_Diagnosis($visit_ID,$Diagnosis_ID);
 
 				/*
-				## This if-branch is used to make sure only one primary diagnosis is selected. 
-				## It creates the database entry for the diagnosis using the function new_Diagnosis_IDs.
+				## This if-branch is used to make sure only one primary diagnosis is selected and the same diagnosis is not entered several times. 
+				## It creates the database entry for the diagnosis using the function new_Diagnosis_IDs and if no protocol entry has been created before, create a protocol entry for the diagnoses.
 				## Within this if-branch it is also checked whether the diagnosis was also selected as provisional diagnosis and if so, stored as such in database.
 				*/
-				if(! $primgiven OR $importance!==1){
+				if(! $given AND(! $primgiven OR $importance!==1)){
+					if(! isset($diagnosis_protocol)){
+						$diagnosis_protocol=protocol::new_Protocol($visit_ID,'new diagnoses entered');
+						$protocol_ID=$protocol->getProtocol_ID();
+					}
 					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
 					$protocol->setStaff_ID($_SESSION['staff_ID']);
 					if($importance==1){
@@ -285,13 +294,7 @@
 			Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,0,0);
 		}
 
-		/*
-		## This if-branch is called, if the user is submitting a new or updated patient's diagnosis,
-		## If the attendant is known, his or her name is documented in database
-		*/
-		if ($stop==false){
-			$protocol->setStaff_ID($_SESSION['staff_ID']);
-		}
+		
 	}
 
 	## In the following, print content on the left hand side of the patient's diagnosis page.
@@ -345,13 +348,14 @@
 			
 			
 			## ???
-			##TODO Flo
-			##Muss auf visit_ID umgestellt werden 
-			##Bleibt solange auskommentiert
-			/*
 			if(! empty($_POST['referral'])){
 				if(! Referral::checkReferral($visit_ID)){
+					$protocol=protocol::new_Protocol($visit_ID,'patient referred');
+					$protocol_ID=$protocol->getProtocol_ID();
+
 					Referral::new_Referral($protocol_ID,$_POST['referredto'],$_POST['refer_reason']);
+
+					$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
 				}else{
 					$referral=new Referral(Referral::checkReferral($visit_ID));
 					$referral->setDestination($_POST['referredto']);
@@ -359,10 +363,13 @@
 				}
 			}else{
 				if(Referral::checkReferral($visit_ID)){
-					Referral::delete_Referral(Referral::checkReferral($visit_ID));
+					$protocol_ID=Referral::checkReferral($visit_ID);
+					Referral::delete_Referral($protocol_ID);
+					Protocol::delete_Protocol($protocol_ID);
+
+					$visit->setCheckout_time('0000-00-00 00:00:00');
 				}
 			}
-			*/
 
 			/*
 			## Check if the user selected the checkbox for referring a patient for nutrition management.
@@ -416,7 +423,7 @@
 			## Add notice to database after the patient's treatment was tagged as completed.
 			if(! empty($_POST['completed'])){
 				$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
-			}else{
+			}else if(! empty($_POST['referral'])){
 				$visit->setCheckout_time('0000-00-00 00:00:00');
 			}
 		}
