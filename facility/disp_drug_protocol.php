@@ -131,7 +131,7 @@
 					## display the name and a link to his results in the second column.
 					*/
 					else{
-						$query2="SELECT * FROM protocol,patient,disp_drugs,visit WHERE protocol.visit_ID=visit.visit_ID AND visit.patient_ID=patient.patient_ID AND protocol.protocol_ID=disp_drugs.protocol_ID AND Disp_Drugs_ID='".$row->Disp_Drugs_ID."'";
+						$query2="SELECT * FROM protocol,patient,disp_drugs,visit WHERE protocol.visit_ID=visit.visit_ID AND visit.patient_ID=patient.patient_ID AND protocol.protocol_ID=disp_drugs.given_protocol_ID AND Disp_Drugs_ID='".$row->Disp_Drugs_ID."'";
 						$result2=mysqli_query($link,$query2);
 						$object2=mysqli_fetch_object($result2);
 						$patient_name=$object2->Name;
