@@ -414,6 +414,11 @@
 		*/
 		public function nutrition_visit($protocol_ID,$age){
 
+			## Initialise new object of protocol and inquire the ID of the patient's visit.
+			$protocol=new protocol($protocol_ID);
+			$visit_ID=$protocol->getVisit_ID();
+
+
 			/*
 			## Get data from database. 
 			## Get the vital signs which were previously taken for the patient on that visit.
@@ -437,7 +442,7 @@
 			## Inquire whether there already existis a nutrition entry, if not create a new one.
 			## Assign the previously entered (or newly created, empty) values to $nutrition. 
 			*/
-			if(Nutrition::nutritionBoolean($protocol_ID)){
+			if(Nutrition::nutritionBoolean($visit_ID)){
 				$nutrition=new Nutrition($protocol_ID);
 			}else{
 				$nutrition=Nutrition::new_Nutrition($protocol_ID);
@@ -503,7 +508,7 @@
 						</tr>
 						<tr>
 							<td style='border-left:none'>
-								<input type='number' name='height' min='0' step='0.1' oninput='PrefillBMI()' value='$vitals->height'> cm
+								<input type='number' name='height' min='0' step='0.1' oninput='PrefillBMI($protocol_ID)' value='$vitals->height'> cm
 							</td>";
 							if($age<6){
 								echo "<td><input type='checkbox' name='infantometer'";
@@ -514,7 +519,7 @@
 							}
 							echo"
 							<td>
-								<input type='number' name='weight' min='0' step='0.1' oninput='PrefillBMI()' value='$vitals->weight'> kg
+								<input type='number' name='weight' min='0' step='0.1' oninput='PrefillBMI($protocol_ID)' value='$vitals->weight'> kg
 							</td>
 							<td id='BMI'>
 							</td>
@@ -539,7 +544,7 @@
 					<br>
 					<input type='checkbox' name='completed'> treatment in clinic completed<br>
 					<input type='submit' name='nutrition' value='submit' style='margin-left:0px'><br>
-					<input type='hidden' name='protocol_ID' value='$protocol_ID'>
+					<input type='hidden' name='visit_ID' value='$visit_ID'>
 					"; 
 			}
 			
@@ -585,8 +590,14 @@
 
 			## In case the user is not in "display mode", print a link to the overview with all nutrition patients. 
 			if(empty($_GET['show'])){
-				echo "<a href='nutrition_patients.php'><div class ='box'>patients in nutrition office</div></a><br>";
+				if(! empty($_GET['nutrition'])){
+					echo"<a href='patient_visit.php?visit_ID=$visit_ID&edit=on'><div class ='box'>edit results</div></a>";
+				}
+				echo "<a href='nutrition_patients.php'><div class ='box'>patients in nutrition office</div></a>";
+
 			}
+
+			
 			echo "</details>";
 		}
 

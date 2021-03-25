@@ -9,6 +9,7 @@
     include_once("../Objects/DB.php");
     include_once("../Objects/Patient.php");
     include_once("../Objects/Protocol.php");
+    include_once("../Objects/Visit.php");
     include_once("variables.php");
     include_once("../Objects/Nutrition.php");
 
@@ -16,6 +17,6 @@
     $BMI=$_POST['BMI'];
 
     $output=Nutrition::classify_BMI($protocol_ID,$BMI);
-    
-    echo json_encode($output);
+
+    echo $output;
 ?>

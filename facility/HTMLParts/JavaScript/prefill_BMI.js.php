@@ -1,7 +1,7 @@
 <script type="text/javascript">
 
     // This function is used to calculate and prefill the amount of drugs from the dosage recommendation when prescribing them.
-    function PrefillBMI() {
+    function PrefillBMI(protocol_ID) {
         var height=document.getElementsByName('height')[0].value/100;
         var weight=document.getElementsByName('weight')[0].value;
 
@@ -9,8 +9,6 @@
 
         document.getElementById('BMI').innerHTML= BMI;
         document.getElementById('BMIflag').style.display = "block";
-
-        var protocol_ID="<?= $_GET['protocol_ID']; ?>";
 
         $.ajax({
 
@@ -22,8 +20,9 @@
             data: {protocol_ID: protocol_ID, BMI: BMI},
 
             success:function(data){
-                var classification = jQuery.parseJSON(data);
+                var classification =data;
                 
+
                 document.getElementById('BMIflag').innerHTML=classification;
             }
         })

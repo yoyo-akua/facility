@@ -14,10 +14,7 @@
 	$patient=new Patient($patient_ID);
 
 	## Inquire whether the patient has received nutrition management for this visit.
-	##TODO Flo: müsste noch umgebaut werden und über visit-ID ermittelt werden
-	## Liebste muss sich erst entscheiden, ob es in eine gesonderte DB-Tabelle ausgelagert werden soll
-	## Solange bleibt es erstmal auskommentiert
-	#$nutrition=Nutrition::nutritionBoolean($protocol_ID);
+	$nutrition=Nutrition::nutritionBoolean($visit_ID);
 
 	/*
 	## Check, whether the patient's diagnosis is protected.
@@ -106,8 +103,9 @@
 	## Inquire whether the patient has come to the facility before, if so initialise variable $ID_last with the ID of the previous visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$querylast="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkout_time<='$date' ORDER BY checkout_time DESC LIMIT 0,1";
+	$querylast="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkout_time<='$date 00:00:00' ORDER BY checkout_time DESC LIMIT 0,1";
 	$resultlast=mysqli_query($link,$querylast);
+
 	if(mysqli_num_rows($resultlast)!==0){
 		#$ID_last=mysqli_fetch_object($resultlast)->protocol_ID;
 		$ID_last=mysqli_fetch_object($resultlast)->visit_ID;
@@ -118,8 +116,9 @@
 	## Inquire whether the patient has come to the facility later on, if so initialise variable $ID_next with the ID of the next visit.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	*/
-	$querynext="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkin_time>='$date' ORDER BY checkin_time ASC LIMIT 0,1";
+	$querynext="SELECT visit_ID FROM visit WHERE patient_ID=$patient_ID AND checkin_time>='$date 23:59:59' ORDER BY checkin_time ASC LIMIT 0,1";
 	$resultnext=mysqli_query($link,$querynext);
+
 	if(mysqli_num_rows($resultnext)!==0){
 		#$ID_next=mysqli_fetch_object($resultnext)->protocol_ID;
 		$ID_next=mysqli_fetch_object($resultnext)->visit_ID;
@@ -130,7 +129,7 @@
 
 	## In case the client has come before, print a link to that's visits summary.
 	if(isset($ID_last)){
-		echo '<a href="patient_visit.php?show=on&visit_ID='.$ID_last.'&patient_ID='.$patient_ID.'"><i class="fa fa-caret-left" aria-hidden="true"></i></a>';
+		echo '<a href="patient_visit.php?show=on&visit_ID='.$ID_last.'"><i class="fa fa-caret-left" aria-hidden="true"></i></a>';
 	}
 	
 	## Print the date o
@@ -138,7 +137,7 @@
 
 	## In case the client has come again later on, print a link to that's visits summary.
 	if(isset($ID_next)){
-		echo '<a href="patient_visit.php?show=on&visit_ID='.$ID_next.'&patient_ID='.$patient_ID.'"><i class="fa fa-caret-right" aria-hidden="true"></i></a>';
+		echo '<a href="patient_visit.php?show=on&visit_ID='.$ID_next.'"><i class="fa fa-caret-right" aria-hidden="true"></i></a>';
 	}
 
 
@@ -370,11 +369,9 @@
 			## In case he did and the patient has no such entry for this visit yet, add an empty nutrition entry for the user.
 			## In case the user is trying to delete an existing nutrition entry, jump into the else branch.
 			*/
-			##TODO Flo: müsste noch umgebaut werden und über visit-ID ermittelt werden
-			## Solange bleibt es erstmal auskommentiert
-			/*
 			if(! empty($_POST["refer_nutrition"]) AND ! $nutrition){
-				
+				$protocol=protocol::new_Protocol($visit_ID,'nutrition management');
+				$protocol_ID=$protocol->getProtocol_ID();
 				Nutrition::new_Nutrition($protocol_ID);
 			}else if(empty($_POST['refer_nutrition']) AND $nutrition){
 
@@ -385,7 +382,7 @@
 				## Check if any data have been entered already for nutrition management, if so alert the user and prevent the deletion of the entry.
 				## Otherwise delete the nutrition entry from the database.
 				*/
-				/*
+				
 				if(! empty($nutrition_management->getManagement()) OR ! empty($nutrition_management->getNutrition_remarks())){
 					echo"
 						<script>
@@ -398,7 +395,7 @@
 					$nutrition=false;
 				}
 			}
-			*/
+			
 			
 			## Add any remarks from the consultant to the diagnosis.
 			## TODO Flo: muss noch umgebaut werden
@@ -931,14 +928,14 @@
 	## Inquire whether any nutrition data are requested or saved for the patient.
 	## If so call the function containing the corresponding code (Vital_Signs::nutrition_visit()).
 	*/
-	##TODO Flo: muss erst noch umgebaut werden
-	## bleibt solange auskommentiert
-	/*
-	$nutrition_entry=new Nutrition($protocol_ID);
-	if(! empty($_GET['nutrition']) OR ($nutrition AND ((! empty($nutrition_entry->getNutrition_remarks()) OR ! empty($nutrition_entry->getManagement())) OR ! empty($_GET['edit'])))){
-		Vital_Signs::nutrition_visit($protocol_ID, $age_exact);
+	if($nutrition){
+		$nutrition_entry=new Nutrition($nutrition);
+		if(! empty($_GET['nutrition']) OR ($nutrition AND ((! empty($nutrition_entry->getNutrition_remarks()) OR ! empty($nutrition_entry->getManagement())) OR ! empty($_GET['edit'])))){
+			Vital_Signs::nutrition_visit($nutrition, $age_exact);
+		}
 	}
-	*/
+	
+	
 
 	/*
 	## If there were any, print a list of all prescribed drugs with information about drug name, amount, unit and dosage recommendation.

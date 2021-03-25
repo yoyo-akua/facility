@@ -60,19 +60,21 @@
 			return $this->BMI_classification = $var;
 		}
 
-		public static function nutritionBoolean($protocol_ID){
+		public static function nutritionBoolean($visit_ID){
 			global $link;
-			$query="SELECT * FROM nutrition WHERE protocol_ID=$protocol_ID";
+			$query="SELECT * FROM nutrition n,protocol p WHERE n.protocol_ID=p.protocol_ID AND p.visit_ID=$visit_ID";
 			$result=mysqli_query($link,$query);
 			
 			if(mysqli_num_rows($result)!==0){
-				$nutrition=true;
+				$nutrition=mysqli_fetch_object($result)->protocol_ID;
 			}else{
 				$nutrition=false;
 			}
 
 			return $nutrition;
 		}
+
+
 		public static function classify_BMI($protocol_ID,$BMI){
 			
 			global $link;

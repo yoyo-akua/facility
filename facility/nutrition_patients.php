@@ -28,7 +28,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID AND checkout_time like '0000-00-00 00:00:00' AND onlylab=0 $searchpara AND patient.patient_ID IN (SELECT patient_ID FROM nutrition,protocol WHERE protocol.protocol_ID=nutrition.protocol_ID AND protocol.timestamp>(DATE_SUB('$today',INTERVAL 1 YEAR))) ORDER BY checkin_time ASC";
+	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID AND checkout_time like '0000-00-00 00:00:00' AND onlylab=0 $searchpara AND patient.patient_ID IN (SELECT patient_ID FROM nutrition,protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND protocol.protocol_ID=nutrition.protocol_ID AND protocol.timestamp>(DATE_SUB('$today',INTERVAL 1 YEAR))) ORDER BY checkin_time ASC";
 	$result = mysqli_query($link,$query);
 
 	/*
@@ -73,7 +73,7 @@
 			$patient = new Patient($row->patient_ID);
 			
 			## Print a new table row for created patient object.
-			$patient->currenttablerow($row->protocol_ID);
+			$patient->currenttablerow();
 			
 			
 			/*
@@ -85,7 +85,7 @@
 			*/
 			echo"
 				<td>
-					<a href=\"patient_visit.php?protocol_ID=$row->protocol_ID&nutrition=enter\">Nutrition Management</a>
+					<a href=\"patient_visit.php?visit_ID=$row->visit_ID&nutrition=enter\">Nutrition Management</a>
 				</td>
 				";
 		}
