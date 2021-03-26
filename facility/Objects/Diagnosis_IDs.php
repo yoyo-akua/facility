@@ -8,17 +8,52 @@
 		private $importance;		## Either primary or secondary diagnosis.
 		
 		/*
+		## This function is called, if a client's diagnosis object is needed for further actions.
+		## Saves the information of that client's diagnosis from database (identified by client's protocol ID) in that diagnosis object.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public function Diagnosis_IDs($diagnosis_entry_ID){
+			global $link;
+			$query = "SELECT * FROM diagnosis_ids WHERE diagnosis_entry_ID = '$diagnosis_entry_ID'";
+			$result = mysqli_query($link,$query);
+			while($row = mysqli_fetch_object($result)){
+				$this->protocol_ID = $row->protocol_ID;
+				$this->diagnosis_ID = $row->diagnosis_ID;
+				$this->importance = $row->importance;
+				$this->remarks = $row->remarks;
+				$this->reattendance = $row->reattendance;
+
+			}
+			$this->diagnosis_entry_ID = $diagnosis_entry_ID;
+		}
+
+		/*
 		## Constructor of new diagnosis entry.
 		## Is called, if a new diagnosis database entry is created.
 		## The data of new diagnosis is saved in database for all its parameters.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function new_Diagnosis_IDs($protocol_ID,$diagnosis_ID,$importance){
+		public static function new_Diagnosis_IDs($protocol_ID,$diagnosis_ID,$importance,$remarks,$reattendance){
 			global $link;
-			$query = "INSERT INTO `diagnosis_ids`(`protocol_ID`,`diagnosis_ID`,`importance`) VALUES ('$protocol_ID','$diagnosis_ID','$importance')";
+			$query = "INSERT INTO `diagnosis_ids`(`protocol_ID`,`diagnosis_ID`,`importance`,`remarks`,`reattendance`) VALUES ('$protocol_ID','$diagnosis_ID','$importance','$remarks','$reattendance')";
 			mysqli_query($link,$query);
 		}
-		
+		/*
+		## Getter function.
+		## Returns the remarks on a diagnosis, on which the function is called.
+		*/
+		public function getRemarks(){
+			return $this->remarks;
+		}
+
+		/*
+		## Getter function.
+		## Returns the protocol ID of a diagnosis, on which the function is called.
+		*/
+		public function getProtocol_ID(){
+			return $this->protocol_ID;
+		}
+
 		/*
 		## Getter function.
 		## Returns an array of the patient's diagnosis IDs of that visit, 
@@ -43,23 +78,11 @@
 		/*
 		## Getter function.
 		## Returns whether a specific diagnosis is primary or secondary.
-		## Only the diagnosis of the newest protocol entry, 
-		## which belongs to the current patient's visit, is observed.
+		## Only the diagnosis of the newest protocol entry.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public function getImportance($visit_ID,$diagnosis_ID){
-			global $link;
-			$query = "SELECT importance FROM diagnosis_ids WHERE protocol_ID = (SELECT protocol_ID FROM protocol WHERE  visit_ID = $visit_ID ORDER BY protocol_ID DESC LIMIT 1) AND diagnosis_ID=$diagnosis_ID";
-			$result=mysqli_query($link,$query);
-			
-			$result=mysqli_fetch_object($result);
-			if(! empty($result)){
-				$importance=$result->importance;
-			}else{
-				$importance='';
-			}
-			
-			return $importance;
+		public function getImportance(){
+			return $this->importance;
 		}
 		
 		/*
@@ -95,47 +118,106 @@
 		## Writes remarks of a certain patient's diagnosis into database.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function setRemarks($protocol_ID, $remarks){
+		public function setRemarks($var){
 			global $link;
-			$query = "INSERT INTO `diagnosis_ids`(`protocol_ID`,`remarks`) VALUES ('$protocol_ID','$remarks')";
+			$query = "UPDATE `diagnosis_ids` SET remarks='$var' WHERE diagnosis_entry_ID=$this->diagnosis_entry_ID";
 			mysqli_query($link,$query);
+
+			return $this->remarks=$var;
 		}
 
 		/*
-		## Getter function.
-		## Gets remarks of a certain patient's diagnosis.
+		## Setter function.
+		## Writes remarks of a certain patient's diagnosis into database.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		public static function getRemarks($visit_ID){
+		public function setImportance($var){
 			global $link;
-			$query = "SELECT remarks FROM diagnosis_ids WHERE remarks NOT LIKE '' AND protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID=$visit_ID)";
+			$query = "UPDATE `diagnosis_ids` SET importance='$var' WHERE diagnosis_entry_ID=$this->diagnosis_entry_ID";
+			mysqli_query($link,$query);
+
+			return $this->importance=$var;
+		}
+
+		/*
+		## Checks whether a certain patient's diagnosis contains any remarks,
+		## if so returns the ID of this entry, if not, returns "false".
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public static function check_Remarks($visit_ID){
+			global $link;
+			$query = "SELECT * FROM diagnosis_ids WHERE remarks NOT LIKE '' AND protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID=$visit_ID)";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
 			
 			if(! empty($object)){
-				$remarks=$object->remarks;
+				$ID=$object->diagnosis_entry_ID;
 			}else{
-				$remarks='';
+				$ID=false;
 			}		
-			return $remarks;
+			return $ID;
 		}
+
+		/*
+		## Checks whether a certain patient's diagnosis contains any remarks,
+		## if so returns the ID of this entry, if not, returns "false".
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public static function check_Reattendance($visit_ID){
+			global $link;
+			$query = "SELECT * FROM diagnosis_ids WHERE reattendance LIKE '1' AND protocol_ID IN (SELECT protocol_ID FROM protocol WHERE visit_ID=$visit_ID)";
+			$result=mysqli_query($link,$query);
+			$object=mysqli_fetch_object($result);
+			
+			if(! empty($object)){
+				$ID=$object->diagnosis_entry_ID;
+			}else{
+				$ID=false;
+			}
+			return $ID;
+		}		
+
+		/*
+		## Setter function.
+		## Writes remarks of a certain patient's diagnosis into database.
+		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
+		*/
+		public function delete_Diagnosis_IDs($diagnosis_entry_ID){
+			global $link;
+			$query = "DELETE FROM diagnosis_ids WHERE diagnosis_entry_ID=$diagnosis_entry_ID";
+			mysqli_query($link,$query);
+		}		
 
 		/*
 		## This function is used whether a client has received the diagnosis of a particular disease throughout a visit to the facility. 
 		## The sent parameter $visit_ID is used to identify the visit at the facility. 
-		## The function returns a boolean with the values true or false, depending on the existnece of a previous diagnosis or not. 
+		## The function returns the ID of the entry, if the diagnosis already exists, otherwise false. 
 		*/
 		public function check_Diagnosis($visit_ID,$diagnosis_ID){
 			global $link; 
-			$query="SELECT * FROM diagnosis_ID d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID AND diagnosis_ID=$diagnosis_ID";
+			$query="SELECT * FROM diagnosis_ids d, protocol p WHERE p.protocol_ID=d.protocol_ID AND visit_ID=$visit_ID AND diagnosis_ID=$diagnosis_ID";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
 			if(! empty($object)){
-				$given=true;
+				$given=$object->diagnosis_entry_ID;
 			}else{
 				$given=false;
 			}
 			return $given;
+		}
+
+	
+		## This function is used to check whether there are any diagnoses in the database linked to a specific protocol entry.
+		public function check_protocol($protocol_ID){
+			global $link; 
+			$query="SELECT * FROM diagnosis_ids WHERE protocol_ID=$protocol_ID";
+			$result=mysqli_query($link,$query);
+			if(mysqli_num_rows($result)!==0){
+				$protocol_ID=true;
+			}else{
+				$protocol_ID=false;
+			}
+			return $protocol_ID;
 		}
 	}
 ?>

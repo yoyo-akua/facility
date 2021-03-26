@@ -74,6 +74,14 @@
 
 		/*
 		## Getter function.
+		## Returns the description of the event of that protocol entry, on which the function is called.
+		*/
+		public function getEvent(){
+			return $this->event;
+		}
+
+		/*
+		## Getter function.
 		## Returns the facility personal's name, who diagnosed the patient at that visit, on which the function is called.
 		*/	
 		public function getStaff_ID(){

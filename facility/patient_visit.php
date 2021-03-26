@@ -241,6 +241,9 @@
 			$Diagnosis_ID=$row->Diagnosis_ID;
 			$Diagnosis = new Diagnoses($Diagnosis_ID);
 
+			## Call this function to check whether this diagnosis has been saved for the client before. 
+			$given=Diagnosis_IDs::check_Diagnosis($visit_ID,$Diagnosis_ID);
+
 			## This if-branch is called, if the current disease has been selected as a diagnosis (either primary, secondary or provisional).
 			if (! empty($_POST["$Diagnosis_ID"]) OR ! empty($_POST["prov_$Diagnosis_ID"])){
 				
@@ -256,8 +259,6 @@
 					$importance=3;
 				}
 				
-				## Call this function to check whether this diagnosis has been saved for the client before. 
-				$given=Diagnosis_IDs::check_Diagnosis($visit_ID,$Diagnosis_ID);
 
 				/*
 				## This if-branch is used to make sure only one primary diagnosis is selected and the same diagnosis is not entered several times. 
@@ -265,14 +266,23 @@
 				## Within this if-branch it is also checked whether the diagnosis was also selected as provisional diagnosis and if so, stored as such in database.
 				*/
 				if(! $given AND(! $primgiven OR $importance!==1)){
-					if(! isset($diagnosis_protocol)){
+					if(! isset($diagnosis_protocol_ID)){
 						$diagnosis_protocol=protocol::new_Protocol($visit_ID,'new diagnoses entered');
-						$protocol_ID=$protocol->getProtocol_ID();
+						$diagnosis_protocol_ID=$diagnosis_protocol->getProtocol_ID();
 					}
-					Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,$Diagnosis_ID,$importance);
-					$protocol->setStaff_ID($_SESSION['staff_ID']);
+					Diagnosis_IDs::new_Diagnosis_IDs($diagnosis_protocol_ID,$Diagnosis_ID,$importance,'',0);
+					$diagnosis_protocol->setStaff_ID($_SESSION['staff_ID']);
 					if($importance==1){
 						$primgiven=true;
+					}
+				}
+				
+				## In case the user is only editing the importance of the diagnosis, update this in the database.
+				else if($given){
+					$previous=new Diagnosis_IDs($given);
+					$prev_importance=$previous->getImportance();
+					if($prev_importance!==$importance){
+						$previous->setImportance($importance);
 					}
 				}
 
@@ -287,14 +297,48 @@
 					break;
 				}
 			}
+			
+			## In case the user deselected a diagnosis, also delete it from the database. 
+			## Check, if there are any other diagnoses entered for the patient, if not, also delete the corresponding protocol entry.
+			else if($given){
+				$protocol_ID=(new Diagnosis_IDs($given))->getProtocol_ID();
+				Diagnosis_IDs::delete_Diagnosis_IDs($given);
+
+				if(! Diagnosis_IDs::check_protocol($protocol_ID)){
+					protocol::delete_Protocol($protocol_ID);
+				}
+			}
 		}
 
 		## In list of patient's diagnosed diseases is also defined, if a patient is coming for review of previous diagnosis.
 		if(! empty($_POST['reattendance'])){
-			Diagnosis_IDs::new_Diagnosis_IDs($protocol_ID,0,0);
+			if(! isset($diagnosis_protocol_ID)){
+				$protocol=protocol::new_Protocol($visit_ID,'patient is reattending');
+				$diagnosis_protocol_ID=$protocol->getProtocol_ID();
+			}
+			Diagnosis_IDs::new_Diagnosis_IDs($diagnosis_protocol_ID,0,0,'',1);
 		}
-
 		
+		/*
+		## If the user erased the reattendance, also delete them from the database,
+		## check if there are any other diagnoses linked to this protocol entry, 
+		## if not, delete the protocol entry. 
+		*/		
+		else{
+			$ID=Diagnosis_IDs::check_Reattendance($visit_ID);
+			if($ID){
+				$reattendance=new Diagnosis_IDs($ID);
+				$protocol_ID=$reattendance->getProtocol_ID();
+				protocol::delete_Protocol($protocol_ID);
+
+				$protocol= new protocol($protocol_ID);
+				if($protocol->getEvent()=='patient is reattending'){
+					protocol::delete_Protocol($protocol_ID);
+				}
+
+				Diagnosis_IDs::delete_Diagnosis_IDs($ID);
+			}
+		}
 	}
 
 	## In the following, print content on the left hand side of the patient's diagnosis page.
@@ -347,8 +391,14 @@
 			}
 			
 			
-			## ???
+			## This if-branch is called when the patient has been referred to a different facility.
 			if(! empty($_POST['referral'])){
+
+				/*
+				## This if-branch is called, if the referral hasn't been written to database yet.
+				## It creates a new protocol entry and a new referral entry linked by $protocol_ID.
+				## Finally set the patient's visit checkout time to the current time.
+				*/
 				if(! Referral::checkReferral($visit_ID)){
 					$protocol=protocol::new_Protocol($visit_ID,'patient referred');
 					$protocol_ID=$protocol->getProtocol_ID();
@@ -356,12 +406,21 @@
 					Referral::new_Referral($protocol_ID,$_POST['referredto'],$_POST['refer_reason']);
 
 					$visit->setCheckout_time(date('Y-m-d H:i:s',time()));
-				}else{
+				}
+				
+				## In case the referral is already saved in database, just update the reason and destination of referral in the database.
+				else{
 					$referral=new Referral(Referral::checkReferral($visit_ID));
 					$referral->setDestination($_POST['referredto']);
 					$referral->setReason($_POST['refer_reason']);
 				}
-			}else{
+			}
+			
+			/*
+			## In case the user user deselected the referral checkbox, after a referral had already been saved to database,
+			## delete the referral from the referral and protocol table and unset the checkout time for the visit. 
+			*/
+			else{
 				if(Referral::checkReferral($visit_ID)){
 					$protocol_ID=Referral::checkReferral($visit_ID);
 					Referral::delete_Referral($protocol_ID);
@@ -404,19 +463,47 @@
 			}
 			
 			
-			## Add any remarks from the consultant to the diagnosis.
-			## TODO Flo: muss noch umgebaut werden
-			## ToDo Flo: HIER HABE ICH AUFGEHÖRT
-			## es muss in die Diagnosis_IDs.php eine neue Funktion
-			## aufgenommen werden für get und set remarks
-			## Diese Funktion muss dann hier zum Schreiben
-			## Und weiter unten zum Lesen aufgerufen werden
-			## bleibt solange auskommentiert
+			## Check if there have previously been entered any remarks for the client. 
+			$remarks_given=Diagnosis_IDs::check_Remarks($visit_ID);
+
+			## Call this if-branch in case the user entered remarks for the client. 
 			if(! empty($_POST['remarks'])){
-				#$protocol->setRemarks($_POST['remarks']);
-				Diagnosis_IDs::setRemarks($protocol_ID, $_POST['remarks']);
-			#}else{
-			#	$protocol->setRemarks('');
+
+				## If remarks have previously been entered, adapt them.
+				if($remarks_given){
+					$Diagnosis_ID=new Diagnosis_IDs($remarks_given);
+					$Diagnosis_ID->setRemarks($_POST['remarks']);
+				}
+				
+				/*
+				## If no remarks have been entered before, check if there is already a protocol entry for the client's diagnoses. 
+				## If not, create one,
+				## write the remarks to database. 
+				*/
+				else{
+
+					if(! isset($diagnosis_protocol_ID)){
+						$protocol=protocol::new_Protocol($visit_ID,'remarks on diagnoses entered');
+						$diagnosis_protocol_ID=$protocol->getProtocol_ID();
+					}
+					Diagnosis_IDs::new_Diagnosis_IDs($diagnosis_protocol_ID,0,0,$_POST['remarks'],0);
+				}
+			}
+			
+			/*
+			## If the user erased the remarks, also delete them from the database,
+			## check if there are any other diagnoses linked to this protocol entry, 
+			## if not, delete the protocol entry. 
+			*/
+			else if($remarks_given){
+				$remarks=new Diagnosis_IDs($remarks_given);
+				$protocol_ID=$remarks->getProtocol_ID();
+				$protocol= new protocol($protocol_ID);
+				if($protocol->getEvent()=='remarks on diagnoses entered'){
+					protocol::delete_Protocol($protocol_ID);
+				}
+
+				Diagnosis_IDs::delete_Diagnosis_IDs($remarks_given);
 			}
 			
 
@@ -662,19 +749,18 @@
 		## Print checkbox for reattendance, which is checked if it was previously defined to be a review case. 
 		echo"
 				<input type='checkbox' name='reattendance' ";
-				if (in_array(0,Diagnosis_IDs::getImportances($visit_ID)) OR ! empty($_POST['reattendance'])){
+				if (Diagnosis_IDs::check_Reattendance($visit_ID)){
 					echo "checked='checked''";
 				}
 		
 		## Print input field and icon for searching a diagnosis as well as submit button for the diagnoses.
 		echo"> reattendance<br><br>
-				<div><input type='text' name='search' id='autocomplete' placeholder='search diagnosis' class='autocomplete'>
+				<div><input type='text' name='search' id='autocomplete' placeholder='search diagnoses' class='autocomplete'>
 				<button type='submit' name='submitsearch'><i class='fas fa-search smallsearch'></i></button></div>
 				<button type='submit' name='submit' value='submit'><i id='submitconsult' class='far fa-check-circle fa-4x'></i></button>";
 		
 		##Print tablehead for following table.
 		Diagnoses::diagnoses_tablehead();
-		
 		/*
 		## Get data from database.
 		## Get the most frequent diseases.
@@ -756,9 +842,10 @@
 					</details>
 					Remarks / further specification of diagnosis:<br>
 					<textarea name="remarks" maxlength="1000" style="min-width:500px">';
-					$remarks = Diagnosis_IDs::getRemarks($visit_ID);
-					if(! empty($remarks)){
-						echo $remarks;
+					$remarks_given = Diagnosis_IDs::check_Remarks($visit_ID);
+					if($remarks_given){
+						$remarks=new Diagnosis_IDs($remarks_given);
+						echo $remarks->getRemarks();
 					}
 					echo'</textarea><br>
 					<input type="checkbox" name="completed" ';

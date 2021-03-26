@@ -1,4 +1,5 @@
 <?php
+
 	class Visit{
 		## Define all parameters a visit entry has. Each visit entry represents a patient's visit.
 		private $visit_ID;				## Database ID of this visit. 
@@ -235,7 +236,7 @@
 			$provisional='';
 
 			## Check, if the patient needs to reattending. If so, print a correspondent notice. 
-			if(in_array(0,Diagnosis_IDs::getImportances($this->visit_ID))){
+			if(Diagnosis_IDs::check_Reattendance($this->visit_ID)){
 				$html.='Patient is <h4>reattending</h4><br>';
 			}
 
@@ -246,7 +247,10 @@
 			*/
 			foreach($Diagnosis_IDs AS $Diagnosis_ID){
 				$Diagnosis = new Diagnoses($Diagnosis_ID);
-				$importance=Diagnosis_IDs::getImportance($this->visit_ID,$Diagnosis_ID);
+
+				$Diagnosis_ID_entry=new Diagnosis_IDs(Diagnosis_IDs::check_Diagnosis($this->visit_ID,$Diagnosis_ID));
+				$importance=$Diagnosis_ID_entry->getImportance();
+
 				$DiagnosisName=$Diagnosis->getDiagnosisName();
 				if ($importance==1){
 					$primary.="-$DiagnosisName<br>";
@@ -291,8 +295,10 @@
 			}
 			
 			## If it is not empty and both - secondary and primary diagnoses - are printed, also print the consultant's remarks on the diagnosis.
-			if($circumference=='both' AND ! empty ($this->remarks)){
-				$html.="<h3>Remarks:</h3>".$this->remarks;
+			if($circumference=='both' AND (Diagnosis_IDs::check_Remarks($this->visit_ID))){
+				$ID=Diagnosis_IDs::check_Remarks($this->visit_ID);
+				$remarks=new Diagnosis_IDs($ID);
+				$html.="<h3>Remarks:</h3>".$remarks->getRemarks() 	;
 			}
 			
 			return $html;

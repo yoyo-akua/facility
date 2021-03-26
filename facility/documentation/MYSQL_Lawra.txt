@@ -578,6 +578,7 @@ UPDATE `delivery` SET `del_category_ID` = '32' WHERE `del_category_ID` = 40;
 ALTER TABLE `disp_drugs` CHANGE `protocol_ID` `prescription_protocol_ID` INT(11) NOT NULL; 
 ALTER TABLE `disp_drugs` ADD `given_protocol_ID` INT NOT NULL AFTER `prescription_protocol_ID`;
 UPDATE disp_drugs SET given_protocol_ID=prescription_protocol_ID;
+ALTER TABLE `diagnosis_ids` ADD `reattendance` TINYINT(1) NOT NULL AFTER `remarks`; 
 
 new.php
 
@@ -608,3 +609,4 @@ ALTER TABLE `protocol`
   DROP `lab_number`;
 ALTER TABLE `protocol`
   DROP `remarks`;
+UPDATE diagnosis_ids SET reattendance='1' WHERE remarks='' AND diagnosis_ID='0'

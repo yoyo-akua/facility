@@ -99,25 +99,29 @@
 		*/
 		public static function diagnoses_tablerow($visit_ID,$Diagnosis_ID){
 			$Diagnosis_Name=(new Diagnoses($Diagnosis_ID))->getDiagnosisname();
+
+			$diagnosis_entry_ID=Diagnosis_IDs::check_Diagnosis($visit_ID,$Diagnosis_ID);
+			$Diagnosis_ID_entry=new Diagnosis_IDs($diagnosis_entry_ID);
+			$importance=$Diagnosis_ID_entry->getImportance();
 			echo"
 					<tr>
 						<td style='border-left:none'>
 							<input type='checkbox'  id='3_$Diagnosis_ID' name='prov_$Diagnosis_ID'";
-							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==3 OR ! empty($_POST["prov_$Diagnosis_ID"])){
+							if($importance==3 OR ! empty($_POST["prov_$Diagnosis_ID"])){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
 							<input type='radio' id='1_$Diagnosis_ID' name='$Diagnosis_ID' value='1'";
-							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==1 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==1)){
+							if($importance==1 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==1)){
 								echo "checked='checked'";
 							}
 							echo">
 						</td>
 						<td>
 							<input type='radio' id='2_$Diagnosis_ID' name='$Diagnosis_ID' value='2'";
-							if(Diagnosis_IDs::getImportance($visit_ID,$Diagnosis_ID)==2 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==2)){
+							if($importance==2 OR (! empty($_POST["$Diagnosis_ID"]) AND $_POST["$Diagnosis_ID"]==2)){
 								echo "checked='checked'";
 							}
 							echo">

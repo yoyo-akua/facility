@@ -21,7 +21,7 @@
 			$query="SELECT Diagnosis_ID FROM diagnoses WHERE DiagnosisName like 'All other Cases'";
 			$result=mysqli_query($link,$query);
 			$object=mysqli_fetch_object($result);
-			Diagnosis_IDs::new_Diagnosis_IDs($_GET['PNC'],$object->Diagnosis_ID,1);
+			Diagnosis_IDs::new_Diagnosis_IDs($_GET['PNC'],$object->Diagnosis_ID,1,'',0);
 		}else{
 			$protocol->setPNC(0);
 		}
