@@ -12,7 +12,7 @@
 	$from=$_GET['from'];
     $to=$_GET['to'];
     
-    $query_not_entered="SELECT * FROM patient,protocol,visit WHERE patient.patient_ID=visit.patient_ID AND protocol_ID NOT IN (SELECT protocol_ID FROM diagnosis_ids) AND ANC_ID='' AND checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 ";
+    $query_not_entered="SELECT * FROM patient pa,protocol pr,visit v WHERE pa.patient_ID=v.patient_ID AND pr.visit_ID=v.visit_ID AND pr.protocol_ID NOT IN (SELECT protocol_ID FROM diagnosis_ids) AND checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 GROUP BY v.visit_ID";
 	$result_not_entered=mysqli_query($link,$query_not_entered);
 	$not_entered=array();
 	$number=0;

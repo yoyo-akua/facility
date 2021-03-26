@@ -46,11 +46,11 @@
 	}
 
 	/*
-	## Get data from database. 
+	## Get data from database.  
 	## Get all patients' and their visits' data within the timeframe defined by $from and $to.
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
-	$query="SELECT * FROM patient,protocol,visit WHERE patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID AND checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 ";
+	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID AND checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 ";
 	$result=mysqli_query($link,$query);
 	/*
 	## The following loop will be run once for each of the output patient visits from the database query.
@@ -61,7 +61,6 @@
 		
 		## Initialise new objects of protocol and patient by their protocol-ID and patient-ID.
 		$patient=new Patient($row->patient_ID);
-		$protocol=new Protocol($row->protocol_ID);
 		$visit=new Visit($row->visit_ID);
 		$insurance=new Insurance($row->visit_ID);
 
@@ -199,6 +198,7 @@
 					</tr>
 				</table>
 			</body>
+			
 			';
 
 	## Initialise variables for the name of the pdf and it's page format.
