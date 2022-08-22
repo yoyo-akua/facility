@@ -646,7 +646,7 @@
 			## Prints links for editing patient as well as for show its results in patient diagnoses overview.
 			echo"
 				<td>
-					<a href=\"edit_patient.php?patient_ID=$this->ID&visit_ID=$visit_ID\">See/Edit</a>
+					<a href=\"edit_patient.php?visit_ID=$visit_ID\">See/Edit</a>
 				</td>
 				<td>
 					<a href=\"patient_visit.php?show=on&visit_ID=$visit_ID&patient_ID=$patient_ID\">Results</a>
@@ -663,7 +663,7 @@
 			echo '
 				<table>
 				<tr>
-				<th style=border-left:none>
+				<th style="border-left:none;">
 					OPD
 				</th>
 				<th>
@@ -890,7 +890,7 @@
 		
 		## Is necessary to close the printed table.
 		public static function tablebottom(){
-			echo'</table>';
+			echo'</tbody></table>';
 		}
 		
 		## Display patient's general data by this function.

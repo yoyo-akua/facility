@@ -32,7 +32,7 @@
 
 			## Show password request and stop any further execution of the page.
 			$text='This patient\'s data are password protected. Please enter the Consulting password to confirm your authorisation to access them';
-			$hidden_array=array('protocol_ID'=>$protocol_ID,'patient_ID'=>$patient_ID);
+			$hidden_array=array('visit_ID'=>$visit_ID,'patient_ID'=>$patient_ID);
 			Settings::popupPassword($thispage,$text,$hidden_array);
 			exit();
 		}
@@ -164,7 +164,7 @@
 		## Get all the tests, that were performed on the patient and their results entered.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 		*/
-		$query="SELECT * FROM lab WHERE protocol_ID=$protocol_ID AND test_results not like ''";
+		$query="SELECT * FROM lab,protocol WHERE protocol.protocol_ID=lab.protocol_ID_results AND protocol.visit_ID=$visit_ID AND test_results not like ''";
 		$result=mysqli_query($link,$query);
 		
 		## The following loop will be run once for each of the output tests from the database query.
@@ -198,12 +198,13 @@
 	## Inquire from database whether any nutrition data are saved for the patient.
 	## If so call the function containing the corresponding code (Vital_Signs::print_nutrition()).
 	*/
-	$query="SELECT * FROM nutrition WHERE protocol_ID=$protocol_ID";
+	$query="SELECT * FROM nutrition,protocol WHERE nutrition.protocol_ID=protocol.protocol_ID AND protocol.visit_ID=$visit_ID";
 	$result=mysqli_query($link,$query);
 	if(mysqli_num_rows($result)!==0){
-		$nutrition=new Nutrition($protocol_ID);
+		$object=mysqli_fetch_object($result);
+		$nutrition=new Nutrition($object->protocol_ID);
 		if(! empty($nutrition->getNutrition_remarks()) OR ! empty($nutrition->getManagement())){
-			$html.="<h2>Nutrition Treatment</h2>".Vital_Signs::print_nutrition($protocol_ID);
+			$html.="<h2>Nutrition Treatment</h2>".Vital_Signs::print_nutrition($object->protocol_ID);
 		}
 	}
 
@@ -212,7 +213,7 @@
 	## with information about drug name, amount, unit and dosage recommendation to $html.
 	## Format this list, to a more pdf adapted style.
 	*/
-	$drugs_prescribed=Disp_Drugs::drugs_prescribed($protocol_ID);
+	$drugs_prescribed=Disp_Drugs::drugs_prescribed($visit_ID);
 
 	if(! empty($drugs_prescribed)){
 		$drugs="<h2>Prescribed Drugs</h2>".Disp_Drugs::display_prescribed_drugs($visit_ID,'print','both');
@@ -222,7 +223,7 @@
 	}
 	
 	## In case files have been attached which contains lab information, display these files. 
-	$upload_array=Uploads::getUploadArray($protocol_ID);
+	$upload_array=Uploads::getUploadArray($visit_ID);
 	if(! empty($upload_array)){
 		$html.='<br pagebreak="true"/><h2>Attached Files</h2>';
 		foreach($upload_array AS $ID){

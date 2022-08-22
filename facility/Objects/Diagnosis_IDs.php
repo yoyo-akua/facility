@@ -48,6 +48,14 @@
 
 		/*
 		## Getter function.
+		## Returns the information whether the patient came for review, on which the function is called.
+		*/
+		public function getReattendance(){
+			return $this->reattendance;
+		}
+
+		/*
+		## Getter function.
 		## Returns the protocol ID of a diagnosis, on which the function is called.
 		*/
 		public function getProtocol_ID(){
@@ -64,9 +72,8 @@
 		*/
 		public static function getDiagnosis_IDs($visit_ID){
 			global $link;
-			$query = "SELECT diagnosis_ID FROM diagnosis_ids WHERE protocol_ID = (SELECT protocol_ID FROM protocol WHERE visit_ID = $visit_ID ORDER BY protocol_ID DESC LIMIT 1)";
+			$query = "SELECT diagnosis_ID FROM diagnosis_ids,protocol WHERE protocol.visit_ID=$visit_ID AND diagnosis_ids.protocol_ID=protocol.protocol_ID ORDER BY diagnosis_ids.protocol_ID DESC";
 			$result=mysqli_query($link,$query);
-			
 			$diagnoses=array();
 			while($row=mysqli_fetch_object($result)){
 				$diagnoses[]=$row->diagnosis_ID;

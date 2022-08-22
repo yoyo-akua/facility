@@ -46,7 +46,7 @@
 		}
 			
 		## Retrieve all diagnoses that were prescribed during the last month from the database.
-		$query="SELECT Drug_ID FROM disp_drugs WHERE CountDate>=(DATE(NOW()) - INTERVAL 1 MONTH) AND protocol_ID!='0'";
+		$query="SELECT Drug_ID FROM disp_drugs WHERE CountDate>=(DATE(NOW()) - INTERVAL 1 MONTH) AND prescription_protocol_ID!='0'";
 		$result=mysqli_query($link,$query);
 		
 		## Create an array which will later be used to store the number of times a drug has appeared.

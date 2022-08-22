@@ -183,6 +183,9 @@
 					## add a notice to the HTML buffer. 
 					*/
 					if($test_name!==$last_test){
+						if($last_test!==''){
+							$html.="</div>";
+						}
 						$html.="<h5>$test_name</h5><div style='margin-left:20px;'>";
 						if($other_facility==1){
 							$html.="&nbsp&nbsp&nbsp&nbsp&nbsp<text style='color:grey'>This test was performed in a different Lab.</text><br>";
@@ -214,7 +217,7 @@
 									if($tooltips=='tooltips on'){
 										$html.="</div>";
 									}
-								 $html.=" ".$unit."</div>";
+								 $html.=" ".$unit."<br>";
 				}
 				
 			}

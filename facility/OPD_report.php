@@ -59,7 +59,7 @@
 	*/
 	while($row=mysqli_fetch_object($result)){
 		
-		## Initialise new objects of protocol and patient by their protocol-ID and patient-ID.
+		## Initialise new objects of visit and patient by their visit-ID and patient-ID.
 		$patient=new Patient($row->patient_ID);
 		$visit=new Visit($row->visit_ID);
 		$insurance=new Insurance($row->visit_ID);

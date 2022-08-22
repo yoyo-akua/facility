@@ -241,7 +241,7 @@
 	## buffered in $parameter to display the user all chosen search parameters later.
 	*/
 	if(! empty($_POST['reattendance'])){
-		$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND diagnosis_ID='0'";
+		$subquery="SELECT protocol.protocol_ID FROM protocol,diagnosis_ids WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID AND reattendance='1'";
 		$searchpara.=" AND protocol.protocol_ID IN ($subquery)";
 		$parameter.="- came for review<br>";
 	}

@@ -310,7 +310,7 @@ td.columns{
     height:40px;
     background-color:<?php echo $main; ?>;
 	margin:0px;
-	z-index:1;
+	z-index:2;
 	box-shadow:1px 1px 6px #a0a0a0;	
 }
 /* Page content */
@@ -483,6 +483,11 @@ th{
 	border-left:1.5px solid #c7c7c7;
 	padding: 5px;
 	vertical-align:bottom;
+	position: sticky; 
+	top: 40px; 
+	z-index: 1;
+	background-color:white;
+	border-bottom-width:2px
 }
 a{
 	color:<?php echo $main; ?>;

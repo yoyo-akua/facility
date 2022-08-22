@@ -28,7 +28,7 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by HTML_HEAD.php.
 	## Save all data from database in $result.
 	*/
-	$query="SELECT * FROM patient,visit WHERE patient.patient_ID=visit.patient_ID AND checkout_time like '0000-00-00 00:00:00' AND onlylab=0 $searchpara AND patient.patient_ID IN (SELECT patient_ID FROM nutrition,protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND protocol.protocol_ID=nutrition.protocol_ID AND protocol.timestamp>(DATE_SUB('$today',INTERVAL 1 YEAR))) ORDER BY checkin_time ASC";
+	$query="SELECT * FROM patient,visit,protocol,nutrition WHERE patient.patient_ID=visit.patient_ID AND visit.visit_ID=protocol.visit_ID AND nutrition.protocol_ID=protocol.protocol_ID AND checkout_time like '0000-00-00 00:00:00' AND onlylab=0 AND protocol.timestamp>(DATE_SUB('2022-08-18',INTERVAL 1 YEAR)) ORDER BY checkin_time ASC ";
 	$result = mysqli_query($link,$query);
 
 	/*

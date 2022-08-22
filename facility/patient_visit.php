@@ -223,7 +223,7 @@
 			$complaints->setDiarrhoea($Diarrhoea);
 			$complaints->setOthers($Others);
 		}
-		else {
+		else if (($Coughing==1)OR($Vomitting==1)OR($Fever==1)OR($Diarrhoea==1)OR($Others!=='')){
 			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
 			protocol::new_Protocol($visit_ID,'complaints entered');
 		}

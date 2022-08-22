@@ -100,6 +100,7 @@
 			<th style=border-left:none>
 			</th>
 			</tr>  
+			
 		";
 		
 		
@@ -130,7 +131,7 @@
 						<input type='checkbox' name='diarrhoea' value='1'>
 					</td>
 					<td>
-						<textarea name='others' length='1000' style=width:90px;height:25px></textarea>
+						<textarea name='others' length='1000' style=width:150px;height:35px;></textarea>
 					<td>
 						<input type='hidden' name='visit_ID' value='".$row->visit_ID."'>
 						<input type='submit' name='submit' value='submit'>

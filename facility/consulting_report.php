@@ -75,8 +75,8 @@
 	## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 	*/
 	$query_array=array();
-	#$query_array['undiagnosed']="SELECT * FROM patient,protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID AND protocol_ID NOT IN (SELECT protocol_ID FROM diagnosis_ids) AND visit.checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 GROUP BY visit.visit_ID";
-	$query_array['diagnosed']="SELECT * FROM patient,protocol,diagnosis_ids,visit WHERE visit.visit_ID=protocol.visit_ID AND diagnosis_ids.protocol_ID=protocol.protocol_ID AND patient.patient_ID=visit.patient_ID AND visit.checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0 GROUP BY visit.visit_ID";
+	$query_array['undiagnosed']="SELECT * FROM patient,protocol,visit WHERE visit.visit_ID=protocol.visit_ID AND patient.patient_ID=visit.patient_ID AND protocol.visit_ID=visit.visit_ID AND visit.visit_ID NOT IN (SELECT visit_ID FROM diagnosis_ids,protocol WHERE protocol.protocol_ID=diagnosis_ids.protocol_ID) AND visit.checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0";
+	$query_array['diagnosed']="SELECT * FROM patient,protocol,diagnosis_ids,visit WHERE visit.visit_ID=protocol.visit_ID AND diagnosis_ids.protocol_ID=protocol.protocol_ID AND patient.patient_ID=visit.patient_ID AND visit.checkin_time BETWEEN '$from' AND '$to 23:59:59' AND onlylab=0";
 	foreach($query_array AS $condition=>$query){
 		
 		$result=mysqli_query($link,$query);
@@ -95,8 +95,7 @@
 			$visit_ID=$row->visit_ID;
 			$visit=new Visit($visit_ID);
 
-			## Initialise a variable $importance containing information whether the diagnosis was primary, secondary or provisional.
-			$importance=$row->importance;
+			
 
 			/*
 			## Set/Reset $malaria_tested as false. It is used to check, if a patient has been counted as "Uncomplicated Malaria, suspected, tested" before.
@@ -137,7 +136,7 @@
 							}
 
 							## If the patient is reattending, this if-branch is called and the value of the correspondent variables increased by one.
-							if(Diagnosis_IDs::check_Reattendance($visit_ID)){
+							if($condition=='diagnosed' AND (new Diagnosis_IDs($row->diagnosis_entry_ID))->getReattendance()==1){
 								$all[$sex][$age_array[$age]]['Reattendance']++;
 								$all['total']['total']['Reattendance']++;
 								$all[$sex]['total']['Reattendance']++;
@@ -191,6 +190,7 @@
 												$all[$sex][$age_array[$age]][$diagnosis]['suspected']++;
 												$all[$sex]['total'][$diagnosis]['suspected']++;
 												$all['total']['total'][$diagnosis]['suspected']++;
+											
 												$all[$sex][$age_array[$age]][$diagnosis]['suspected, tested']++;
 												$all[$sex]['total'][$diagnosis]['suspected, tested']++;
 												$all['total']['total'][$diagnosis]['suspected, tested']++;
@@ -202,8 +202,11 @@
 								}
 								## This if branch is called, if the patient has actually been diagnosed with a certain diagnosis.
 								if($condition=='diagnosed'){
-									if($row->diagnosis_ID==$diagnosis_ID){
 
+									## Initialise a variable $importance containing information whether the diagnosis was primary, secondary or provisional.
+									$importance=$row->importance;
+
+									if($row->diagnosis_ID==$diagnosis_ID){
 										/*
 										## This if-branch is called, if the diagnosis is Malaria, to deal with some of the special cases, 
 										## that are described in $malaria_array.
@@ -219,7 +222,7 @@
 											## they will be increased by one here, depending if the patient is pregnant or not.
 											## The variable for not tested, but treated as Malaria, is also increased by one in that case.
 											*/
-											if(! $malaria_tested){
+											if(!$malaria_tested){
 												if($visit->getPregnant()==1){
 													$all[$sex][$age_array[$age]][$diagnosis]['in pregnancy, suspected']++;
 													$all[$sex]['total'][$diagnosis]['in pregnancy, suspected']++;
@@ -460,6 +463,7 @@
 	$pdfName='consulting_report('.$fromdisplay.'-'.$todisplay.').pdf';
 	$size='A1';
 
+	echo $html;
 	## This function is creating the pdf file, using the data stored in $html as content.
-	Settings::pdf_execute($pdfName,$size,$html);
+	#Settings::pdf_execute($pdfName,$size,$html);
 ?>

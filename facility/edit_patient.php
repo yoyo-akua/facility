@@ -5,19 +5,17 @@
 	*/
 	include("HTMLParts/HTML_HEAD.php");
 
-	## Initialise new objects of patient and protocol by certain IDs, with which the page is called.
-	$patient_ID=$_GET['patient_ID'];
-	$patient = new Patient($patient_ID);
-
-	$protocol_ID=$_GET['protocol_ID'];
-	$protocol = new Protocol ($protocol_ID);
-
-	$visit_ID=$protocol->getVisit_ID();
+	## Initialise new objects of patient and visit by certain IDs, with which the page is called.
+	$visit_ID=$_GET['visit_ID'];
 	$visit=new Visit($visit_ID);
 
+	$patient_ID=$visit->getPatient_ID();
+	$patient = new Patient($patient_ID);
+	
+	## Initialise object $insurance containing the patient's visit's insurance information.
 	$insurance=new Insurance($visit_ID);
 
-	$vital_signs=new Vital_Signs($protocol_ID);
+	
 	## This if-branch is called if the user made some changes in the patient's data and clicked "submit".
 	if(! empty($_POST['submit'])){
 		
@@ -26,10 +24,7 @@
 		## The timestamp of the visit date is sent with the function to calculate the age of the patient and if it is too old to use its mother's NHIS.
 		*/
 		$patient->setOPD_data(strtotime($visit->getCheckin_time()));
-		
-		## This function saves the patient's vital signs.
-		(new Vital_Signs($protocol_ID))->setVital_signs('post');
-		
+				
 		## Save in the database, if "Expired?" is selected or not.
 		if(! empty($_POST['Expired'])){
 			$insurance->setExpired(1);
@@ -142,7 +137,7 @@
 				</tr>
 
 				<tr>
-					<form action="edit_patient.php?protocol_ID='.$protocol_ID.'&patient_ID='.$patient_ID.'" method="post">
+					<form action="edit_patient.php?visit_ID='.$visit_ID.'" method="post">
 				<td>
 					<input type=text name="Name" value="'.$patient->getName().'" required>
 				</td>
@@ -249,96 +244,36 @@
 						}
 						echo '>		
 					</td>
-				<tr class="emptytable">
-					<td>
-					</td>
-				</tr>
-				<tr>
-					<th>
-						Blood Pressure
-					</th>
-					<th>
-						Pulse
-					</th>
-					<th>
-						Weight
-					</th>
-					<th>
-						Temperature
-					</th>
-					<th>
-						MUAC
-					</th>
-				</tr>  
-				<tr>';
+					';
+				
 				echo"
-
-					<td>
-						<input type='text' name='BP' class='smalltext' ";
-								if($vital_signs->getBP()!=0){
-									echo"value='".$vital_signs->getBP()."'";
-								}
-								echo"> mmHg
-					</td>
-					<td>
-						<input type='number' name='pulse' min='0' max='200' ";
-								if($vital_signs->getPulse()!=0){
-									echo"value='".$vital_signs->getPulse()."'";
-								}
-								echo"> bpm
-					</td>
-					<td>
-						<input type='number' name='weight' step='0.1' min='0' max='300' ";
-								if($vital_signs->getWeight()!=0){
-									echo"value='".$vital_signs->getWeight()."'";
-								}
-								echo"> kg
-					</td>
-					<td>
-						<input type='number' name='temperature' min='30' max='45' step='0.1' ";
-								if($vital_signs->getTemperature()!=0){
-									echo"value='".$vital_signs->getTemperature()."'";
-								}
-								echo">&#176C
-					</td>
-					<td>
-						<input type='number' name='MUAC' min='0' step='0.1' ";
-								if($vital_signs->getMUAC()!=0){
-									echo"value='".$vital_signs->getMUAC()."'";
-								}
-								echo">cm
-					</td>
-					";
-				echo'
+				
 				</tr>
-				<tr class="emptytable">
-				<td>
-				</td>
-				<td>
-				</td>
-				<td>
-				</td>
-				<td>				
-				</td>
-				<td>
-				</td>
-				<td>
-				</td>
-				<td>
-				</td>
-				<td>
-					<input type="submit" name="submit" value="Submit">
+				<tr class='emptytable'>
+				<td></td>
+				</tr>
+				<tr class='emptytable'>
+				<td></td>
+				</tr>
+				<tr class='emptytable'>
+				<td colspan='8'>
+					<div class='tooltip'>
+						<button type='submit' name='submit' value='submit'><i id='submitanc' class='far fa-check-circle fa-4x'></i></button>
+						<span class='tooltiptext'>
+							submit
+						</span>
+					</div>	
 				</td>
 				</tr>
-			<form>
-			';
+			</form>
+			";
 
 	## Print table bottom.
 	Patient::tablebottom();
 	
 	## Print links to delete patients from protocol or entire database, and back to protocol.
 	echo'
-			<a href="delete_from_protocol.php?protocol_ID='.$protocol_ID.'&patient_ID='.$patient_ID.'"><div class ="box">delete from protocol</div></a>
+			<a href="delete_from_protocol.php?protocol_ID='.$visit_ID.'"><div class ="box">delete from protocol</div></a>
 			<a href="delete_from_database.php?patient_ID='.$patient_ID.'"><div class ="box">delete completely from system</div></a>
 			<a href="patient_protocol.php?from='.$today.'&to='.$today.'"><div class ="box">back to protocol</div></a>
 			';
