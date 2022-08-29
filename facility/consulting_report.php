@@ -97,11 +97,7 @@
 
 			
 
-			/*
-			## Set/Reset $malaria_tested as false. It is used to check, if a patient has been counted as "Uncomplicated Malaria, suspected, tested" before.
-			## This is necessary, because there are two places in the source code where this could happen.
-			*/
-			$malaria_tested=false;
+			
 
 			/*
 			## This loop is used to categorise patients by sex by running through defined sexes (male and female) and
@@ -148,7 +144,7 @@
 							## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
 							*/
 							$diagnosis_result=mysqli_query($link,$diagnosis_query);
-
+						
 							## The following loop will be run once for each of the output diagnoses from the database query.
 							while($diagnosis_row=mysqli_fetch_object($diagnosis_result)){
 
@@ -164,6 +160,9 @@
 								##		- malaria was diagnosed for patient without performing a test before.
 								## The following if-branch checks, whether the patient has been tested for malaria independent from the actual diagnosis.
 								*/
+
+
+
 								if($diagnosis=='Uncomplicated Malaria'){
 
 									/*
@@ -173,11 +172,21 @@
 									## Make sure to only do this, in case you haven't done it before with the same patient.
 									*/
 									if($visit_ID!==$previous_visit_ID){
+
+										/*
+										## Set/Reset $malaria_tested as false. It is used to check, if a patient has been counted as "Uncomplicated Malaria, suspected, tested" before.
+										## This is necessary, because there are two places in the source code where this could happen.
+										*/
+										$malaria_tested=false;
+
 										$malaria_query="SELECT * FROM tests,parameters,lab,protocol WHERE protocol.protocol_ID=lab.protocol_ID_ordered AND parameters.test_ID=tests.test_ID AND lab.parameter_ID=parameters.parameter_ID AND test_name='Malaria' AND protocol.visit_ID='$visit_ID' GROUP BY protocol.visit_ID";
 										$malaria_result=mysqli_query($link,$malaria_query);
 
 										## This if-branch is called, if patient has been tested for Malaria.
 										if(! empty(mysqli_fetch_object($malaria_result))){
+											## $malaria_tested is set true, to prevent the same variables from being increased by one again for the same patient and to indicate, that the person has been tested for Malaria.
+											$malaria_tested=true;
+											
 											## Depending on the patient being pregnant or not, the correspondent variables are increased by one.
 											if($visit->getPregnant()==1){
 												$all[$sex][$age_array[$age]][$diagnosis]['in pregnancy, suspected']++;
@@ -187,6 +196,7 @@
 												$all[$sex]['total'][$diagnosis]['in pregnancy, suspected, tested']++;
 												$all[$sex][$age_array[$age]][$diagnosis]['in pregnancy, suspected, tested']++;
 											}else{
+												##1st option suspected
 												$all[$sex][$age_array[$age]][$diagnosis]['suspected']++;
 												$all[$sex]['total'][$diagnosis]['suspected']++;
 												$all['total']['total'][$diagnosis]['suspected']++;
@@ -195,8 +205,7 @@
 												$all[$sex]['total'][$diagnosis]['suspected, tested']++;
 												$all['total']['total'][$diagnosis]['suspected, tested']++;
 											}
-											## $malaria_tested is set true, to prevent the same variables from being increased by one again for the same patient and to indicate, that the person has been tested for Malaria.
-											$malaria_tested=true;
+											
 										}
 									}
 								}
@@ -222,6 +231,7 @@
 											## they will be increased by one here, depending if the patient is pregnant or not.
 											## The variable for not tested, but treated as Malaria, is also increased by one in that case.
 											*/
+										
 											if(!$malaria_tested){
 												if($visit->getPregnant()==1){
 													$all[$sex][$age_array[$age]][$diagnosis]['in pregnancy, suspected']++;
@@ -232,6 +242,7 @@
 													$all[$sex]['total'][$diagnosis]['in pregnancy, not tested, but treated as Malaria']++;
 													$all['total']['total'][$diagnosis]['in pregnancy, not tested, but treated as Malaria']++;
 												}else{
+													##2nd option suspected
 													$all[$sex][$age_array[$age]][$diagnosis]['suspected']++;
 													$all[$sex]['total'][$diagnosis]['suspected']++;
 													$all['total']['total'][$diagnosis]['suspected']++;
@@ -463,7 +474,7 @@
 	$pdfName='consulting_report('.$fromdisplay.'-'.$todisplay.').pdf';
 	$size='A1';
 
-	echo $html;
+	
 	## This function is creating the pdf file, using the data stored in $html as content.
-	#Settings::pdf_execute($pdfName,$size,$html);
+	Settings::pdf_execute($pdfName,$size,$html);
 ?>
