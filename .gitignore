@@ -3,5 +3,4 @@
 *.todo
 **/facility/uploads
 facility/documentation/ERD_protocol_neu.vuerd.json
-.gitignore
 **/demomap
