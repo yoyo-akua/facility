@@ -202,7 +202,9 @@ div.columnleft{
 .popupbackground{
 	background-color:grey;
 	position:fixed;
-	z-index:3;
+	left:0px;
+	top:40px;
+	z-index:1;
 	width:100%;
 	height:100%;
 }
@@ -310,7 +312,7 @@ td.columns{
     height:40px;
     background-color:<?php echo $main; ?>;
 	margin:0px;
-	z-index:2;
+	z-index:10;
 	box-shadow:1px 1px 6px #a0a0a0;	
 }
 /* Page content */

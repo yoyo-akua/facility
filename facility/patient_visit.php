@@ -224,8 +224,8 @@
 			$complaints->setOthers($Others);
 		}
 		else if (($Coughing==1)OR($Vomitting==1)OR($Fever==1)OR($Diarrhoea==1)OR($Others!=='')){
+			$protocol_ID=(protocol::new_Protocol($visit_ID,'complaints entered'))->getProtocol_ID();
 			$complaints=Complaints::new_Complaints($protocol_ID,$Coughing,$Vomitting,$Fever,$Diarrhoea,$Others);
-			protocol::new_Protocol($visit_ID,'complaints entered');
 		}
 
 		/*
@@ -436,7 +436,7 @@
 			## In case the user is trying to delete an existing nutrition entry, jump into the else branch.
 			*/
 			if(! empty($_POST["refer_nutrition"]) AND ! $nutrition){
-				$protocol=protocol::new_Protocol($visit_ID,'nutrition management');
+				$protocol=protocol::new_Protocol($visit_ID,'nutrition management requested');
 				$protocol_ID=$protocol->getProtocol_ID();
 				Nutrition::new_Nutrition($protocol_ID);
 			}else if(empty($_POST['refer_nutrition']) AND $nutrition){
@@ -445,6 +445,8 @@
 				$nutrition_management=new Nutrition($protocol_ID);
 
 				/*
+				## TODO: Delete nutrition data after verfication.
+
 				## Check if any data have been entered already for nutrition management, if so alert the user and prevent the deletion of the entry.
 				## Otherwise delete the nutrition entry from the database.
 				*/
@@ -456,6 +458,7 @@
 						</script>
 						";
 				}else{
+					## TODO: inquire protocol_ID for deletion. Function cannot be working.
 					$query="DELETE FROM nutrition WHERE protocol_ID=$protocol_ID";
 					mysqli_query($link,$query);
 					$nutrition=false;

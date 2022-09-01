@@ -111,16 +111,6 @@
 		}
 		
 		/*
-		## Deletes all diagnosis entries of a specific patient's visit
-		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.
-		*/
-		public static function clean($protocol_ID){
-			global $link;
-			$query = "DELETE FROM diagnosis_ids WHERE protocol_ID=$protocol_ID";
-			mysqli_query($link,$query);
-		}	
-
-		/*
 		## Setter function.
 		## Writes remarks of a certain patient's diagnosis into database.
 		## Variable $link contains credentials to connect with database and is defined in DB.php which is included by setup.php.

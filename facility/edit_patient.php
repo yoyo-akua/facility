@@ -273,7 +273,7 @@
 	
 	## Print links to delete patients from protocol or entire database, and back to protocol.
 	echo'
-			<a href="delete_from_protocol.php?protocol_ID='.$visit_ID.'"><div class ="box">delete from protocol</div></a>
+			<a href="delete_from_protocol.php?visit_ID='.$visit_ID.'"><div class ="box">delete from protocol</div></a>
 			<a href="delete_from_database.php?patient_ID='.$patient_ID.'"><div class ="box">delete completely from system</div></a>
 			<a href="patient_protocol.php?from='.$today.'&to='.$today.'"><div class ="box">back to protocol</div></a>
 			';
